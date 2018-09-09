@@ -950,3 +950,4 @@ public class TrackCandListFinder {
         return Math.signum((-1. / mb) * (xcen - 0.5 * (P1x + P2x)) + 0.5 * (P1y + P2y));
     }
 }
+>>>>>>> ran a syntactic clean-up through the entirety of the code under dc/track/. Details are too long to describe.
