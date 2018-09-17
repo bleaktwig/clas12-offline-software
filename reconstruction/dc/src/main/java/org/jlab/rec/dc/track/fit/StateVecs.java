@@ -62,17 +62,17 @@ public class StateVecs {
         double stepSize = 1.0;
         StateVecs.StateVec fVec = new StateVec(f);
         CovMat fCov = new CovMat(f);
-        fVec.x = iVec.x;
-        fVec.y = iVec.y;
-        fVec.z = iVec.z;
-        fVec.tx = iVec.tx;
-        fVec.ty = iVec.ty;
-        fVec.Q = iVec.Q;
-        fVec.B = iVec.B;
+        fVec.x      = iVec.x;
+        fVec.y      = iVec.y;
+        fVec.z      = iVec.z;
+        fVec.tx     = iVec.tx;
+        fVec.ty     = iVec.ty;
+        fVec.Q      = iVec.Q;
+        fVec.B      = iVec.B;
         fCov.covMat = covMat.covMat;
 
-        double s  = 0;
-        double z = Z[i];
+        double s       = 0;
+        double z       = Z[i];
         double BatMeas = iVec.B;
 
         // auxiliary variable
@@ -81,13 +81,13 @@ public class StateVecs {
         // while(Math.signum(Z[f] - Z[i])*z < Math.signum(Z[f] - Z[i])*Z[f]) {
         while(signumAux * z < signumAux * Z[f]) {
             // System.out.println(" RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x  = fVec.x;
-            double y  = fVec.y;
-            z         = fVec.z;
-            double tx = fVec.tx;
-            double ty = fVec.ty;
-            double Q =  fVec.Q;
-            double dPath = fVec.deltaPath;
+            double x      = fVec.x;
+            double y      = fVec.y;
+            z             = fVec.z;
+            double tx     = fVec.tx;
+            double ty     = fVec.ty;
+            double Q      =  fVec.Q;
+            double dPath  = fVec.deltaPath;
             covMat.covMat = fCov.covMat;
 
             s= Math.signum(Z[f] - Z[i]) * stepSize;
@@ -98,8 +98,8 @@ public class StateVecs {
             rk.RK4transport( sector, Q, x, y, z, tx, ty, s, dcSwim,
                         covMat, fVec, fCov, mass, dPath);
 
-            if( Math.abs(fVec.B - BatMeas)<0.0001)
-                stepSize*=2;
+            if (Math.abs(fVec.B - BatMeas) < 0.0001)
+                stepSize *= 2;
 
             BatMeas = fVec.B;
         }
@@ -117,7 +117,7 @@ public class StateVecs {
      */
     public void transportFixed(int sector, int i, int f, StateVec iVec, CovMat covMat) {
         // s = signed step-size
-        if(iVec==null) return;
+        if(iVec == null) return;
         double stepSize = 0.5;
 
         StateVecs.StateVec fVec = new StateVec(f);
