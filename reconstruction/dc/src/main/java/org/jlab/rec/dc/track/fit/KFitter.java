@@ -11,6 +11,7 @@ import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.fit.StateVecs.CovMat;
 import org.jlab.rec.dc.track.fit.StateVecs.StateVec;
 
+
 /**
  * @author ziegler
  * @since 08.08.2018 modified by gurjyan
@@ -31,34 +32,6 @@ public class KFitter {
     private double chi2kf = 0;
     public int NDF        = 0;
     public int ConvStatus = 1;
-
-// %%% NOTE: These two methods produce an out of range exception. %%%%%%%%%%%%%%
-    // public KFitter(Track trk,
-    //                DCGeant4Factory DcDetector,
-    //                boolean TimeBasedUsingHBtrack,
-    //                Swim swimmer) {
-    //
-    //     sv = new StateVecs(swimmer);
-    //     this.init(trk, DcDetector, TimeBasedUsingHBtrack);
-    // }
-    //
-    // public void init(Track trk,
-    //                  DCGeant4Factory DcDetector,
-    //                  boolean TimeBasedUsingHBtrack) {
-    //
-    //     mv.setMeasVecs(trk, DcDetector);
-    //     int mSize = mv.measurements.size();
-    //
-    //     sv.Z = new double[mSize];
-    //
-    //     for (int i = 0; i < mSize; i++) {
-    //         sv.Z[i] = mv.measurements.get(i).z;
-    //     }
-    //
-    //     if (TimeBasedUsingHBtrack) sv.initFromHB(trk, sv.Z[0], this);
-    //     else                       sv.init(trk, sv.Z[0], this);
-    // }
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     public KFitter(Track trk, DCGeant4Factory DcDetector,
                    boolean TimeBasedUsingHBtrack,
@@ -97,8 +70,8 @@ public class KFitter {
     }
 
     public void runFitter(int sector) {
-        this.chi2     = 0;
-        this.NDF      = mv.ndf;
+        this.chi2 = 0;
+        this.NDF = mv.ndf;
         int svzLength = sv.Z.length;
 
         // IntStream.range(1,totNumIter ).parallel().forEach(i -> {
