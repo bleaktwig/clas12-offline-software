@@ -46,7 +46,7 @@ public class KFitter {
         }
     }
 
-    // NOTE: These two methods can be easily merged.
+    // NOTE: These two methods should be merged.
     private void initFromHB(Track trk, DCGeant4Factory DcDetector) {
         mv.setMeasVecsFromHB(trk, DcDetector);
         int mSize = mv.measurements.size();
@@ -256,7 +256,7 @@ public class KFitter {
                 mv.measurements.get(0).error;
 
         for (int k1 = 1; k1 <= k; k1++) {
-            sv.transport(sector, k1 - 1, k1, sv.trackTraj.get(k1), sv.trackCov.get(k1));
+            sv.transport(sector, k1 - 1, k1, sv.trackTraj.get(k1 - 1), sv.trackCov.get(k1 - 1));
 
             double V = mv.measurements.get(k1).error;
             double h = mv.h(new double[]{sv.trackTraj.get(k1).x, sv.trackTraj.get(k1).y},
@@ -277,6 +277,27 @@ public class KFitter {
             kfStateVecsAlongTrajectory.add(svc);
             chi2 += (mv.measurements.get(k1).x - h) * (mv.measurements.get(k1).x - h) / V;
         }
+
+        // for (int k1 = 0; k1 < k; k1++) {
+        //     sv.transport(sector, k1, k1 + 1, sv.trackTraj.get(k1), sv.trackCov.get(k1));
+        //
+        //     double V = mv.measurements.get(k1 + 1).error;
+        //     double h = mv.h(new double[]{sv.trackTraj.get(k1 + 1).x, sv.trackTraj.get(k1 + 1).y},
+        //             mv.measurements.get(k1 + 1).tilt,
+        //             mv.measurements.get(k1 + 1).wireMaxSag,
+        //             mv.measurements.get(k1 + 1).wireLen);
+        //     svc = new org.jlab.rec.dc.trajectory.StateVec(sv.trackTraj.get(k1 + 1).x,
+        //             sv.trackTraj.get(k1 + 1).y,
+        //             sv.trackTraj.get(k1 + 1).tx,
+        //             sv.trackTraj.get(k1 + 1).ty);
+        //     svc.setZ(sv.trackTraj.get(k1 + 1).z);
+        //     svc.setB(sv.trackTraj.get(k1 + 1).B);
+        //     path += sv.trackTraj.get(k1 + 1).deltaPath;
+        //     svc.setPathLength(path);
+        //     svc.setProjector(h);
+        //     kfStateVecsAlongTrajectory.add(svc);
+        //     chi2 += (mv.measurements.get(k1 + 1).x - h) * (mv.measurements.get(k1 + 1).x - h) / V;
+        // }
     }
 
     private boolean isNonsingular(Matrix mat) {
