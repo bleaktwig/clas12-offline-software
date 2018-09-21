@@ -214,52 +214,9 @@ public class DCTBEngine extends DCEngine {
 
         // 6) find the list of track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
-        // TrajectoryFinder trjFind = new TrajectoryFinder();
 
         KFen.runKalmanFilter(TrackArray, crossMake, crosses,
                              dcSwim, trkcandFinder, trkcands);
-
-        // for(int i = 0; i < TrackArray.length; i++) {
-        //     if(TrackArray[i] == null ||
-        //        TrackArray[i].get_ListOfHBSegments() == null ||
-        //        TrackArray[i].get_ListOfHBSegments().size() < 4) {
-        //         continue;
-        //     }
-        //     TrackArray[i].set_MissingSuperlayer(get_Status(TrackArray[i]));
-        //     TrackArray[i].addAll(crossMake.find_Crosses(TrackArray[i].get_ListOfHBSegments(),
-        //                                                 dcDetector));
-        //     if(TrackArray[i].size() < 1) continue;
-        //     crosses.addAll(TrackArray[i]);
-        //     // if(TrackArray[i].get_FitChi2()>200) {
-        //     //    resetTrackParams(TrackArray[i], new DCSwimmer());
-        //     // }
-        //     KFitter kFit = new KFitter(TrackArray[i], dcDetector, true, dcSwim);
-        //
-        //     StateVec fn = new StateVec();
-        //     kFit.runFitter(TrackArray[i].get(0).get_Sector());
-        //
-        //     if(kFit.setFitFailed == false && kFit.finalStateVec != null) {
-        //         // set the state vector at the last measurement site
-        //         fn.set(kFit.finalStateVec.x,  kFit.finalStateVec.y,
-        //                kFit.finalStateVec.tx, kFit.finalStateVec.ty);
-        //         // set the track parameters if the filter does not fail
-        //         TrackArray[i].set_P(1. / Math.abs(kFit.finalStateVec.Q));
-        //         TrackArray[i].set_Q((int) Math.signum(kFit.finalStateVec.Q));
-        //         trkcandFinder.setTrackPars(TrackArray[i], new Trajectory(),
-        //                                    trjFind, fn, kFit.finalStateVec.z,
-        //                                    dcDetector, dcSwim);
-        //         // candidate parameters are set from the state vector
-        //         TrackArray[i].set_FitChi2(kFit.chi2);
-        //         TrackArray[i].set_FitNDF(kFit.NDF);
-        //         TrackArray[i].set_Trajectory(kFit.kfStateVecsAlongTrajectory);
-        //         TrackArray[i].set_FitConvergenceStatus(kFit.ConvStatus);
-        //         TrackArray[i].set_Id(TrackArray[i].size() + 1);
-        //         TrackArray[i].set_CovMat(kFit.finalCovMat.covMat);
-        //         if(TrackArray[i].get_Vtx0().toVector3D().mag() > 500) continue;
-        //
-        //         trkcands.add(TrackArray[i]);
-        //     }
-        // }
 
         for(int i = 0; i < crosses.size(); i++) {
             crosses.get(i).set_Id(i+1);

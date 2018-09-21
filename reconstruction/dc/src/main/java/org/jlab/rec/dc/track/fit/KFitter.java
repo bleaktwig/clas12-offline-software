@@ -37,8 +37,6 @@ public class KFitter {
                    boolean TimeBasedUsingHBtrack,
                    Swim swimmer) {
 
-        System.out.println("/!\\ KFitter instance created /!\\");
-
         sv = new StateVecs(swimmer);
         if (TimeBasedUsingHBtrack) {
             this.initFromHB(trk, DcDetector);
