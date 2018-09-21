@@ -17,7 +17,6 @@ import org.jlab.rec.dc.track.fit.StateVecs.StateVec;
  * @since 08.08.2018 modified by gurjyan
  */
 public class KFitter {
-
     public boolean setFitFailed = false;
 
     private StateVecs sv;
@@ -37,6 +36,8 @@ public class KFitter {
     public KFitter(Track trk, DCGeant4Factory DcDetector,
                    boolean TimeBasedUsingHBtrack,
                    Swim swimmer) {
+
+        System.out.println("/!\\ KFitter instance created /!\\");
 
         sv = new StateVecs(swimmer);
         if (TimeBasedUsingHBtrack) {
