@@ -43,6 +43,8 @@ public class DCTBEngine extends DCEngine {
     public DCTBEngine() {
         super("DCTB");
         tde = new TimeToDistanceEstimator();
+        KFen = new DCKFEngine();
+        KFen.init();
     }
 
     @Override
