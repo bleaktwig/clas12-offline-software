@@ -398,7 +398,7 @@ public class DCHBEngine extends DCEngine {
             en2.processDataEvent(event);
             writer.writeEvent(event);
             System.out.println("PROCESSED  EVENT " + event.getBank("RUN::config").getInt("event", 0));
-            
+
             if(counter>40)
                 break;
         }

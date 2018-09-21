@@ -22,7 +22,7 @@ public class DCEngine extends ReconstructionEngine {
     DCGeant4Factory dcDetector;
     FTOFGeant4Factory ftofDetector;
     ECGeant4Factory ecDetector;
-    PCALGeant4Factory pcalDetector; 
+    PCALGeant4Factory pcalDetector;
     org.jlab.rec.fmt.Geometry fmtDetector;
     TrajectorySurfaces tSurf;
     String clasDictionaryPath ;
@@ -34,7 +34,7 @@ public class DCEngine extends ReconstructionEngine {
     public void setStartTimeOption() {
         // Load config
         String useSTTConf = this.getEngineConfigString("useStartTime");
-        
+
         if (useSTTConf!=null) {
             System.out.println("["+this.getName()+"] run with start time in tracking config chosen based on yaml ="+useSTTConf);
             Constants.setUSETSTART(Boolean.valueOf(useSTTConf));
@@ -49,10 +49,10 @@ public class DCEngine extends ReconstructionEngine {
         if (useSTTConf==null) {
              System.out.println("["+this.getName()+"] run with start time in tracking config chosen based on default ="+Constants.isUSETSTART());
         }
-        
+
         // Wire distortions
         String wireDistortionsFlag = this.getEngineConfigString("wireDistort");
-        
+
         if (wireDistortionsFlag!=null) {
             System.out.println("["+this.getName()+"] run with wire distortions in tracking config chosen based on yaml ="+wireDistortionsFlag);
             if(Boolean.valueOf(wireDistortionsFlag)==true) {
@@ -77,7 +77,7 @@ public class DCEngine extends ReconstructionEngine {
         }
     }
     public void LoadTables() {
-        
+
         // Load tables
         clasDictionaryPath= CLASResources.getResourcePath("etc");
         String[]  dcTables = new String[]{
@@ -101,11 +101,11 @@ public class DCEngine extends ReconstructionEngine {
             if (geomDBVar!=null) {
                 System.out.println("["+this.getName()+"] run with geometry variation chosen based on env ="+geomDBVar);
             }
-        } 
+        }
         if (geomDBVar==null) {
             System.out.println("["+this.getName()+"] run with default geometry");
         }
-        
+
         // Load the geometry
         ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, Optional.ofNullable(geomDBVar).orElse("default"));
         dcDetector = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON);
@@ -116,19 +116,19 @@ public class DCEngine extends ReconstructionEngine {
         // Load other geometries
         ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, 11, "default");
         ftofDetector = new FTOFGeant4Factory(providerFTOF);
-        
+
         ConstantProvider providerEC = GeometryFactory.getConstants(DetectorType.ECAL, 11, "default");
         ecDetector = new ECGeant4Factory(providerEC);
         pcalDetector = new PCALGeant4Factory(providerEC);
-        
+
         fmtDetector = new org.jlab.rec.fmt.Geometry();
-        if(org.jlab.rec.fmt.Constants.areConstantsLoaded==false) 
+        if(org.jlab.rec.fmt.Constants.areConstantsLoaded==false)
             org.jlab.rec.fmt.CCDBConstantsLoader.Load(11);
         System.out.println(" -- Det Geometry constants are Loaded " );
         // create the surfaces
         tSurf = new TrajectorySurfaces();
         tSurf.LoadSurfaces(dcDetector, ftofDetector, ecDetector, pcalDetector, org.jlab.rec.fmt.Constants.FVT_Zlayer);
-        
+
         // Get the constants for the correct variation
         String ccDBVar = this.getEngineConfigString("constantsDBVariation");
         if (ccDBVar!=null) {
@@ -139,7 +139,7 @@ public class DCEngine extends ReconstructionEngine {
             if (ccDBVar!=null) {
                 System.out.println("["+this.getName()+"] run with constants variation chosen based on env ="+ccDBVar);
             }
-        } 
+        }
         if (ccDBVar==null) {
             System.out.println("["+this.getName()+"] run with default constants");
         }
@@ -148,8 +148,8 @@ public class DCEngine extends ReconstructionEngine {
         variationName = dcvariationName;
         this.getConstantsManager().setVariation(dcvariationName);
     }
-    
-    
+
+
     @Override
     public boolean processDataEvent(DataEvent event) {
         return true;
