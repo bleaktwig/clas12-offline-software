@@ -39,7 +39,7 @@ public class DCTBEngine extends DCEngine {
     // TrajectorySurfaces tSurf;
 
     private TimeToDistanceEstimator tde;
-    private double tarCent=-1.942;
+    private double tarCent = -1.942;
     public DCTBEngine() {
         super("DCTB");
         tde = new TimeToDistanceEstimator();
@@ -57,10 +57,9 @@ public class DCTBEngine extends DCEngine {
             System.err.println("RUN CONDITIONS NOT READ AT TIMEBASED LEVEL!");
             return true;
         }
-        if(event.hasBank("MC::Event")==true)
-            tarCent=0;
-        //if(event.getBank("RECHB::Event").getFloat("STTime", 0)<0)
-        //    return true; // require the start time to reconstruct the tracks in the event
+        if (event.hasBank("MC::Event") == true) tarCent = 0;
+        // if(event.getBank("RECHB::Event").getFloat("STTime", 0) < 0)
+        //     return true; // require the start time to reconstruct the tracks in the event
 
         DataBank bank = event.getBank("RUN::config");
 
@@ -116,10 +115,6 @@ public class DCTBEngine extends DCEngine {
 
         List<FittedHit> hits = new ArrayList<FittedHit>();
 // I) Get the hits =============================================================
-        // if (hitRead.get_TBHits().isEmpty())
-        //     hits = hitRead.get_HBHits();
-        // else
-        //     hits = hitRead.get_TBHits();
         hits = hitRead.get_HBHits();
 
 // II) Process the hits ========================================================
@@ -295,7 +290,7 @@ public class DCTBEngine extends DCEngine {
                                    trk.get_Q(),
                                    ftofDetector, tSurf, tarCent);
 
-                for(Cross c : trk) { 
+                for(Cross c : trk) {
                     c.get_Segment1().isOnTrack=true;
                     c.get_Segment2().isOnTrack=true;
 
