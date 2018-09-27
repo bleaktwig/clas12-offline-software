@@ -39,7 +39,7 @@ public class DCTBEngine extends DCEngine {
     // TrajectorySurfaces tSurf;
 
     private TimeToDistanceEstimator tde;
-    private double tarCent=-1.942;
+    private double tarCent = -1.942;
     public DCTBEngine() {
         super("DCTB");
         tde = new TimeToDistanceEstimator();
@@ -57,10 +57,9 @@ public class DCTBEngine extends DCEngine {
             System.err.println("RUN CONDITIONS NOT READ AT TIMEBASED LEVEL!");
             return true;
         }
-        if(event.hasBank("MC::Event")==true)
-            tarCent=0;
-        //if(event.getBank("RECHB::Event").getFloat("STTime", 0)<0)
-        //    return true; // require the start time to reconstruct the tracks in the event
+        if (event.hasBank("MC::Event") == true) tarCent = 0;
+        // if(event.getBank("RECHB::Event").getFloat("STTime", 0) < 0)
+        //     return true; // require the start time to reconstruct the tracks in the event
 
         DataBank bank = event.getBank("RUN::config");
 
@@ -116,10 +115,6 @@ public class DCTBEngine extends DCEngine {
 
         List<FittedHit> hits = new ArrayList<FittedHit>();
 // I) Get the hits =============================================================
-        // if (hitRead.get_TBHits().isEmpty())
-        //     hits = hitRead.get_HBHits();
-        // else
-        //     hits = hitRead.get_TBHits();
         hits = hitRead.get_HBHits();
 
 // II) Process the hits ========================================================
@@ -287,28 +282,20 @@ public class DCTBEngine extends DCEngine {
                 trkcandFinder.matchHits(trk.get_Trajectory(),
                                         trk, dcDetector, dcSwim);
                 trk.calcTrajectory(trkId, dcSwim,
-                                   trk.get_Vtx0().x(),    trk.get_Vtx0().y(),
-                                   trk.get_Vtx0().z(),    trk.get_pAtOrig().x(),
-                                   trk.get_pAtOrig().y(), trk.get_pAtOrig().z(),
-                                   trk.get_Q(), ftofDetector, tSurf, tarCent);
-                // for(int j = 0; j< trk.trajectory.size(); j++) {
-                // System.out.println(trk.get_Id()+" "+trk.trajectory.size()+" ("+trk.trajectory.get(j).getDetId()+") ["+
-                //             trk.trajectory.get(j).getDetName()+"] "+
-                //             (float)trk.trajectory.get(j).getX()/trk.get_P()+", "+
-                //             (float)trk.trajectory.get(j).getY()/trk.get_P()+", "+
-                //             (float)trk.trajectory.get(j).getZ()/trk.get_P()+", "+
-                //             (float)trk.trajectory.get(j).getpX()/trk.get_P()+", "+
-                //             (float)trk.trajectory.get(j).getpY()/trk.get_P()+", "+
-                //             (float)trk.trajectory.get(j).getpZ()/trk.get_P()+", "+
-                //             (float)trk.trajectory.get(j).getPathLen()+" "
-                //             );
-                // }
+                                   trk.get_Vtx0().x(),
+                                   trk.get_Vtx0().y(),
+                                   trk.get_Vtx0().z(),
+                                   trk.get_pAtOrig().x(),
+                                   trk.get_pAtOrig().y(),
+                                   trk.get_pAtOrig().z(),
+                                   trk.get_Q(),
+                                   ftofDetector, tSurf, tarCent);
 
                 for(Cross c : trk) {
-                    c.get_Segment1().isOnTrack = true;
-                    c.get_Segment2().isOnTrack = true;
+                    c.get_Segment1().isOnTrack=true;
+                    c.get_Segment2().isOnTrack=true;
 
-                    for(FittedHit h1 : c.get_Segment1()) {
+                    for (FittedHit h1 : c.get_Segment1()) {
                         h1.set_AssociatedTBTrackID(trk.get_Id());
                     }
                     for (FittedHit h2 : c.get_Segment2()) {
