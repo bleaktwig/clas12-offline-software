@@ -43,8 +43,6 @@ public class DCTBEngine extends DCEngine {
     public DCTBEngine() {
         super("DCTB");
         tde = new TimeToDistanceEstimator();
-        KFen = new DCKFEngine();
-        KFen.init();
     }
 
     @Override
@@ -281,7 +279,8 @@ public class DCTBEngine extends DCEngine {
             for (Track trk : trkcands) {
                 // Reset the id
                 trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
+                trkcandFinder.matchHits(trk.get_Trajectory(),
+                                        trk, dcDetector, dcSwim);
                 trk.calcTrajectory(trkId, dcSwim,
                                    trk.get_Vtx0().x(),
                                    trk.get_Vtx0().y(),
