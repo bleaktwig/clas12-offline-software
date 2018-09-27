@@ -37,75 +37,76 @@ public class StateVecs {
      * the measurement layer
      */
     public StateVecs(Swim swimmer) {
-        //Max Field Location: (phi, rho, z) = (29.50000, 44.00000, 436.00000)
+        // Max Field Location: (phi, rho, z) = (29.50000, 44.00000, 436.00000)
         // get the maximum value of the B field
         dcSwim = swimmer;
         rk = new RungeKutta();
-        //double phi = Math.toRadians(29.5);
-        //double rho = 44.0;
-        //double z = 436.0;
-        //swimmer.BfieldLab(rho*Math.cos(phi), rho*Math.sin(phi), z, lbf);
-        //Bmax = Math.sqrt(lbf[0]*lbf[0]+lbf[1]*lbf[1]+lbf[2]*lbf[2]) *(2.366498/4.322871999651699); // scales according to torus scale by reading the map and averaging the value
+        // double phi = Math.toRadians(29.5);
+        // double rho = 44.0;
+        // double z = 436.0;
+        // swimmer.BfieldLab(rho*Math.cos(phi), rho*Math.sin(phi), z, lbf);
+        // Bmax = Math.sqrt(lbf[0]*lbf[0]+lbf[1]*lbf[1]+lbf[2]*lbf[2]) *(2.366498/4.322871999651699);
+        // scales according to torus scale by reading the map and averaging the value
      }
 
     /**
      *
-     * @param i initial state vector index
-     * @param f final state vector index
-     * @param iVec state vector at the initial index
-     * @param covMat state covariance matrix at the initial index
+     * @param i       initial state vector index
+     * @param f       final state vector index
+     * @param iVec    state vector at the initial index
+     * @param iCovMat state covariance matrix at the initial index
      */
-    public void transport(int sector, int i, int f, StateVec iVec, CovMat covMat) {
-        // s = signed step-size
-        if(iVec == null) return;
+    public void transport(int sector, int i, int f, StateVec iVec, CovMat iCovMat) {
 
+        if(iVec == null) return;
         double stepSize = 1.0;
+
+        // final state vector and covariance matrix creation and initialization
+        //     at the initial state vector and covariance matrix's values.
         StateVecs.StateVec fVec = new StateVec(f);
-        CovMat fCov = new CovMat(f);
-        fVec.x      = iVec.x;
-        fVec.y      = iVec.y;
-        fVec.z      = iVec.z;
-        fVec.tx     = iVec.tx;
-        fVec.ty     = iVec.ty;
-        fVec.Q      = iVec.Q;
-        fVec.B      = iVec.B;
-        fCov.covMat = covMat.covMat;
+        CovMat fCovMat          = new CovMat(f);
+
+        fVec.x         = iVec.x;
+        fVec.y         = iVec.y;
+        fVec.z         = iVec.z;
+        fVec.tx        = iVec.tx;
+        fVec.ty        = iVec.ty;
+        fVec.Q         = iVec.Q;
+        fVec.B         = iVec.B;
+        fCovMat.covMat = iCovMat.covMat;
 
         double s       = 0;
         double z       = Z[i];
-        double BatMeas = iVec.B;
+        // double BatMeas = iVec.B;
 
         // auxiliary variable
         double signumAux = Math.signum(Z[f] - Z[i]);
 
-        // while(Math.signum(Z[f] - Z[i])*z < Math.signum(Z[f] - Z[i])*Z[f]) {
         while(signumAux * z < signumAux * Z[f]) {
-            // System.out.println(" RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x      = fVec.x;
-            double y      = fVec.y;
-            z             = fVec.z;
-            double tx     = fVec.tx;
-            double ty     = fVec.ty;
-            double Q      = fVec.Q;
-            covMat.covMat = fCov.covMat;
+            double x       = fVec.x;
+            double y       = fVec.y;
+            z              = fVec.z;
+            double tx      = fVec.tx;
+            double ty      = fVec.ty;
+            double Q       = fVec.Q;
+            iCovMat.covMat = fCovMat.covMat;
 
             s = signumAux * stepSize;
-            // System.out.println(" from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
             if(signumAux * (z + s) > signumAux * Z[f]) {
                 s = signumAux * Math.abs(Z[f] - z);
             }
 
             rk.RK4transport(sector, Q, x, y, z, tx, ty, s, dcSwim,
-                            covMat, fVec, fCov, mass);
+                            iCovMat, fVec, fCovMat, mass);
 
-            if(Math.abs(fVec.B - BatMeas) < 0.0001)
+            if(Math.abs(fVec.B - iVec.B) < 0.0001)
                 stepSize *= 2;
 
-            BatMeas = fVec.B;
+            // BatMeas = fVec.B;
         }
 
         this.trackTraj.put(f, fVec);
-        this.trackCov.put(f, fCov);
+        this.trackCov.put(f, fCovMat);
     }
 
     /**
@@ -364,13 +365,13 @@ public class StateVecs {
      */
     public class StateVec {
 
-        final  int k;       //index
-        public double z;    //z (fixed measurement planes)
-        public double x;    //track x in the tilted sector coordinate system at z
-        public double y;    //track y in the tilted sector coordinate system at z
-        public double tx;   //track px/pz in the tilted sector coordinate system at z
-        public double ty;   //track py/pz in the tilted sector coordinate system at z
-        public double Q;    //track q/p
+        final  int k;       // index
+        public double z;    // z (fixed measurement planes)
+        public double x;    // track x in the tilted sector coordinate system at z
+        public double y;    // track y in the tilted sector coordinate system at z
+        public double tx;   // track px/pz in the tilted sector coordinate system at z
+        public double ty;   // track py/pz in the tilted sector coordinate system at z
+        public double Q;    // track q/p
         double B;
         double deltaPath;
 
