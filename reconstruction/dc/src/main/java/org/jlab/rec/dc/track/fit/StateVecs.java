@@ -360,6 +360,49 @@ public class StateVecs {
         }
     }
 
+    void initFromHB(Track trkcand, double z0, KFitter kf) {
+        if (trkcand != null && trkcand.get_CovMat()!=null) {
+            dcSwim.SetSwimParameters(trkcand.get_Vtx0().x(), trkcand.get_Vtx0().y(), trkcand.get_Vtx0().z(),
+                    trkcand.get_pAtOrig().x(), trkcand.get_pAtOrig().y(), trkcand.get_pAtOrig().z(), trkcand.get_Q());
+            double[] VecInDCVolume = dcSwim.SwimToPlaneLab(175.);
+            if(VecInDCVolume==null){
+                kf.setFitFailed = true;
+                return;
+            }
+            // rotate to TCS
+            Cross C = new Cross(trkcand.get(0).get_Sector(), trkcand.get(0).get_Region(), -1);
+
+            Point3D trkR1X = C.getCoordsInTiltedSector(VecInDCVolume[0],VecInDCVolume[1],VecInDCVolume[2]);
+            Point3D trkR1P = C.getCoordsInTiltedSector(VecInDCVolume[3],VecInDCVolume[4],VecInDCVolume[5]);
+
+            dcSwim.SetSwimParameters(trkR1X.x(), trkR1X.y(), trkR1X.z(),
+                    trkR1P.x(), trkR1P.y(), trkR1P.z(), trkcand.get_Q());
+
+            double[] VecAtFirstMeasSite = dcSwim.SwimToPlaneTiltSecSys(trkcand.get(0).get_Sector(), z0);
+            if(VecAtFirstMeasSite==null){
+                kf.setFitFailed = true;
+                return;
+            }
+            StateVec initSV = new StateVec(0);
+            initSV.x = VecAtFirstMeasSite[0];
+            initSV.y = VecAtFirstMeasSite[1];
+            initSV.z = VecAtFirstMeasSite[2];
+            initSV.tx = VecAtFirstMeasSite[3] / VecAtFirstMeasSite[5];
+            initSV.ty = VecAtFirstMeasSite[4] / VecAtFirstMeasSite[5];
+            initSV.Q = trkcand.get_Q() / trkcand.get_pAtOrig().mag();
+            dcSwim.Bfield(trkcand.get(0).get_Sector(), initSV.x, initSV.y, initSV.z, bf);
+            initSV.B = Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2]);
+            this.trackTraj.put(0, initSV);
+
+            CovMat initCM = new CovMat(0);
+            initCM.covMat = trkcand.get_CovMat();
+            this.trackCov.put(0, initCM);
+        } else {
+            kf.setFitFailed = true;
+            return;
+        }
+
+    }
     /**
      * The state vector representing the track at a given measurement site
      */

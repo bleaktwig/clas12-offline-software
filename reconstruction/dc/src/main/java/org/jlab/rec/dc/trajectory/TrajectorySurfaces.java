@@ -25,7 +25,7 @@ public class TrajectorySurfaces {
 
     private List<ArrayList<Surface>> _DetectorPlanes = new ArrayList<ArrayList<Surface>>();
     
-    public synchronized List<ArrayList<Surface>> getDetectorPlanes() {
+    public List<ArrayList<Surface>> getDetectorPlanes() {
         return _DetectorPlanes;
     }
 
@@ -61,7 +61,7 @@ public class TrajectorySurfaces {
             n = this.RotateFromTSCtoLabC(0,0,1, is+1).toVector3D();
             for(int isup =0; isup<6; isup++) {
                 for(int il =0; il<6; il++) {
-                    d = dcDetector.getWireMidpoint(isup, il, iw).z; 
+                    d = dcDetector.getWireMidpoint(is, isup, il, iw).z; 
                     this._DetectorPlanes.get(is).add(new Surface("DC"+(index-6), index++, is*6+il+1,d, n.x(), n.y(), n.z()));                    
                 }
             } 
