@@ -279,8 +279,12 @@ public class DCTBEngine extends DCEngine {
             for (Track trk : trkcands) {
                 // Reset the id
                 trk.set_Id(trkId);
+<<<<<<< HEAD
                 trkcandFinder.matchHits(trk.get_Trajectory(),
                                         trk, dcDetector, dcSwim);
+=======
+                trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
+>>>>>>> bcb43b2f442abf4d91580477d25f9abf8cad06a4
                 trk.calcTrajectory(trkId, dcSwim,
                                    trk.get_Vtx0().x(),
                                    trk.get_Vtx0().y(),
