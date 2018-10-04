@@ -5,6 +5,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.clas.reco.ReconstructionEngine;
 
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.track.TrackCandListFinder;
 
 /**
  * A CLARA engine to run the Kalman filtering process for the DC software.
