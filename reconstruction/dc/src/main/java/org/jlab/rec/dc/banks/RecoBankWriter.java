@@ -9,6 +9,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
@@ -293,6 +294,56 @@ public class RecoBankWriter {
         }
         return bank;
     }
+
+    /**
+     * Serializes an org.jlab.rec.dc.cross.CrossList object.
+     *
+     * @param event the EvioEvent
+     * @return crosses bank
+     */
+    public DataBank fillHBCrossListsBank(DataEvent event, CrossList crossArrList) {
+
+        int banksize=0;
+        for (List<Cross> crossList : crossArrList) {
+            for (Cross cross : crossList) {
+                if (cross.get_Id() != -1) banksize++;
+            }
+        }
+
+        DataBank bank = event.createBank("HitBasedTrkg::HBCrossLists", banksize);
+
+        int crossIndex = 0;
+        short crossListIndex = 0;
+        for (List<Cross> crossList : crossArrList) {
+            for (Cross cross : crossList) {
+                if (cross.get_Id() == -1) continue;
+
+                bank.setShort("id",          crossIndex, (short) cross.get_Id());
+                bank.setShort("status",      crossIndex, (short) 0);
+                bank.setByte ("sector",      crossIndex, (byte)  cross.get_Sector());
+                bank.setByte ("region",      crossIndex, (byte)  cross.get_Region());
+                bank.setFloat("x",           crossIndex, (float) cross.get_Point().x());
+                bank.setFloat("y",           crossIndex, (float) cross.get_Point().y());
+                bank.setFloat("z",           crossIndex, (float) cross.get_Point().z());
+                bank.setFloat("err_x",       crossIndex, (float) cross.get_PointErr().x());
+                bank.setFloat("err_y",       crossIndex, (float) cross.get_PointErr().y());
+                bank.setFloat("err_z",       crossIndex, (float) cross.get_PointErr().z());
+                bank.setFloat("ux",          crossIndex, (float) cross.get_Dir().x());
+                bank.setFloat("uy",          crossIndex, (float) cross.get_Dir().y());
+                bank.setFloat("uz",          crossIndex, (float) cross.get_Dir().z());
+                bank.setFloat("err_ux",      crossIndex, (float) cross.get_DirErr().x());
+                bank.setFloat("err_uy",      crossIndex, (float) cross.get_DirErr().y());
+                bank.setFloat("err_uz",      crossIndex, (float) cross.get_DirErr().z());
+                bank.setShort("Segment1_ID", crossIndex, (short) cross.get_Segment1().get_Id());
+                bank.setShort("Segment2_ID", crossIndex, (short) cross.get_Segment2().get_Id());
+                bank.setShort("list_id",     crossIndex, (short) crossListIndex);
+                crossIndex++;
+            }
+            crossListIndex++;
+        }
+        return bank;
+    }
+
 
     private DataBank fillHBTracksBank(DataEvent event, List<Track> candlist) {
 

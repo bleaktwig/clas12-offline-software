@@ -1,11 +1,11 @@
-[ 
+[
  {
     "bank": "HitBasedTrkg::HBHits",
     "group": 20621,
     "info": "reconstructed hits using DC wire positions",
     "items": [
        {"name":"id",          "id":1, "type":"int16",  "info":"id of the hit"},
-       {"name":"status",      "id":2, "type":"int16",  "info":"id of the hit"},       
+       {"name":"status",      "id":2, "type":"int16",  "info":"id of the hit"},
        {"name":"sector",      "id":3, "type":"int8",   "info":"DC sector"},
        {"name":"superlayer",  "id":4, "type":"int8",  "info":"DC superlayer (1...6)"},
        {"name":"layer",       "id":5, "type":"int8",  "info":"DC layer in superlayer (1...6)"},
@@ -169,7 +169,32 @@
         {"name":"ndf",           "id":34, "type":"int16",  "info":"fit ndf of the track"}
     ]
  },
- 
+ {
+    "bank": "HitBasedTrkg::HBCrossLists",
+    "group": 20627,
+    "info": "reconstructed segments using DC wire positions in a list",
+    "items": [
+        {"name":"id",            "id":1, "type":"int16",  "info":"id of the cross"},
+        {"name":"status",        "id":2, "type":"int16",  "info":"status of the cross"},
+        {"name":"sector",        "id":3, "type":"int8",   "info":"sector of the cross"},
+        {"name":"region",        "id":4, "type":"int8",   "info":"region of the cross"},
+        {"name":"x",             "id":5, "type":"float",  "info":"DC track cross x-coordinate (in the DC tilted sector coordinate system)"},
+        {"name":"y",             "id":6, "type":"float",  "info":"DC track cross y-coordinate (in the DC tilted sector coordinate system)"},
+        {"name":"z",             "id":7, "type":"float",  "info":"DC track cross z-coordinate (in the DC tilted sector coordinate system)"},
+        {"name":"err_x",         "id":8, "type":"float",  "info":"DC track cross x-coordinate uncertainty (in the DC tilted sector coordinate system)"},
+        {"name":"err_y",         "id":9, "type":"float",  "info":"DC track cross y-coordinate uncertainty (in the DC tilted sector coordinate system)"},
+        {"name":"err_z",         "id":10, "type":"float",  "info":"DC track cross z-coordinate uncertainty (in the DC tilted sector coordinate system)"},
+        {"name":"ux",            "id":11, "type":"float",  "info":"DC track cross x-direction (in the DC tilted sector coordinate system)"},
+        {"name":"uy",            "id":12, "type":"float",  "info":"DC track cross y-direction (in the DC tilted sector coordinate system)"},
+        {"name":"uz",            "id":13, "type":"float",  "info":"DC track cross z-direction (in the DC tilted sector coordinate system)"},
+        {"name":"err_ux",        "id":14, "type":"float",  "info":"DC track cross x-direction uncertainty (in the DC tilted sector coordinate system)"},
+        {"name":"err_uy",        "id":15, "type":"float",  "info":"DC track cross y-direction uncertainty (in the DC tilted sector coordinate system)"},
+        {"name":"err_uz",        "id":16, "type":"float",  "info":"DC track cross z-direction uncertainty (in the DC tilted sector coordinate system)"},
+        {"name":"Segment1_ID",   "id":17, "type":"int16",  "info":"id of first superlater used in segment"},
+        {"name":"Segment2_ID",   "id":18, "type":"int16",  "info":"id of second superlater used in segment"},
+        {"name":"list_id",       "id":19, "type":"int16",  "info":"id of the list containing the cross"}
+    ]
+ },
  {
     "bank": "TimeBasedTrkg::TBHits",
     "group": 20631,
@@ -192,7 +217,7 @@
         {"name":"Z",            "id":15,  "type":"float", "info":"wire z-coordinate  in tilted-sector"},
         {"name":"B",            "id":16,  "type":"float", "info":"B-field intensity at hit position in tilted-sector system"},
         {"name":"TProp",        "id":17,  "type":"float", "info":"t propagation along the wire (ns)"},
-        {"name":"TFlight",      "id":18,  "type":"float", "info":"time of flight correction (ns)"},      
+        {"name":"TFlight",      "id":18,  "type":"float", "info":"time of flight correction (ns)"},
         {"name":"T0",           "id":19,  "type":"float", "info":"T0 (ns)"},
         {"name":"TStart",       "id":20,  "type":"float", "info":"event start time used (ns)"},
         {"name":"clusterID",    "id":21, "type":"int16", "info":"ID of associated cluster"},
@@ -267,7 +292,7 @@
         {"name":"resiSum",       "id":28,  "type":"float", "info":"sum of hit residuals"},
         {"name":"timeSum",       "id":29,  "type":"float", "info":"sum of the hit times"},
         {"name":"size",          "id":30,  "type":"int8", "info":"size of segment"}
-              
+
     ]
  },
  {
@@ -399,5 +424,5 @@
         {"name":"L",       "id":10, "type":"float",  "info":"pathlength of the track from the DOCA to the Beamline to the detector surface (cm)"}
     ]
  }
- 
+
 ]
