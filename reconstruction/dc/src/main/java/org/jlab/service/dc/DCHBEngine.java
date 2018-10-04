@@ -57,63 +57,63 @@ public class DCHBEngine extends DCEngine {
         Constants.Load();
         super.setStartTimeOption();
         super.LoadTables();
-//        newRun = 809;
-//        long timeStamp = 371468548086L;
-//        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-//            IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
-//            double period = tabJ.getDoubleValue("period", 0, 0, 0);
-//            int phase = tabJ.getIntValue("phase", 0, 0, 0);
-//            int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
-//
-//            if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
-//
-//            TableLoader.FillT0Tables(newRun, super.variationName);
-//            TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
-//
-//            Run.set(newRun);
-//        }
+        // newRun = 809;
+        // long timeStamp = 371468548086L;
+        // if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
+        //     IndexedTable tabJ = super.getConstantsManager().getConstants(newRun,
+        //             Constants.TIMEJITTER);
+        //     double period = tabJ.getDoubleValue("period", 0, 0, 0);
+        //     int phase = tabJ.getIntValue("phase", 0, 0, 0);
+        //     int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
+        //
+        //     if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
+        //
+        //     TableLoader.FillT0Tables(newRun, super.variationName);
+        //     TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
+        //
+        //     Run.set(newRun);
+        // }
         return true;
     }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-//        long startTime = 0;
-        //setRunConditionsParameters( event) ;
+        // long startTime = 0;
+        // setRunConditionsParameters( event);
         if (!event.hasBank("RUN::config")) {
             return true;
         }
 
-       DataBank bank = event.getBank("RUN::config");
-       long timeStamp = bank.getLong("timestamp", 0);
-       double triggerPhase = 0;
+        DataBank bank = event.getBank("RUN::config");
+        long timeStamp = bank.getLong("timestamp", 0);
+        double triggerPhase = 0;
 
         // Load the constants
         //-------------------
         int newRun = bank.getInt("run", 0);
-       if (newRun == 0)
-           return true;
+        if (newRun == 0) return true;
 
-       if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-           if (timeStamp == -1)
-               return true;
- //          if (debug.get()) startTime = System.currentTimeMillis();
-           IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
-           double period = tabJ.getDoubleValue("period", 0, 0, 0);
-           int phase = tabJ.getIntValue("phase", 0, 0, 0);
-           int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
+        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
+            if (timeStamp == -1) return true;
+            // if (debug.get()) startTime = System.currentTimeMillis();
+            IndexedTable tabJ = super.getConstantsManager().getConstants(newRun,
+                    Constants.TIMEJITTER);
+            double period     = tabJ.getDoubleValue("period", 0, 0, 0);
+            int phase         = tabJ.getIntValue("phase", 0, 0, 0);
+            int cycles        = tabJ.getIntValue("cycles", 0, 0, 0);
 
-           if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
+            if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
 
-           TableLoader.FillT0Tables(newRun, super.variationName);
-           TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
+            TableLoader.FillT0Tables(newRun, super.variationName);
+            TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
 
-           Run.set(newRun);
-           if (event.hasBank("MC::Particle") && this.getEngineConfigString("wireDistort")==null) {
-               Constants.setWIREDIST(0);
-           }
+            Run.set(newRun);
+            if (event.hasBank("MC::Particle") && this.getEngineConfigString("wireDistort")==null) {
+                Constants.setWIREDIST(0);
+            }
 
- //          if (debug.get()) System.out.println("NEW RUN INIT = " + (System.currentTimeMillis() - startTime));
-       }
+            // if (debug.get()) System.out.println("NEW RUN INIT = " + (System.currentTimeMillis() - startTime));
+        }
 
         /* 1 */
         // get Field
@@ -224,11 +224,32 @@ public class DCHBEngine extends DCEngine {
                 dcSwim);
         /* 18 */
         //6) find the list of  track candidates
+        /* TODO: Serialize the generated crosslist via:
+                     org.jlab.rec.dc.banks.fillHBCrossesBank(event, crosslist)
+                 the bank will be under "HitBasedTrkg::HBCrosses"
+        */
+        rbc.fillHBCrossListsBank(event, crosslist);
+        // NOTE: DCHB1 ends
+        // NOTE: DCKF  starts
+        // org.jlab.rec.dc.Constants.HITBASE can be obtained directly from the DC constants.
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
+        // get the serialized crosslist from DataEvent via "HitBasedTrkg::HBCrosses"
+        // TODO: ask about the dcDetector
+        // org.jlab.clas.swimtools.Swimmer.TORSCALE can be obtained directly from Swimmer.
+        // TODO: ask about the Swim instance
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
+        /* TODO: Serialize the candidate lists via:
+                     org.jlab.rec.dc.banks.fillHBTracksBank(event, trkcands)
+                 the track candidates will be under "HitBasedTrkg::HBTracks"
+                 and the matrix will be under "TimeBasedTrkg::TBCovMat"
+                 TODO: Check if the covariance matrices also need to be
+                       serialized.
+        */
+        // NOTE: DCKF  ends
+        // NOTE: DCHB2 starts
         /* 19 */
 
         // track found
@@ -308,10 +329,14 @@ public class DCHBEngine extends DCEngine {
                 dcDetector,
                 null,
                 dcSwim);
+        // NOTE: DCHB2 ends
+        // NOTE: DCKF  starts
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
+        // NOTE: DCKF  ends
+        // NOTE: DCHB3 starts
 
         // remove overlaps
         if (mistrkcands.size() > 0) {

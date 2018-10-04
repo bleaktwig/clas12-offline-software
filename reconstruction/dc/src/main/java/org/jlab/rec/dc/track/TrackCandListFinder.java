@@ -102,7 +102,6 @@ public class TrackCandListFinder {
         dcSwim.SetSwimParameters(R[0], R[1], R[2], R[3], R[4], R[5], -q);
         chi2 += (R[0] - x2) * (R[0] - x2) + (R[1] - y2) * (R[1] - y2);
 
-        // NOTE: the following line seems to be displaced:
         dcSwim.SetSwimParameters(R[0], R[1], R[2], R[3], R[4], R[5], -q);
 
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z1);
@@ -232,11 +231,13 @@ public class TrackCandListFinder {
                                      cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
                                      cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                     cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
+                    /* NOTE: /!\ KFitter INITIALIZATION */
                     // initialize the fitter with the candidate track
                     KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
                     kFit.totNumIter = 1;
 
                     if (debug) startTime = System.currentTimeMillis();
+                    /* NOTE: /!\ KFitter RUNNING */
                     kFit.runFitter(cand.get(0).get_Sector());
                     if (debug) System.out.println("Kalman fitter = " +
                                                   (System.currentTimeMillis() - startTime));
@@ -461,7 +462,7 @@ public class TrackCandListFinder {
                                             cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                             cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
                             // initialize the fitter with the candidate track
-
+                            /* NOTE: /!\ KFitter INITIALIZATION */
                             KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
                             // if (this.trking.equalsIgnoreCase("TimeBased"))
                             //     kFit.totNumIter=30;
@@ -470,6 +471,7 @@ public class TrackCandListFinder {
                             StateVec fn = new StateVec();
 
                             if (debug) startTime = System.currentTimeMillis();
+                            /* NOTE: /!\ KFitter RUNNING */
                             kFit.runFitter(cand.get(0).get_Sector());
                             if (debug)
                                 System.out.println("Kalman fitter - 2 = " +

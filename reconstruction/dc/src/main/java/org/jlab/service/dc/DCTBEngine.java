@@ -236,10 +236,14 @@ public class DCTBEngine extends DCEngine {
             if (TrackArray[i].size() < 1) continue;
             crosses.addAll(TrackArray[i]);
 
+            // NOTE: DCTB1Engine ends
+            // NOTE: DCKFEngine starts
             KFitter kFit = new KFitter(TrackArray[i], dcDetector, true, dcSwim);
 
             StateVec fn = new StateVec();
             kFit.runFitter(TrackArray[i].get(0).get_Sector());
+            // NOTE: DCKFEngine ends
+            // NOTE: DCTB2Engine starts
 
             if (kFit.setFitFailed == false && kFit.finalStateVec != null) {
                 // Set the state vector at the last measurement site
