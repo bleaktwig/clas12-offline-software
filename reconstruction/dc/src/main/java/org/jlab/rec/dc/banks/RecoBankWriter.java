@@ -299,7 +299,7 @@ public class RecoBankWriter {
      * Serializes an org.jlab.rec.dc.cross.CrossList object.
      *
      * @param event the EvioEvent
-     * @return crosses bank
+     * @return crosslists bank
      */
     public DataBank fillHBCrossListsBank(DataEvent event, CrossList crossArrList) {
 
