@@ -172,7 +172,7 @@
  {
     "bank": "HitBasedTrkg::HBCrossLists",
     "group": 20627,
-    "info": "reconstructed segments using DC wire positions in a list",
+    "info": "list of reconstructed segments using DC wire positions",
     "items": [
         {"name":"id",            "id":1, "type":"int16",  "info":"id of the cross"},
         {"name":"status",        "id":2, "type":"int16",  "info":"status of the cross"},
