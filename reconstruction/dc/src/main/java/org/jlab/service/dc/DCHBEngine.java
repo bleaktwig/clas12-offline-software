@@ -1,13 +1,11 @@
 package org.jlab.service.dc;
 
-import cnuphys.snr.NoiseReductionParameters;
-import cnuphys.snr.clas12.Clas12NoiseAnalysis;
-import cnuphys.snr.clas12.Clas12NoiseResult;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import cnuphys.snr.NoiseReductionParameters;
+import cnuphys.snr.clas12.Clas12NoiseAnalysis;
+import cnuphys.snr.clas12.Clas12NoiseResult;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
@@ -204,16 +202,17 @@ public class DCHBEngine extends DCEngine {
         CrossMaker crossMake = new CrossMaker();
         List<Cross> crosses = crossMake.find_Crosses(segments, dcDetector);
         if (crosses.isEmpty()) {
-            rbc.fillAllHBBanks(event,
-                    rbc,
-                    fhits,
-                    clusters,
-                    segments,
-                    null,
-                    null);
+            rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, null, null);
             return true;
         }
+        // TODO: UNCOMMENT
+        // else {
+        //     rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null);
+        // }
+
         /* 17 */
+        // NOTE: DCHB1 ends
+        // NOTE: DCKF  starts
         CrossListFinder crossLister = new CrossListFinder();
 
         CrossList crosslist = crossLister.candCrossLists(crosses,
@@ -224,30 +223,11 @@ public class DCHBEngine extends DCEngine {
                 dcSwim);
         /* 18 */
         //6) find the list of  track candidates
-        /* TODO: Serialize the generated crosslist via:
-                     org.jlab.rec.dc.banks.fillHBCrossesBank(event, crosslist)
-                 the bank will be under "HitBasedTrkg::HBCrosses"
-        */
-        rbc.fillHBCrossListsBank(event, crosslist);
-        // NOTE: DCHB1 ends
-        // NOTE: DCKF  starts
-        // org.jlab.rec.dc.Constants.HITBASE can be obtained directly from the DC constants.
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
-        // get the serialized crosslist from DataEvent via "HitBasedTrkg::HBCrosses"
-        // TODO: ask about the dcDetector
-        // org.jlab.clas.swimtools.Swimmer.TORSCALE can be obtained directly from Swimmer.
-        // TODO: ask about the Swim instance
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
-        /* TODO: Serialize the candidate lists via:
-                     org.jlab.rec.dc.banks.fillHBTracksBank(event, trkcands)
-                 the track candidates will be under "HitBasedTrkg::HBTracks"
-                 and the matrix will be under "TimeBasedTrkg::TBCovMat"
-                 TODO: Check if the covariance matrices also need to be
-                       serialized.
-        */
         // NOTE: DCKF  ends
         // NOTE: DCHB2 starts
         /* 19 */

@@ -39,6 +39,17 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
         }
     }
 
+    public FittedCluster(int sector, int superlayer, int id,
+                         ArrayList<FittedHit> fHits) {
+        this._Sector = sector;
+        this._Superlayer = superlayer;
+        this._Id = id;
+
+        for (int i = 0; i < fHits.size(); i++) {
+            this.add(fHits.get(i));
+        }
+    }
+
     private int _Sector;      							//	    sector[1...6]
     private int _Superlayer;    	 					//	    superlayer [1,...6]
     private int _Id;								//		cluster Id
@@ -46,8 +57,8 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     private Line3D _clusLine;
     private double _fitProb = -1;
     private double _Chisq = Double.POSITIVE_INFINITY;
-    
-	
+
+
     private double _clusterLineFitSlope;
     private double _clusterLineFitintercept;
     private double _clusterLineFitSlopeErr;

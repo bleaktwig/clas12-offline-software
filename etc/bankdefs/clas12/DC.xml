@@ -145,27 +145,6 @@
             <column name="Segment2_ID" num="17" type="int32" info="ID of the top layer segment in the Cross"/>
         </section>
 
-        <section name="HBCrossLists" tag="1318" info="list of reconstructed hit-based tracking DC crosses">
-            <column name="ID" num="1" type="int32" info="ID"/>
-            <column name="sector" num="2" type="int32" info="sector"/>
-            <column name="region" num="3" type="int32" info="region"/>
-            <column name="x" num="4" type="float64" info="DC track cross x-coordinate (in the DC tilted sector coordinate system)"/>
-            <column name="y" num ="5" type="float64" info="DC track cross y-coordinate (in the DC tilted sector coordinate system)"/>
-            <column name="z" num="6" type="float64" info="DC track cross z-coordinate (in the DC tilted sector coordinate system)"/>
-            <column name="err_x" num="7" type="float64" info="DC track cross x-coordinate error (in the DC tilted sector coordinate system)"/>
-            <column name="err_y" num="8" type="float64" info="DC track cross y-coordinate error (in the DC tilted sector coordinate system)"/>
-            <column name="err_z" num="9" type="float64" info="DC track cross z-coordinate error (in the DC tilted sector coordinate system)"/>
-            <column name="ux" num="10" type="float64" info="DC track cross x-direction (in the DC tilted sector coordinate system)"/>
-            <column name="uy" num="11" type="float64" info="DC track cross y-direction (in the DC tilted sector coordinate system)"/>
-            <column name="uz" num="12" type="float64" info="DC track cross z-direction (in the DC tilted sector coordinate system)"/>
-            <column name="err_ux" num="13" type="float64" info="DC track cross x-direction error (in the DC tilted sector coordinate system)"/>
-            <column name="err_uy" num="14" type="float64" info="DC track cross y-direction error (in the DC tilted sector coordinate system)"/>
-            <column name="err_uz" num="15" type="float64" info="DC track cross z-direction error (in the DC tilted sector coordinate system)"/>
-            <column name="Segment1_ID" num="16" type="int32" info="ID of the bottom layer segment in the Cross"/>
-            <column name="Segment2_ID" num="17" type="int32" info="ID of the top layer segment in the Cross"/>
-            <column name="list_Id" num="18" type="int32" info="id of the list containing the cross"/>
-        </section>
-
         <section name="HBTracks" tag="1315" info="reconstructed hit-based tracking DC tracks">
             <column name="ID" num="1" type="int32" info="ID"/>
             <column name="sector" num="2" type="int32" info="sector"/>
