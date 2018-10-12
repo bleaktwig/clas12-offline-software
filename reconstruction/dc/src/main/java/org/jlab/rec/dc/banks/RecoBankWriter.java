@@ -295,7 +295,7 @@ public class RecoBankWriter {
         return bank;
     }
 
-    private DataBank fillHBTracksBank(DataEvent event, List<Track> candlist) {
+    public DataBank fillHBTracksBank(DataEvent event, List<Track> candlist) {
 
         DataBank bank = event.createBank("HitBasedTrkg::HBTracks", candlist.size());
 

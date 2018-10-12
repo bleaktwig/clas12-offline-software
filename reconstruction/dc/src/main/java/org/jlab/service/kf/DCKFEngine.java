@@ -1,15 +1,21 @@
 package org.jlab.service.kf;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.base.ConstantProvider;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
@@ -18,9 +24,6 @@ import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
-// TODO: delete the following lines
-import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.utils.groups.IndexedTable;
 
 /**
  * An engine to run the Kalman filtering process for the DC software.
@@ -39,7 +42,28 @@ public class DCKFEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         Constants.Load();
-        dataeventCounter = 0;
+
+        // Load tables
+        String[] dcTables = new String[]{
+            // "/calibration/dc/signal_generation/doca_resolution",
+            // "/calibration/dc/time_to_distance/t2d",
+            "/calibration/dc/time_to_distance/time2dist",
+            // "/calibration/dc/time_corrections/T0_correction",
+            // "/calibration/dc/time_corrections/tdctimingcuts",
+            // "/calibration/dc/time_jitter",
+            // "/calibration/dc/tracking/wire_status",
+        };
+        requireConstants(Arrays.asList(dcTables));
+
+        // Load geometry
+        String geomDBVar = this.getEngineConfigString("geomDBVariation");
+        ConstantProvider provider =
+                GeometryFactory.getConstants(DetectorType.DC,
+                                             11,
+                                             Optional.ofNullable(geomDBVar).orElse("default"));
+        dcDetector = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON);
+
+        dataeventCounter = -1;
         return true;
     }
 
@@ -57,6 +81,7 @@ public class DCKFEngine extends ReconstructionEngine {
         if (newRun == 0) return true;
 
         Swim dcSwim = new Swim();
+        RecoBankWriter rbc = new RecoBankWriter();
         System.out.println("[DCKF] " + dataeventCounter + ".1: initialization done.");
 
 // === GET CROSSES =============================================================
@@ -83,61 +108,76 @@ public class DCKFEngine extends ReconstructionEngine {
         for (int c = 0; c < nCrosses; c++) {
             crosses.add(getCross(crossesBank, segmentsBank,
                                  clustersBank, hitsBank, c));
-//             if (dataeventCounter == 1) {
-// /******************************************************************************/
-//                 System.out.println(
-// "      Cross " + crosses.get(c).get_Id() + " retrieved. Data:\n" +
-// "        " + crosses.get(c).printInfo() + "\n\n" +
-// /******************************************************************************/
-// "      Segments " + crosses.get(c).get_Segment1().get_Id() +
-// " and "           + crosses.get(c).get_Segment2().get_Id() + " retrieved. Data:\n" +
-// "         " + crosses.get(c).get_Segment1().printInfo() + "\n" +
-// "         " + crosses.get(c).get_Segment2().printInfo() + "\n\n" +
-// /******************************************************************************/
-// "      Clusters " + crosses.get(c).get_Segment1().get_fittedCluster().get_Id() +
-// " and "           + crosses.get(c).get_Segment2().get_fittedCluster().get_Id() +
-// " retrieved. Data:\n" +
-// "         " + crosses.get(c).get_Segment1().get_fittedCluster().printInfo() + "\n" +
-// "         " + crosses.get(c).get_Segment2().get_fittedCluster().printInfo() + "\n"
-//                 );
-// /******************************************************************************/
-//             }
+
+            if (dataeventCounter == 0) {
+                /**************************************************************/
+                System.out.println(
+                    "      Cross " + crosses.get(c).get_Id() + " retrieved. Data:\n" +
+                    "        " + crosses.get(c).printInfo() + "\n\n" +
+                    /**********************************************************/
+                    "      Segments " + crosses.get(c).get_Segment1().get_Id() +
+                    " and "           + crosses.get(c).get_Segment2().get_Id() + " retrieved. Data:\n" +
+                    "         " + crosses.get(c).get_Segment1().printInfo() + "\n" +
+                    "         " + crosses.get(c).get_Segment2().printInfo() + "\n\n" +
+                    /**********************************************************/
+                    "      Clusters " + crosses.get(c).get_Segment1().get_fittedCluster().get_Id() +
+                    " and "           + crosses.get(c).get_Segment2().get_fittedCluster().get_Id() +
+                    " retrieved. Data:\n" +
+                    "         " + crosses.get(c).get_Segment1().get_fittedCluster().printInfo() + "\n" +
+                    "         " + crosses.get(c).get_Segment2().get_fittedCluster().printInfo() + "\n"
+                );
+                /**************************************************************/
+                FittedCluster cluster1 = crosses.get(c).get_Segment1().get_fittedCluster();
+                FittedCluster cluster2 = crosses.get(c).get_Segment2().get_fittedCluster();
+                System.out.println("       Hits in Cluster " + cluster1.get_Id() + ":");
+                for (int i = 0; i < cluster1.size(); i++) {
+                    System.out.println("         " + cluster1.get(i).printInfo());
+                }
+                System.out.println("");
+                System.out.println("       Hits in Cluster " + cluster2.get_Id() + ":");
+                for (int i = 0; i < cluster2.size(); i++) {
+                    System.out.println("         " + cluster2.get(i).printInfo());
+                }
+                System.out.println("");
+                /**************************************************************/
+            }
         }
         System.out.println("[DCKF] " + dataeventCounter + ".3: crosses loaded.");
         // TODO: remove crosses and segments and clusters and hits from banks.
         //       TODO: Check what is really necessary to remove from the banks.
 
 // === CREATE CROSSLIST FROM CROSSES ===========================================
-        // CrossListFinder crossLister = new CrossListFinder();
-        //
-        // ConstantsManager constantsManager = this.getConstantsManager();
-        // IndexedTable errorCheck = constantsManager.getConstants(newRun, Constants.TIME2DIST);
-        //
-        // CrossList crosslist = crossLister.candCrossLists(crosses,
-        //         false,
-        //         // this.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
-        //         errorCheck,
-        //         dcDetector,
-        //         null,
-        //         dcSwim);
-        // System.out.println("[DCKF] " + dataeventCounter + ".4: cross lists found.");
-        //
+        CrossListFinder crossLister = new CrossListFinder();
+
+        CrossList crosslist = crossLister.candCrossLists(crosses,
+                false,
+                this.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
+                dcDetector,
+                null,
+                dcSwim);
+        System.out.println("[DCKF] " + dataeventCounter + ".4: cross lists found.");
+
 // === CREATE AND RUN TrackCandListFinder ======================================
-        // TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
-        // List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
-        //                                                    dcDetector,
-        //                                                    Swimmer.getTorScale(),
-        //                                                    dcSwim);
-        // System.out.println("[DCKF] " + dataeventCounter + ".5: tracks found.");
-        // // TODO: WRITE list<org.jlab.rec.dc.track.Track> to evio event
-        // /* NOTE: Serialize the candidate lists via:
-        //              org.jlab.rec.dc.banks.fillHBTracksBank(event, trkcands)
-        //          the track candidates will be under "HitBasedTrkg::HBTracks"
-        //          and the matrix will be under "TimeBasedTrkg::TBCovMat"
-        //          TODO: Check if the covariance matrices also need to be
-        //                serialized.
-        // */
-        //
+        TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
+        List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
+                                                           dcDetector,
+                                                           Swimmer.getTorScale(),
+                                                           dcSwim);
+        System.out.println("[DCKF] " + dataeventCounter + ".5: tracks found.");
+
+        if (trkcands.size() > 0) {
+            trkCandFinder.removeOverlappingTracks(trkcands);
+            rbc.fillHBTracksBank(event, trkcands);
+            System.out.println("[DCKF] " + dataeventCounter + ".6: tracks " +
+                               "written on bank.");
+        }
+        else {
+            System.out.println("[DCKF] " + dataeventCounter + ".6: no tracks" +
+                               " found.");
+        }
+
+        // TODO: Check if the covariance matrices also need to be serialized.
+
         System.out.println("[DCKF] Processed evio event " +
                            dataeventCounter + "\n");
         return true;
@@ -203,6 +243,13 @@ public class DCKFEngine extends ReconstructionEngine {
             else if (i == 2) cross.set_Segment2(segment);
         }
 
+        if (cross.get_Segment1().get_Id() == -1 ||
+            cross.get_Segment2().get_Id() == -1) {
+            cross.isPseudoCross = true;
+        }
+
+        cross.set_CrossDirIntersSegWires();
+
         return cross;
     }
 
@@ -247,6 +294,8 @@ public class DCKFEngine extends ReconstructionEngine {
 
         segment.set_SegmentEndPoints(endPoints);
 
+        // TODO: compare this data with the one obtained from the cluster. Maybe
+        //       I'm rewriting the same data onto the object.
         segment.get_fittedCluster()
                .set_clusterLineFitSlope((double) sBank.getFloat("fitSlope", sAddr));
         segment.get_fittedCluster()
@@ -302,9 +351,9 @@ public class DCKFEngine extends ReconstructionEngine {
             fHits.add(fHit);
         }
 
-        FittedCluster cluster = new FittedCluster((int) clBank.getByte("sector",     clAddr),
-                                                  (int) clBank.getByte("superlayer", clAddr),
-                                                  (int) clBank.getShort("id",        clAddr),
+        FittedCluster cluster = new FittedCluster((int) clBank.getByte ("sector",       clAddr),
+                                                  (int) clBank.getByte ("superlayer",   clAddr),
+                                                  (int) clBank.getShort("id",           clAddr),
                                                   fHits);
 
         cluster.set_clusterLineFitSlope       ((double) clBank.getFloat("fitSlope",     clAddr));
@@ -346,9 +395,9 @@ public class DCKFEngine extends ReconstructionEngine {
         hit.set_lY                 ((double) bank.getFloat("LocY",      addr));
         hit.set_X                  ((double) bank.getFloat("X",         addr));
         hit.set_Z                  ((double) bank.getFloat("Z",         addr));
-        hit.set_LeftRightAmb       ((int)    bank.getByte("LR",         addr));
+        hit.set_LeftRightAmb       ((int)    bank.getByte ("LR",        addr));
         hit.set_AssociatedClusterID((int)    bank.getShort("clusterID", addr));
-        hit.set_AssociatedHBTrackID((int)    bank.getByte("trkID",      addr));
+        hit.set_AssociatedHBTrackID((int)    bank.getByte ("trkID",     addr));
         hit.setB                   ((double) bank.getFloat("B",         addr));
         hit.setTProp               ((double) bank.getFloat("TProp",     addr));
         hit.setTFlight             ((double) bank.getFloat("TFlight",   addr));
