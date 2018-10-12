@@ -42,10 +42,10 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
     private Segment _seg1;
     private Segment _seg2;
     public boolean isPseudoCross = false;
-    
+
     private double cos_tilt = FastMath.cos(Math.toRadians(25.));
     private double sin_tilt = FastMath.sin(Math.toRadians(25.));
-    
+
     public int recalc;
     /**
      *
@@ -323,7 +323,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
                 + " Point " + this.get_Point().toString() + "  Dir " + this.get_Dir().toString();
         return s;
     }
-    
+
     /**
      *
      * @param X
@@ -354,39 +354,39 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
 
         return new Point3D(rx, ry, PointInSec.z());
     }
-    
+
     public Point3D getCoordsInTiltedSector(double X, double Y, double Z) {
         double rx = X * FastMath.cos((this.get_Sector() - 1) * Math.toRadians(-60.)) - Y * FastMath.sin((this.get_Sector() - 1) * Math.toRadians(-60.));
         double ry = X * FastMath.sin((this.get_Sector() - 1) * Math.toRadians(-60.)) + Y * FastMath.cos((this.get_Sector() - 1) * Math.toRadians(-60.));
-       
+
         double rtz = rx * sin_tilt + Z * cos_tilt;
         double rtx = rx * cos_tilt - Z * sin_tilt;
-         
+
         return new Point3D(rtx, ry, rtz);
     }
     /*
 	public double[] ReCalcPseudoCross(Cross c2, Cross c3) {
-	
+
 		double[] XY = new double[2];
 		Vector3D fitLine = new Vector3D(c3.get_Point().x()-c2.get_Point().x(), c3.get_Point().y()-c2.get_Point().y(), 0);
 		fitLine.unit();
-		
+
 		Vector3D pseuLine = new Vector3D(this.get_Point().x()-c2.get_Point().x(), this.get_Point().y()-c2.get_Point().y(), 0);
 		pseuLine.unit();
-		
+
 		double alpha = Math.acos(fitLine.dot(pseuLine));
-		
+
 		double X = (this.get_Point().x()-c2.get_Point().x())*Math.cos(alpha) + (this.get_Point().y()-c2.get_Point().y())*Math.sin(alpha) + c2.get_Point().x();
 		double Y = -(this.get_Point().x()-c2.get_Point().x())*Math.sin(alpha) + (this.get_Point().y()-c2.get_Point().y())*Math.cos(alpha) + c2.get_Point().y();
-		
+
 		if(this.recalc==0) {
-			
+
 			System.out.println(this.recalc+"] "+this.printInfo()+" alpha "+Math.toDegrees(alpha)+" X "+X+" Y "+Y+c2.printInfo()+" "+c3.printInfo());
 			this.set_Point(new Point3D(X, Y, this.get_Point().z()));
 		}
 		XY[0] = X;
 		XY[1] = Y;
-		
+
 		return XY;
 		//System.out.println(this.recalc+"] "+this.printInfo()+" alpha "+Math.toDegrees(alpha)+" X "+X+" Y "+Y+c2.printInfo()+" "+c3.printInfo());
 	}
@@ -405,14 +405,14 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         for(int i =0; i<this.get_Segment2().size(); i++) {
             this.calc_IntersectPlaneAtZ(this.get_Segment2().get(i).get_Z(), wy_over_wx, val_sl1, val_sl2, val_it1, val_it2, this.get_Segment2().get(i));
         }
-        
+
     }
-   
+
     private void calc_IntersectPlaneAtZ(double z, double wy_over_wx, double val_sl1, double val_sl2, double val_it1, double val_it2, FittedHit hit) {
-       
+
         double x = 0.5 * (val_it1 + val_it2) + 0.5 * z * (val_sl1 + val_sl2);
         double y = 0.5 * wy_over_wx * (val_it2 - val_it1) + 0.5 * wy_over_wx * z * (val_sl2 - val_sl1);
-        
+
         hit.setCrossDirIntersWire(new Point3D(x,y,z));
-    } 
+    }
 }
