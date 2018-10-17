@@ -166,7 +166,7 @@ public class DCHBEngine extends DCEngine {
         /* 12 */
         List<FittedHit> fhits = rbc.createRawHitList(hits);
         /* 13 */
-        rbc.updateListsListWithClusterInfo(fhits, clusters);
+        rbc.updateHitsListWithClusterInfo(fhits, clusters);
         /* 14 */
         //3) find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();

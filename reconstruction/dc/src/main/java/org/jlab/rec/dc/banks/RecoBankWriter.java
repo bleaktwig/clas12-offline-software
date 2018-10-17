@@ -27,9 +27,39 @@ import trackfitter.fitter.utilities.*;
  */
 public class RecoBankWriter {
 
-    // NOTE: Lacks Javadoc comment.
-    public void updateListsListWithClusterInfo(List<FittedHit> fhits,
-                                               List<FittedCluster> clusters) {
+    // NOTE: I feel like this method shouldn't be in this class. Maybe it would
+    //       fit better in FittedHit?
+    /**
+     * Transforms a list hits into one of fitted hits.
+     * @param hits list of hits to be transformed
+     * @return     list of fitted hits
+     */
+    public List<FittedHit> createRawHitList(List<Hit> hits) {
+
+        List<FittedHit> fhits = new ArrayList<>();
+
+        for (Hit hit : hits) {
+            FittedHit fhit = new FittedHit(hit.get_Sector(),
+                                           hit.get_Superlayer(),
+                                           hit.get_Layer(),
+                                           hit.get_Wire(),
+                                           hit.get_TDC(),
+                                           hit.get_Id());
+            fhit.set_Id(hit.get_Id());
+            fhit.set_DocaErr(hit.get_DocaErr());
+            fhits.add(fhit);
+        }
+        return fhits;
+    }
+
+    /**
+     * Updates the list of fitted hits with data from the clusters containing
+     *         them.
+     * @param fhits    the list of fitted hits
+     * @param clusters the list of clusters
+     */
+    public void updateHitsListWithClusterInfo(List<FittedHit> fhits,
+                                              List<FittedCluster> clusters) {
 
         for (int i = 0; i < clusters.size(); i++) {
             clusters.get(i).set_Id(i + 1);
@@ -758,7 +788,12 @@ public class RecoBankWriter {
         return bank;
     }
 
-    // NOTE: Lacks Javadoc comment.
+    /**
+     * Writes a list of trajectories with data pulled from a list of tracks.
+     * @param event  the EvioEvent
+     * @param tracks the list of tracks
+     * @return       trajectories bank
+     */
     private DataBank fillTrajectoryBank(DataEvent event, List<Track> tracks) {
         DataBank bank = event.createBank("TimeBasedTrkg::Trajectory", tracks.size() * 21);
 
