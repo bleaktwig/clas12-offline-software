@@ -200,9 +200,7 @@ public class TrackCandListFinder {
         if (debug) startTime2 = System.currentTimeMillis();
 
         List<Track> cands = new ArrayList<>();
-        if (crossList.size() == 0) {
-            return cands;
-        }
+        if (crossList.size() == 0) return cands;
 
         for (List<Cross> aCrossList : crossList) {
             // initialize
