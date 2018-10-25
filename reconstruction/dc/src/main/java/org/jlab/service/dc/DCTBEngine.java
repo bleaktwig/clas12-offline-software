@@ -93,7 +93,7 @@ public class DCTBEngine extends DCEngine {
         RecoBankWriter rbc = new RecoBankWriter();
 
         HitReader hitRead  = new HitReader();
-        hitRead.read_HBHits(event,
+        hitRead.readHBHits(event,
             super.getConstantsManager()
                  .getConstants(newRun,
                                "/calibration/dc/signal_generation/doca_resolution"),
@@ -103,7 +103,7 @@ public class DCTBEngine extends DCEngine {
             Constants.getT0(), Constants.getT0Err(), dcDetector, tde
         );
 
-        hitRead.read_TBHits(event,
+        hitRead.readTBHits(event,
             super.getConstantsManager()
                  .getConstants(newRun,
                                "/calibration/dc/signal_generation/doca_resolution"),

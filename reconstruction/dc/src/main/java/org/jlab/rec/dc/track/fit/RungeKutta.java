@@ -365,7 +365,7 @@ public class RungeKutta {
         double aux_qv = q * v;
         double half_h = 0.5 * h;
 
-        //State
+        // State
         swimmer.Bfield(sector, x0, y0, z0, _b);
         double x1  = tx0;
         double y1  = ty0;
