@@ -2,7 +2,11 @@ package org.jlab.rec.dc.segment;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.clas.clas.math.FastMath;
+
+// NOTE: Uncomment
+// import org.jlab.clas.clas.math.FastMath;
+import org.apache.commons.math3.util.FastMath;
+
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -19,9 +23,9 @@ import org.jlab.rec.dc.trajectory.SegmentTrajectory;
  *
  */
 public class SegmentFinder {
-    
+
     /**
-     * 
+     *
      * @param seg Segment
      * @param event HipoDataEvent
      * @param DcDetector DC detector utility
@@ -132,20 +136,20 @@ public class SegmentFinder {
 
             Segment seg = new Segment(fClus);
             seg.set_fitPlane(DcDetector);
-            
+
             if (runLayersEffs == true)
                 this.get_LayerEfficiencies(seg, event, DcDetector);
-            
+
             double sumRes=0;
             double sumTime=0;
-            
+
             for(FittedHit h : seg) {
                 sumRes+=h.get_TimeResidual();
                 sumTime+=h.get_Time();
             }
             seg.set_ResiSum(sumRes);
             seg.set_TimeSum(sumTime);
-            
+
             segList.add(seg);
         }
 
@@ -155,7 +159,7 @@ public class SegmentFinder {
     }
 
     /**
-     * 
+     *
      * @param clusters list of fitted clusters
      * @return list of time-based fitted clusters
      */
@@ -172,7 +176,7 @@ public class SegmentFinder {
             if (AveDoca < AveCelSz*1.2) {
                 selTimeBasedSegments.add(clusters.get(i));
             }
-            
+
         }
         return selTimeBasedSegments;
     }

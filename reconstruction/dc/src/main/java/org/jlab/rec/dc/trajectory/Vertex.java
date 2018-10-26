@@ -1,8 +1,11 @@
 package org.jlab.rec.dc.trajectory;
 
 import java.util.Random;
-//import org.apache.commons.math3.util.FastMath;
-import org.jlab.clas.clas.math.FastMath;
+
+// NOTE: Uncomment
+// import org.jlab.clas.clas.math.FastMath;
+import org.apache.commons.math3.util.FastMath;
+
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -16,12 +19,12 @@ public class Vertex {
     Random rn = new Random();
     public static double SMEARING_FAC = 0;
     Swim swim2 = new Swim();
-    
+
     public Vertex() {
 
     }
     /**
-     * 
+     *
      * @param event HipoDataEvent
      * @return the vertex from MC at the raster radius estimated from MC
      */
@@ -35,11 +38,11 @@ public class Vertex {
             smearedVal = val + SMEARING_FAC * rn.nextGaussian();
 
         }
-        return smearedVal; 
+        return smearedVal;
     }
 
     /**
-     * 
+     *
      * @param event HipoDataEvent
      * @param thecand The track candidate
      */
@@ -79,10 +82,10 @@ public class Vertex {
         thecand.set_Vtx0(new Point3D(rx,ry,rz));
         thecand.set_pAtOrig(new Vector3D(rpx,rpy,rpz));
 
-    } 
+    }
 
     /**
-     * 
+     *
      * @param x track x
      * @param y track y
      * @param z track z
@@ -120,7 +123,7 @@ public class Vertex {
 
         } else {
 
-            double LIGHTVEL     = 0.000299792458 ; 
+            double LIGHTVEL     = 0.000299792458 ;
             double pt = Math.sqrt(px*px + py*py);
 
             double R = Q* pt / (LIGHTVEL * Bfield);
@@ -165,5 +168,5 @@ public class Vertex {
         }
         return value;
     }
-	
+
 }

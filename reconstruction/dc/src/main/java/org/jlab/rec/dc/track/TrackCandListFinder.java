@@ -2,9 +2,11 @@ package org.jlab.rec.dc.track;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.clas.clas.math.FastMath;
 
-//import org.apache.commons.math3.util.FastMath;
+// NOTE: Uncomment
+// import org.jlab.clas.clas.math.FastMath;
+import org.apache.commons.math3.util.FastMath;
+
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Point3D;
@@ -84,11 +86,11 @@ public class TrackCandListFinder {
         dcSwim.SetSwimParameters(x, y, z,
                 -pz * tanThX, -pz * tanThY, -pz,
                 -q);
-        double chi2 = 0; // assume err =1 on points 
+        double chi2 = 0; // assume err =1 on points
         double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
         if(R==null)
             return Double.POSITIVE_INFINITY;
-        
+
         chi2 += (R[0] - x3) * (R[0] - x3) + (R[1] - y3) * (R[1] - y3);
         dcSwim.SetSwimParameters(R[0], R[1], R[2],
                 R[3], R[4], R[5],
@@ -96,7 +98,7 @@ public class TrackCandListFinder {
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
         if(R==null)
             return Double.POSITIVE_INFINITY;
-        
+
         dcSwim.SetSwimParameters(R[0], R[1], R[2],
                 R[3], R[4], R[5],
                 -q);
@@ -107,7 +109,7 @@ public class TrackCandListFinder {
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z1);
         if(R==null)
             return Double.POSITIVE_INFINITY;
-        
+
         chi2 += (R[0] - x1) * (R[0] - x1) + (R[1] - y1) * (R[1] - y1);
 
         return chi2;
@@ -123,7 +125,7 @@ public class TrackCandListFinder {
         }
         double[] pars = new double[2];
 
-        double chi2 = 0; // assume err =1 on points 
+        double chi2 = 0; // assume err =1 on points
         double intBdl = 0;
 
         double p = calcInitTrkP(ux, uy, uz, thX, thY,
@@ -139,7 +141,7 @@ public class TrackCandListFinder {
         double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
         if(R==null)
             return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
-        
+
         chi2 += (R[0] - x2) * (R[0] - x2) + (R[1] - y2) * (R[1] - y2);
         intBdl += R[7];
         dcSwim.SetSwimParameters(R[0], R[1], R[2],
@@ -148,7 +150,7 @@ public class TrackCandListFinder {
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
         if(R==null)
             return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
-        
+
         chi2 += (R[0] - x3) * (R[0] - x3) + (R[1] - y3) * (R[1] - y3);
         intBdl += R[7];
 
@@ -165,7 +167,7 @@ public class TrackCandListFinder {
         if (deltaTheta == 0)
             return Double.POSITIVE_INFINITY;
 
-        // momentum estimate if Bdl is non zero and the track has curvature    
+        // momentum estimate if Bdl is non zero and the track has curvature
         double pxz = Math.abs(Constants.LIGHTVEL * iBdl / deltaTheta);
         double py = Math.sqrt((thX * thX + thY * thY + 1) / (thX * thX + 1) - 1) * pxz;
 
@@ -209,7 +211,7 @@ public class TrackCandListFinder {
             if (traj == null)
                 continue;
 
-            //look for straight tracks    
+            //look for straight tracks
             if (aCrossList.size() == 3 && Math.abs(TORSCALE) < 0.001) {
                 cand.addAll(aCrossList);
                 cand.set_Sector(aCrossList.get(0).get_Sector());
@@ -381,10 +383,10 @@ public class TrackCandListFinder {
                         // compute delta theta using the non-pseudo segments in region 1 and 3
 
                         // get integral Bdl from the swimmer trajectory
-                        //double iBdl = traj.get_IntegralBdl(); 
+                        //double iBdl = traj.get_IntegralBdl();
 
                         if (iBdl != 0) {
-                            // momentum estimate if Bdl is non zero and the track has curvature  
+                            // momentum estimate if Bdl is non zero and the track has curvature
                             double p = calcInitTrkP(ux, uy, uz, thX, thY,
                                     theta1, theta3,
                                     iBdl, TORSCALE);
@@ -614,7 +616,7 @@ public class TrackCandListFinder {
         double[] VecAtTarOut = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), 592);
         if(VecAtTarOut==null)
             return;
-        
+
         double xOuter = VecAtTarOut[0];
         double yOuter = VecAtTarOut[1];
         double zOuter = VecAtTarOut[2];
@@ -654,7 +656,7 @@ public class TrackCandListFinder {
         double pyOr = -VecAtTarIn[4];
         double pzOr = -VecAtTarIn[5];
 
-        //if(traj!=null && trjFind!=null) { 
+        //if(traj!=null && trjFind!=null) {
         //        traj.set_Trajectory(trjFind.getStateVecsAlongTrajectory(xOr, yOr, zOr, pxOr/pzOr, pyOr/pzOr, cand.get_P(),cand.get_Q(), getDcDetector));
         //        cand.set_Trajectory(traj.get_Trajectory());
         //}
@@ -685,10 +687,10 @@ public class TrackCandListFinder {
         double x_n = Math.cos(theta_n);
         double y_n = Math.sin(theta_n);
         double[] Vt = dcSwim.SwimToPlaneBoundary(0, new Vector3D(x_n, y_n, 0), -1);
-        
+
         if(Vt==null)
             return;
-        
+
         int status = 99999;
 
         int LR = 0;
@@ -820,9 +822,9 @@ public class TrackCandListFinder {
                 stateVecAtPlanesList.get(0).getZ());
         if (ToFirstMeas == null)
             return;
-        
+
         //double PathToFirstMeas =ToFirstMeas[6];
-        
+
         for (StateVec st : stateVecAtPlanesList) {
             if (st == null)
                 return;

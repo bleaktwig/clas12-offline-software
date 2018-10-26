@@ -138,7 +138,7 @@ public class DCHBEngine extends DCEngine {
         /* 8 */
         HitReader hitRead = new HitReader();
         /* 9 */
-        hitRead.fetch_DCHits(event,
+        hitRead.fetchDCHits(event,
                 noiseAnalysis,
                 parameters,
                 results,
@@ -168,7 +168,7 @@ public class DCHBEngine extends DCEngine {
         /* 12 */
         List<FittedHit> fhits = rbc.createRawHitList(hits);
         /* 13 */
-        rbc.updateListsListWithClusterInfo(fhits, clusters);
+        rbc.updateHitsListWithClusterInfo(fhits, clusters);
         /* 14 */
         //3) find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();
@@ -178,13 +178,14 @@ public class DCHBEngine extends DCEngine {
         /* 15 */
         // need 6 segments to make a trajectory
         if (segments.isEmpty()) {
-            rbc.fillAllHBBanks(event,
+            rbc.fillAllBanks(event,
                     rbc,
                     fhits,
                     clusters,
                     null,
                     null,
-                    null);
+                    null,
+                    false);
             return true;
         }
         List<Segment> rmSegs = new ArrayList<>();
@@ -204,13 +205,14 @@ public class DCHBEngine extends DCEngine {
         CrossMaker crossMake = new CrossMaker();
         List<Cross> crosses = crossMake.find_Crosses(segments, dcDetector);
         if (crosses.isEmpty()) {
-            rbc.fillAllHBBanks(event,
+            rbc.fillAllBanks(event,
                     rbc,
                     fhits,
                     clusters,
                     segments,
                     null,
-                    null);
+                    null,
+                    false);
             return true;
         }
         /* 17 */
@@ -340,22 +342,24 @@ public class DCHBEngine extends DCEngine {
         // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses
         if (trkcands.isEmpty()) {
-            rbc.fillAllHBBanks(event,
+            rbc.fillAllBanks(event,
                     rbc,
                     fhits,
                     clusters,
                     segments,
                     crosses,
-                    null);
+                    null,
+                    false);
             return true;
         }
-        rbc.fillAllHBBanks(event,
+        rbc.fillAllBanks(event,
                 rbc,
                 fhits,
                 clusters,
                 segments,
                 crosses,
-                trkcands);
+                trkcands,
+                false);
         return true;
     }
 
@@ -398,7 +402,7 @@ public class DCHBEngine extends DCEngine {
             en2.processDataEvent(event);
             writer.writeEvent(event);
             System.out.println("PROCESSED  EVENT " + event.getBank("RUN::config").getInt("event", 0));
-            
+
             if(counter>40)
                 break;
         }

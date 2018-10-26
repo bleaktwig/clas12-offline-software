@@ -3,7 +3,10 @@ package org.jlab.rec.dc.trajectory;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jlab.clas.clas.math.FastMath;
+// NOTE: Uncomment
+// import org.jlab.clas.clas.math.FastMath;
+import org.apache.commons.math3.util.FastMath;
+
 import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.cluster.FittedCluster;
@@ -22,9 +25,9 @@ public class RoadFinder  {
     QuadraticFit qf = new QuadraticFit();
     public RoadFinder() {
     }
-    
+
     /**
-     * 
+     *
      * @param segs list of segments
      * @param DcDetector DC detector utility
      * @return list of segments corresponding to pseudo-segments
@@ -34,12 +37,12 @@ public class RoadFinder  {
         //initialize the lists
 
         List<Road> Roads = new ArrayList<Road>();
-        
+
         List<ArrayList<ArrayList<Segment>>> superLayerLists = new ArrayList<ArrayList<ArrayList<Segment>>>();
         for(int sec=0; sec<6; sec++)  {
             ArrayList<ArrayList<Segment>> sLyrs = new ArrayList<ArrayList<Segment>>();
             ArrayList<ArrayList<ArrayList<Segment>>> rLyrs = new ArrayList<ArrayList<ArrayList<Segment>>>();
-            
+
             for(int sly=0; sly<6; sly++) {
                 sLyrs.add(new ArrayList<Segment>());
             }
@@ -61,15 +64,15 @@ public class RoadFinder  {
             }
         }
         int roadId =1;
-        for (int sec = 0; sec<6; sec++) { 
+        for (int sec = 0; sec<6; sec++) {
             for (int j = 0; j<2; j++) {
                 for (int i1 = 0; i1<superLayerLists.get(sec).get(0+j).size(); i1++) {
-                    Segment s1 = superLayerLists.get(sec).get(0+j).get(i1); 
+                    Segment s1 = superLayerLists.get(sec).get(0+j).get(i1);
                     for (int i2 = 0; i2<superLayerLists.get(sec).get(2+j).size(); i2++) {
-                        Segment s2 = superLayerLists.get(sec).get(2+j).get(i2); 
+                        Segment s2 = superLayerLists.get(sec).get(2+j).get(i2);
                         for (int i3 = 0; i3<superLayerLists.get(sec).get(4+j).size(); i3++) {
-                            Segment s3 = superLayerLists.get(sec).get(4+j).get(i3); 
-                            Road sLyr = new Road(); 
+                            Segment s3 = superLayerLists.get(sec).get(4+j).get(i3);
+                            Road sLyr = new Road();
                             if(s1.get_Id()!=-10) {
                                 sLyr.add(s1);
                             }
@@ -78,17 +81,17 @@ public class RoadFinder  {
                             }
                             if(s3.get_Id()!=-10) {
                                 sLyr.add(s3);
-                            } 
-                            if(sLyr.size()<3) 
+                            }
+                            if(sLyr.size()<3)
                                 continue;
-                            if (this.fitRoad(sLyr, DcDetector)==true) { 
+                            if (this.fitRoad(sLyr, DcDetector)==true) {
                                 if(qf.chi2<150 && qf.chi2!=0 ) { // road is good --> pass w.out looking for missing segment
                                     sLyr.id=roadId;
                                     sLyr.a=qf.a;
                                     Roads.add(sLyr);
-                                    roadId++; 
+                                    roadId++;
                                 }
-                                
+
                             }
                         }
                     }
@@ -98,10 +101,10 @@ public class RoadFinder  {
         return Roads;
     }
 
-    public Segment findRoadMissingSegment(List<Segment> segList, DCGeant4Factory DcDetector, double[] a)  { 
-        
+    public Segment findRoadMissingSegment(List<Segment> segList, DCGeant4Factory DcDetector, double[] a)  {
+
         //his.fitRoad((ArrayList<Segment>) segList, DcDetector);
-     
+
         Segment pseudoSeg = null;
         if(segList.size()<3) { // make pseudo-segment for missing segment
             // find missing segment superlayer
@@ -128,10 +131,10 @@ public class RoadFinder  {
             for(int l = 0; l<6; l++) {
                 int layer = l+1;
                 double z = DcDetector.getWireMidpoint(segList.get(0).get_Sector() - 1, slyr-1,layer-1,0).z;
-                double trkX = a[0]*z*z+a[1]*z+a[2]; 
+                double trkX = a[0]*z*z+a[1]*z+a[2];
                 int calcWire = segTrj.getWireOnTrajectory(segList.get(0).get_Sector(), slyr, layer, trkX, DcDetector) ;
                 FittedHit pseudoHit = new FittedHit(segList.get(0).get_Sector(),slyr, layer, calcWire,
-                                0, -1); 
+                                0, -1);
                 //estimate the error on the hit as the cellSize/sqrt(12)
                 pseudoHit.calc_CellSize(DcDetector);
                 pseudoHit.set_DocaErr(pseudoHit.get_CellSize()/Math.sqrt(12.));
@@ -144,13 +147,13 @@ public class RoadFinder  {
             cf.Fit(fpseudoCluster, true);
 
             cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
-            pseudoSeg = new Segment(fpseudoCluster); 
-            pseudoSeg.set_fitPlane(DcDetector);	
+            pseudoSeg = new Segment(fpseudoCluster);
+            pseudoSeg.set_fitPlane(DcDetector);
         }
         return pseudoSeg;
     }
     /**
-     * 
+     *
      * @param pseudoSeg
      * @param segList
      * @param DcDetector
@@ -166,12 +169,12 @@ public class RoadFinder  {
             for(int l = 0; l<6; l++) {
             int layer = l+1;
             double z = DcDetector.getWireMidpoint(pseudoSeg.get_Sector()-1, pseudoSeg.get_Superlayer()-1,layer-1,0).z;
-            double trkX = qf.a[0]*z*z+qf.a[1]*z+qf.a[2]; 
+            double trkX = qf.a[0]*z*z+qf.a[1]*z+qf.a[2];
             double delta = (trkX-pseudoSeg.get(l).get_X())/pseudoSeg.get(l).get_CellSize()/FastMath.cos(Math.toRadians(6.)) ;
             int calcWire = segTrj.getWireOnTrajectory(pseudoSeg.get_Sector(), pseudoSeg.get_Superlayer(), layer, trkX, DcDetector);
 
             FittedHit pseudoHit = new FittedHit(segList.get(0).get_Sector(),pseudoSeg.get_Superlayer(), layer, calcWire,
-                            0, -1); 
+                            0, -1);
             pseudoHit.set_DocaErr(pseudoHit.get_CellSize()/Math.sqrt(12.)/FastMath.cos(Math.toRadians(6.)));
             pseudoHit.updateHitPosition(DcDetector);
             fpseudoCluster.add(pseudoHit);
@@ -182,14 +185,14 @@ public class RoadFinder  {
      cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
      Segment pseudoSeg1 = new Segment(fpseudoCluster);
 
-     pseudoSeg1.set_fitPlane(DcDetector);	
+     pseudoSeg1.set_fitPlane(DcDetector);
 
      return pseudoSeg1;
     }
 
     private boolean fitRoad(ArrayList<Segment> segList, DCGeant4Factory DcDetector) {
         qf.init();
-        int NbHits =0;		
+        int NbHits =0;
         if(segList.size()<2) {
             return false;
         }
@@ -201,14 +204,14 @@ public class RoadFinder  {
         double[] Z = new double[NbHits];
         double[] errX = new double[NbHits];
 
-        int hitno =0; 
+        int hitno =0;
         for(Segment s : segList) {
-            for(int j =0; j<s.size(); j++) { 
+            for(int j =0; j<s.size(); j++) {
                 X[hitno] = s.get(j).get_X();
                 //X[hitno] = GeometryLoader.dcDetector.getSector(0).getSuperlayer(s.get(j).get_Superlayer()-1).getLayer(s.get(j).get_Layer()-1).getComponent(s.get(j).get_Wire()-1).getMidpoint().x();
                 Z[hitno] = s.get(j).get_Z();
-                //errX[hitno] = s.get(j).get_DocaErr()/FastMath.cos(Math.toRadians(6.)); 
-                errX[hitno] = s.get(j).get_CellSize()/Math.sqrt(12.)/FastMath.cos(Math.toRadians(6.)); 
+                //errX[hitno] = s.get(j).get_DocaErr()/FastMath.cos(Math.toRadians(6.));
+                errX[hitno] = s.get(j).get_CellSize()/Math.sqrt(12.)/FastMath.cos(Math.toRadians(6.));
                 hitno++;
             }
         }
@@ -218,36 +221,36 @@ public class RoadFinder  {
         double WChi2 =0;
         for(Segment s : segList) {
             for(FittedHit h : s) {
-                double trkX = qf.a[0]*h.get_Z()*h.get_Z()+qf.a[1]*h.get_Z()+qf.a[2]; 
+                double trkX = qf.a[0]*h.get_Z()*h.get_Z()+qf.a[1]*h.get_Z()+qf.a[2];
                 int calcWire = segTrj.getWireOnTrajectory(h.get_Sector(), h.get_Superlayer(), h.get_Layer(), trkX, DcDetector) ;
                 WChi2+=(h.get_Wire()-calcWire)*(h.get_Wire()-calcWire);
-            } 
+            }
         }
         // pass if normalized chi2 is less than 1
         return WChi2/qf.NDF <= 1;
     }
 
     /**
-     * 
+     *
      * @param superlayer segment superlayer
      * @return the superlayer in a region in which there should be a match to make a cross; i.e. for a segmenet in superlayer 1 there should be a matched segment in superlayer 2
-     */    
+     */
     private int SuperlayerInWhichToSearchMatchingSeg(int superlayer) {
         if(superlayer%2==0) { //even layer
-            return superlayer-1; 
+            return superlayer-1;
         } else { //odd layer
-            return superlayer+1; 
+            return superlayer+1;
         }
     }
-    
+
     /**
-     * quadratic fitting class to handle trajectory approximation 
+     * quadratic fitting class to handle trajectory approximation
      */
     private class QuadraticFit {
         public double chi2;
         public double NDF;
         public double[] a;
-        
+
         public void init() {
             chi2 = 0;
             NDF = 0;
@@ -304,8 +307,8 @@ public class RoadFinder  {
                         //System.out.println(X.get(i, 0));
                 }
                 double _chi2 =0;
-                for (int i = 0; i<x.length; i++) {				
-                        double tiltSysXterm = ret[0]*x[i]*x[i]+ret[1]*x[i]+ret[2];	
+                for (int i = 0; i<x.length; i++) {
+                        double tiltSysXterm = ret[0]*x[i]*x[i]+ret[1]*x[i]+ret[2];
                         _chi2+=(tiltSysXterm-y[i])*(tiltSysXterm-y[i])/(err[i]*err[i]);
                 }
                 this.chi2 = _chi2;
@@ -315,5 +318,5 @@ public class RoadFinder  {
             a = ret;
         }
     }
-	
+
 }

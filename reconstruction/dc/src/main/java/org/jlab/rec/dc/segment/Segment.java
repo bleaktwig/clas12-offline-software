@@ -6,7 +6,10 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
-import org.jlab.clas.clas.math.FastMath;
+// NOTE: Uncomment
+// import org.jlab.clas.clas.math.FastMath;
+import org.apache.commons.math3.util.FastMath;
+
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
@@ -54,10 +57,10 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         this._Id = fCluster.get_Id();
         this.set_Status(Status());
     }
-    
+
     public int Status() {
-        int stat = 0;    
-        
+        int stat = 0;
+
         int L[] = new int[6];
         for(int l = 0; l<this.size(); l++) {
             L[this.get(l).get_Layer()-1]++;
@@ -68,7 +71,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         }
         return stat;
     }
-    
+
     /**
      *
      * @return the fitted cluster
@@ -154,7 +157,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     }
 
     /**
-     * 
+     *
      * @return sum of residuals for all hits in segment
      */
     public double get_ResiSum() {
@@ -162,7 +165,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     }
 
     /**
-     * 
+     *
      * @param _ResiSum sum of residuals for all hits in segment
      */
     public void set_ResiSum(double _ResiSum) {
@@ -170,7 +173,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     }
 
     /**
-     * 
+     *
      * @return sum of the corrected (T0-subtracted) times of all hits in segment
      */
     public double get_TimeSum() {
@@ -178,20 +181,20 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     }
 
     /**
-     * 
+     *
      * @param _TimeSum sum of the corrected (T0-subtracted) times of all hits in segment
      */
     public void set_TimeSum(double _TimeSum) {
         this._TimeSum = _TimeSum;
     }
-    
+
     /**
      *
      * @param otherseg matching cluster in other superlayer in a region
      * @return a region-segment proximity condition
      */
     public boolean isCloseTo(Segment otherseg) {
-        /// A region-segment contains two segments if they are in the same sector 
+        /// A region-segment contains two segments if they are in the same sector
         /// and region and satisfy the proximity condition: \n\n
         /// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
         /// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
@@ -201,14 +204,14 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         if (Math.abs(this.getAvgwire() - otherseg.getAvgwire()) < Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B) {
             value = true;
         }
-        
+
         return value;
     }
-    
+
     public boolean hasNoMatchingSegment(List<Segment> othersegs) {
         // if superlayer%2==0 (even) check superlayer%2==1 in the same region
         //
-        /// A region-segment contains two segments if they are in the same sector 
+        /// A region-segment contains two segments if they are in the same sector
         /// and region and satisfy the proximity condition: \n\n
         /// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
         /// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
@@ -220,14 +223,14 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
                 value = false; // found a matching segment
             }
         }
-        
+
         return value;
     }
 
     public boolean hasConsistentSlope(Segment otherseg) {
         boolean value = false;
 
-        if (this.get_fitPlane() != null && otherseg.get_fitPlane() != null) { 
+        if (this.get_fitPlane() != null && otherseg.get_fitPlane() != null) {
             if (Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal()))) - 12.) < Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 12 degrees with some tolerance
             {
                 value = true;
@@ -349,29 +352,29 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     }
 
     /**
-     * 
+     *
      * @return segment trajectory
      */
     public SegmentTrajectory get_Trajectory() {
         return _Trajectory;
     }
     /**
-     * 
+     *
      * @param _Trajectory segment trajectory
      */
     public void set_Trajectory(SegmentTrajectory _Trajectory) {
         this._Trajectory = _Trajectory;
     }
-    
+
     /**
-     * 
+     *
      * @return word describing segment status (not yet used)
      */
     public int get_Status() {
         return _Status;
     }
     /**
-     * 
+     *
      * @param _Status segment status word
      */
     public void set_Status(int _Status) {
