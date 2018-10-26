@@ -318,7 +318,7 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/signal_generation/doca_resolution"),
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"),
             Constants.getT0(), Constants.getT0Err(), dcDetector, tde);
-        hitRead.readTBHits(event, 
+        hitRead.readTBHits(event,
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/signal_generation/doca_resolution"),
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"), tde, Constants.getT0(), Constants.getT0Err());
         List<FittedHit> hits = new ArrayList<FittedHit>();

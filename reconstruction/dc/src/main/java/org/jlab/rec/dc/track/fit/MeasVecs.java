@@ -3,15 +3,20 @@ package org.jlab.rec.dc.track.fit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.track.Track;
 
+/**
+ *
+ * @author ziegler
+ */
 public class MeasVecs {
 
     public List<MeasVec> measurements = new ArrayList<MeasVec>();
+    public int ndf = 0;
 
-    public int ndf=0;
     /**
      * The state projector - it projects the state onto the measurement
      *
@@ -22,10 +27,11 @@ public class MeasVecs {
      */
     public double[] H(double y, int s, double w, double l) {
         double[] hMatrix = new double[2];
-        hMatrix[0] = 1;
-        hMatrix[1] = -Math.tan((Math.toRadians(s * 6.)));
+        hMatrix[0]  = 1;
+        hMatrix[1]  = -Math.tan((Math.toRadians(s * 6.)));
         // add geometric corrections
-        hMatrix[1]-= w*(4./l)*(1 - y/(l/2.));        
+        hMatrix[1] -= w * (4./l) * (1 - y/(l/2.));
+
         return hMatrix;
     }
 
@@ -39,17 +45,19 @@ public class MeasVecs {
      */
     public double h(double[] stateV, int s, double w, double l) {
 
-        double val = stateV[0] - Math.tan((Math.toRadians(s * 6.))) * stateV[1]; 
+        double val = stateV[0] - Math.tan((Math.toRadians(s * 6.))) * stateV[1];
         // add geometric corrections
-        val+= w*(1 - stateV[1]/(l/2.))*(1 - stateV[1]/(l/2.));       
+        val += w * (1 - stateV[1]/(l/2.)) * (1 - stateV[1]/(l/2.));
         return val;
     }
 
     public void setMeasVecs(Track trkcand, DCGeant4Factory DcDetector) {
-    	
-        List<HitOnTrack> hOTS = new ArrayList<HitOnTrack>(); // the list of hits on track		
+
+        // the list of hits on track
+        List<HitOnTrack> hOTS = new ArrayList<HitOnTrack>();
         FittedHit hitOnTrk;
-        // loops over the regions (1 to 3) and the superlayers in a region (1 to 2) and obtains the hits on track
+        // loops over the regions (1 to 3) and the superlayers in a region
+        //     (1 to 2) and obtains the hits on track
         for (int c = 0; c < 3; c++) {
             for (int s = 0; s < 2; s++) {
                 for (int h = 0; h < trkcand.get(c).get(s).size(); h++) {
@@ -57,21 +65,28 @@ public class MeasVecs {
                         continue;
                     }
                     trkcand.get(c).get(s).get(h).calc_CellSize(DcDetector);
-                    hitOnTrk = trkcand.get(c).get(s).get(h); 
+                    hitOnTrk  = trkcand.get(c).get(s).get(h);
                     int slayr = trkcand.get(c).get(s).get(h).get_Superlayer();
-                    
-                    double sl1 = trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitSlope();
-                    double it1 = trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitIntercept();
+
+                    double sl1 = trkcand.get(c)
+                                        .get(s)
+                                        .get_fittedCluster()
+                                        .get_clusterLineFitSlope();
+
+                    double it1 = trkcand.get(c)
+                                        .get(s)
+                                        .get_fittedCluster()
+                                        .get_clusterLineFitIntercept();
 
                     double Z = hitOnTrk.get_Z();
                     double X = sl1 * Z + it1;
 
                     //exclude hits that have poor segment
                     //if ((trkcand.get(c).get(s).get(h).get_X() - X) / (trkcand.get(c).get(s).get(h).get_CellSize() / FastMath.cos(Math.toRadians(6.))) > 1.5) {
-                    //if(Math.abs(trkcand.get(c).get(s).get(h).get_Residual())>1) {   
+                    //if(Math.abs(trkcand.get(c).get(s).get(h).get_Residual())>1) {
                     //    continue;
                     //}
-                    
+
                     HitOnTrack hot = new HitOnTrack(slayr, X, Z, trkcand.get(c).get(s).get(h).get_WireLength(), trkcand.get(c).get(s).get(h).get_WireMaxSag());
                     double err_sl1 = trkcand.get(c).get(s).get_fittedCluster().get_clusterLineFitSlopeErr();
 
@@ -82,23 +97,52 @@ public class MeasVecs {
                     hot._hitError = err_sl1 * err_sl1 * Z * Z + err_it1 * err_it1 + 2 * Z * err_cov1 + trkcand.get(c).get(s).get(h).get_DocaErr()*trkcand.get(c).get(s).get(h).get_DocaErr();
                     //if(trkcand.get(c).get(s).get(h).get_Time()/CCDBConstants.getTMAXSUPERLAYER()[trkcand.get(c).get(s).get(h).get_Sector()-1][trkcand.get(c).get(s).get(h).get_Superlayer()-1]<1.1)
                     //	hot._hitError = 100000; //exclude outoftimers from fit
-                    
+
                     if(Math.abs(trkcand.get(c).get(s).get(h).get_Residual())<1)
                         hOTS.add(hot);
 
+                    // auxiliary variable:
+                    double squaresAux = err_sl1 * err_sl1 * Z * Z + err_it1 * err_it1;
+
+                    hot._Unc = Math.sqrt(squaresAux);
+                    hot._hitError = squaresAux + 2 * Z * err_cov1 +
+                        trkcand.get(c).get(s).get(h).get_DocaErr() *
+                        trkcand.get(c).get(s).get(h).get_DocaErr();
+
+                    // if (trkcand.get(c).get(s).get(h).get_Time() /
+                    //     CCDBConstants.getTMAXSUPERLAYER()
+                    //         [trkcand.get(c).get(s).get(h).get_Sector()-1]
+                    //         [trkcand.get(c).get(s).get(h).get_Superlayer()-1]
+                    //      < 1.1) {
+                    // 	hot._hitError = 100000; //exclude outoftimers from fit
+                    // }
+
+                    if(Math.abs(trkcand.get(c).get(s).get(h).get_Residual()) < 1) {
+                        hOTS.add(hot);
+                    }
                 }
             }
         }
-        Collections.sort(hOTS); // sort the collection in order of increasing Z value (i.e. going downstream from the target)
-        ndf = hOTS.size()-5;
-        // identify double hits and take the average position		
-        for (int i = 0; i < hOTS.size(); i++) {
-            if (i > 0) {
-                if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z)<0.01) {
-                    hOTS.get(i - 1)._X = (hOTS.get(i - 1)._X / (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) + hOTS.get(i)._X / (hOTS.get(i)._Unc * hOTS.get(i)._Unc)) / (1. / (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) + 1. / (hOTS.get(i)._Unc * hOTS.get(i)._Unc));
-                    //hOTS.get(i-1)._hitError  = 1./Math.sqrt(1./(hOTS.get(i-1)._hitError*hOTS.get(i-1)._hitError) + 1./(hOTS.get(i)._hitError*hOTS.get(i)._hitError) );
-                    hOTS.remove(i);
-                }
+
+        // sort the collection in order of increasing Z value (i.e. going
+        //     downstream from the target)
+        Collections.sort(hOTS);
+        ndf = hOTS.size() - 5;
+
+        // identify double hits and take the average position
+        for (int i = 1; i < hOTS.size(); i++) {
+            if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z) < 0.01) {
+                hOTS.get(i - 1)._X =
+                    (hOTS.get(i - 1)._X /
+                     (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) +
+                     hOTS.get(i)._X / (hOTS.get(i)._Unc * hOTS.get(i)._Unc)) /
+                    (1. / (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) +
+                     1. / (hOTS.get(i)._Unc * hOTS.get(i)._Unc));
+
+                // hOTS.get(i-1)._hitError =
+                //     1./Math.sqrt(1./(hOTS.get(i-1)._hitError*hOTS.get(i-1)._hitError) +
+                //                  1./(hOTS.get(i)._hitError*hOTS.get(i)._hitError));
+                hOTS.remove(i);
             }
         }
 
@@ -118,52 +162,77 @@ public class MeasVecs {
         }
     }
 
-    void setMeasVecsFromHB(Track trk, DCGeant4Factory DcDetector) { 
-        List<HitOnTrack> hOTS = new ArrayList<HitOnTrack>(); // the list of hits on track		
+    void setMeasVecsFromHB(Track trk, DCGeant4Factory DcDetector) {
+
+        // the list of hits on track
+        List<HitOnTrack> hOTS = new ArrayList<HitOnTrack>();
         FittedHit hitOnTrk;
         for(int s = 0; s < trk.get_ListOfHBSegments().size(); s++) {
-            for(int h = 0; h < trk.get_ListOfHBSegments().get(s).size(); h++) { 
+            for(int h = 0; h < trk.get_ListOfHBSegments().get(s).size(); h++) {
                 trk.get_ListOfHBSegments().get(s).get(h).calc_CellSize(DcDetector);
-                hitOnTrk = trk.get_ListOfHBSegments().get(s).get(h); 
+                hitOnTrk = trk.get_ListOfHBSegments().get(s).get(h);
                 int slayr = trk.get_ListOfHBSegments().get(s).get(h).get_Superlayer();
 
-                double sl1 = trk.get_ListOfHBSegments().get(s).get_fittedCluster().get_clusterLineFitSlope();
-                double it1 = trk.get_ListOfHBSegments().get(s).get_fittedCluster().get_clusterLineFitIntercept();
+                double sl1 = trk.get_ListOfHBSegments()
+                                .get(s)
+                                .get_fittedCluster()
+                                .get_clusterLineFitSlope();
+
+                double it1 = trk.get_ListOfHBSegments()
+                                .get(s)
+                                .get_fittedCluster()
+                                .get_clusterLineFitIntercept();
 
                 double Z = hitOnTrk.get_Z();
                 double X = sl1 * Z + it1;
 
                 //exclude hits that have poor segment
                 //if ((trkcand.get(c).get(s).get(h).get_X() - X) / (trkcand.get(c).get(s).get(h).get_CellSize() / FastMath.cos(Math.toRadians(6.))) > 1.5) {
-                //if(Math.abs(trk.get_ListOfHBSegments().get(s).get(h).get_Residual())>1) {   
+                //if(Math.abs(trk.get_ListOfHBSegments().get(s).get(h).get_Residual())>1) {
                 //    continue;
                 //}
 
-                HitOnTrack hot = new HitOnTrack(slayr, X, Z, hitOnTrk.get_WireLength(), hitOnTrk.get_WireMaxSag());
-                double err_sl1 = trk.get_ListOfHBSegments().get(s).get_fittedCluster().get_clusterLineFitSlopeErr();
+                double err_it1 = trk.get_ListOfHBSegments()
+                                    .get(s)
+                                    .get_fittedCluster()
+                                    .get_clusterLineFitInterceptErr();
 
-                double err_it1 = trk.get_ListOfHBSegments().get(s).get_fittedCluster().get_clusterLineFitInterceptErr();
-                double err_cov1 = trk.get_ListOfHBSegments().get(s).get_fittedCluster().get_clusterLineFitSlIntCov();
+                double err_cov1 = trk.get_ListOfHBSegments()
+                                     .get(s)
+                                     .get_fittedCluster()
+                                     .get_clusterLineFitSlIntCov();
 
-                hot._Unc = Math.sqrt(err_sl1 * err_sl1 * Z * Z + err_it1 * err_it1);
-                hot._hitError = err_sl1 * err_sl1 * Z * Z + err_it1 * err_it1 + 2 * Z * err_cov1 + trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr()*trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
-                //hot._hitError = trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
+                // auxiliary variable:
+                double squaresAux = err_sl1 * err_sl1 * Z * Z + err_it1 * err_it1;
 
-                if(Math.abs(trk.get_ListOfHBSegments().get(s).get(h).get_Residual())<1) 
+                hot._Unc = Math.sqrt(squaresAux);
+                hot._hitError = squaresAux + 2 * Z * err_cov1 +
+                    trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr() *
+                    trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
+                // hot._hitError = trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
+
+                if(Math.abs(trk.get_ListOfHBSegments().get(s).get(h).get_Residual()) < 1) {
                     hOTS.add(hot);
-                
+                }
             }
         }
-        Collections.sort(hOTS); // sort the collection in order of increasing Z value (i.e. going downstream from the target)
-        ndf = hOTS.size()-5;
-        // identify double hits and take the average position		
-        for (int i = 0; i < hOTS.size(); i++) {
-            if (i > 0) {
-                if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z)<0.01) {
-                    hOTS.get(i - 1)._X = (hOTS.get(i - 1)._X / (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) + hOTS.get(i)._X / (hOTS.get(i)._Unc * hOTS.get(i)._Unc)) / (1. / (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) + 1. / (hOTS.get(i)._Unc * hOTS.get(i)._Unc));
-                    //hOTS.get(i-1)._hitError  = 1./Math.sqrt(1./(hOTS.get(i-1)._hitError*hOTS.get(i-1)._hitError) + 1./(hOTS.get(i)._hitError*hOTS.get(i)._hitError) );
-                    hOTS.remove(i);
-                }
+        // sort the collection in order of increasing Z value (i.e. going
+        //     downstream from the target)
+        Collections.sort(hOTS);
+        ndf = hOTS.size() - 5;
+        // identify double hits and take the average position
+        for (int i = 1; i < hOTS.size(); i++) {
+            if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z) < 0.01) {
+                hOTS.get(i - 1)._X =
+                    (hOTS.get(i - 1)._X /
+                     (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) +
+                     hOTS.get(i)._X / (hOTS.get(i)._Unc * hOTS.get(i)._Unc)) /
+                    (1. / (hOTS.get(i - 1)._Unc * hOTS.get(i - 1)._Unc) +
+                     1. / (hOTS.get(i)._Unc * hOTS.get(i)._Unc));
+                // hOTS.get(i-1)._hitError =
+                //     1./Math.sqrt(1./(hOTS.get(i-1)._hitError*hOTS.get(i-1)._hitError) +
+                //     1./(hOTS.get(i)._hitError*hOTS.get(i)._hitError));
+                hOTS.remove(i);
             }
         }
 
@@ -183,9 +252,9 @@ public class MeasVecs {
             //System.out.println(" measurement "+i+" = "+meas.x+" at "+meas.z);
         }
     }
-    
+
     public class MeasVec {
-        
+
         final int k;
         public double z;
         public double x;
@@ -194,47 +263,37 @@ public class MeasVecs {
         public double error;
         public double wireLen;
         public double wireMaxSag;
-        
+
         MeasVec(int k) {
             this.k = k;
         }
-        
     }
 
     private class HitOnTrack implements Comparable<HitOnTrack> {
 
-        public double _hitError;
+        public  double _hitError;
         private double _X;
         private double _Z;
         private double _Unc;
-        private int _tilt;
+        private int    _tilt;
         private double _wireLen;
         private double _wireMaxSag;
 
         HitOnTrack(int superlayer, double X, double Z, double wirelen, double wiremaxsag) {
-            _X = X;
-            _Z = Z;
-            _wireLen = wirelen;
+            _X          = X;
+            _Z          = Z;
+            _wireLen    = wirelen;
             _wireMaxSag = wiremaxsag;
-            
-            int s = (int) (superlayer) % 2;
-            int tilt = 1;
-            if (s == 0) {
-                tilt = -1;
-            }
-            _tilt = tilt;
+            _tilt = ((int) (superlayer) % 2 == 0) ? -1 : 1;
         }
 
         @Override
         public int compareTo(HitOnTrack o) {
-            if (this._Z == o._Z) {
-                return 0;
-            }
-            if (this._Z > o._Z) {
+            if (this._Z >= o._Z) {
+                if (this._Z == o._Z) return 0;
                 return 1;
-            } else {
-                return -1;
             }
+            return -1;
         }
     }
 }

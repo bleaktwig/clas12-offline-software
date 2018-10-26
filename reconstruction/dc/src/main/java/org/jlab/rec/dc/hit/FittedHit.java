@@ -168,6 +168,14 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      *
+     * @param lY explicit definition for lY.
+     */
+    public void set_lY(double _lY) {
+        this._lY = _lY;
+    }
+
+    /**
+     *
      * @return The approximate uncertainty on the hit position using the inverse
      * of the gemc smearing function
      */

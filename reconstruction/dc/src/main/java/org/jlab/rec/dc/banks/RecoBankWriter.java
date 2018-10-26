@@ -9,12 +9,17 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 
 import trackfitter.fitter.utilities.*;
+
+// TODO: The DCHB and DCTB bank filling methods should be merged with a boolean
+//       describing for what kind of tracking they're working since they're
+//       pretty much the same methods.
 
 /**
  * A class to fill the reconstructed DC banks.
@@ -214,7 +219,7 @@ public class RecoBankWriter {
 
                 // Math.sqrt(12.) = 3.4641016151377544
                 double residual = cluslist.get(i).get(j).get_ClusFitDoca() /
-                        (cluslist.get(i).get(j).get_CellSize() / 3.4641016151377544);
+                                  (cluslist.get(i).get(j).get_CellSize() / 3.4641016151377544);
                 chi2 += residual * residual;
             }
             bank.setFloat("fitChisqProb", i,
@@ -358,6 +363,7 @@ public class RecoBankWriter {
         return bank;
     }
 
+
     /**
      * Writes a list of tracks into the EvioEvent's bank.
      * @param event    the EvioEvent
@@ -406,6 +412,7 @@ public class RecoBankWriter {
                 bank.setFloat("t1_py", i, (float) candlist.get(i).get_Region1TrackP().y());
                 bank.setFloat("t1_pz", i, (float) candlist.get(i).get_Region1TrackP().z());
             }
+
             bank.setFloat("pathlength", i, (float) candlist.get(i).get_TotPathLen());
             bank.setFloat("Vtx0_x",     i, (float) candlist.get(i).get_Vtx0().x());
             bank.setFloat("Vtx0_y",     i, (float) candlist.get(i).get_Vtx0().y());
