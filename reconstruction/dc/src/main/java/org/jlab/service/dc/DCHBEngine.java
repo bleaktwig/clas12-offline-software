@@ -358,7 +358,7 @@ public class DCHBEngine extends DCEngine {
         return true;
     }
 
-    public static void main(String[] args) {
+    public static void main (String[] args) {
 
         String inputFile = "/Users/ziegler/Desktop/Work/validation/infiles/straight.hipo";
         MagFieldsEngine enf = new MagFieldsEngine();
@@ -401,6 +401,5 @@ public class DCHBEngine extends DCEngine {
             if(counter>40)
                 break;
         }
-        return true;
     }
 }

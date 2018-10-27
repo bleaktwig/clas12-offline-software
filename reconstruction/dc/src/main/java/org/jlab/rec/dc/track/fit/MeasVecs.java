@@ -192,6 +192,13 @@ public class MeasVecs {
                 //    continue;
                 //}
 
+                HitOnTrack hot = new HitOnTrack(slayr, X, Z, hitOnTrk.get_WireLength(),
+                                                hitOnTrk.get_WireMaxSag());
+                double err_sl1 = trk.get_ListOfHBSegments()
+                                    .get(s)
+                                    .get_fittedCluster()
+                                    .get_clusterLineFitSlopeErr();
+
                 double err_it1 = trk.get_ListOfHBSegments()
                                     .get(s)
                                     .get_fittedCluster()

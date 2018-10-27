@@ -61,7 +61,7 @@ public class StateVecs {
      */
     public void transport(int sector, int i, int f, StateVec iVec, CovMat iCovMat) {
 
-        if(iVec == null) return;
+        if (iVec == null) return;
         double stepSize = 1.0;
 
         // final state vector and covariance matrix creation and initialization
@@ -80,7 +80,7 @@ public class StateVecs {
 
         double s       = 0;
         double z       = Z[i];
-        // double BatMeas = iVec.B;
+        double BatMeas = iVec.B;
 
         // auxiliary variable
         double signumAux = Math.signum(Z[f] - Z[i]);
@@ -94,15 +94,15 @@ public class StateVecs {
             double ty     = fVec.ty;
             double Q      =  fVec.Q;
             double dPath  = fVec.deltaPath;
-            covMat.covMat = fCov.covMat;
+            iCovMat.covMat = fCovMat.covMat;
 
-            s= Math.signum(Z[f] - Z[i]) * stepSize;
+            s = Math.signum(Z[f] - Z[i]) * stepSize;
            // System.out.println(" from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
             if(Math.signum(Z[f] - Z[i]) *(z+s)>Math.signum(Z[f] - Z[i]) *Z[f])
                 s=Math.signum(Z[f] - Z[i]) *Math.abs(Z[f]-z);
 
             rk.RK4transport( sector, Q, x, y, z, tx, ty, s, dcSwim,
-                        covMat, fVec, fCov, mass, dPath);
+                        iCovMat, fVec, fCovMat, mass, dPath);
 
             if (Math.abs(fVec.B - BatMeas) < 0.0001)
                 stepSize *= 2;

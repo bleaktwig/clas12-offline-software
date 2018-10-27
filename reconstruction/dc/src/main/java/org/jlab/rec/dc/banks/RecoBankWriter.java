@@ -17,12 +17,9 @@ import org.jlab.rec.dc.track.Track;
 
 import trackfitter.fitter.utilities.*;
 
-// TODO: The DCHB and DCTB bank filling methods should be merged with a boolean
-//       describing for what kind of tracking they're working since they're
-//       pretty much the same methods.
-
 /**
  * A class to fill the reconstructed DC banks.
+ *
  * @author ziegler
  */
 public class RecoBankWriter {
@@ -566,9 +563,11 @@ public class RecoBankWriter {
         if (crosses != null)
             event.appendBanks(rbc.fillCrossesBank(event, crosses, TB));
         else return;
-        if (trkcands != null)
-            event.appendBanks(rbc.fillTracksBank(event, trkcands, TB),
-                              rbc.fillTrackCovMatBank(event, trkcands));
+        if (trkcands != null) {
+            event.appendBanks(rbc.fillTracksBank(event, trkcands, TB));
+            if (!TB) event.appendBanks(rbc.fillTrackCovMatBank(event, trkcands));
+            else     event.appendBanks(rbc.fillTrajectoryBank(event, trkcands));
+        }
         return;
     }
 }

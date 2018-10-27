@@ -301,7 +301,7 @@ public class DCTBEngine extends DCEngine {
 
                     for(FittedHit h1 : c.get_Segment1()) {
                         h1.set_AssociatedTBTrackID(trk.get_Id());
-
+                    }
                     for (FittedHit h1 : c.get_Segment1()) {
                         h1.set_AssociatedTBTrackID(trk.get_Id());
                     }
