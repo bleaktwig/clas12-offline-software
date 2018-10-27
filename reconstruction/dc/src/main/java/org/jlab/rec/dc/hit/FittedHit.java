@@ -123,7 +123,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * Calculates the center of the cell utilizing the layer and the wire in the local superlayer
-     *         coordinate system and sets it.
+     * coordinate system and sets it.
      * @param layer layer number from 1 to 6
      * @param wire  wire number from 1 to 112 sets the center of the cell as a function of wire
      *              number in the local superlayer coordinate system.
@@ -148,7 +148,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     public double get_TimeToDistance() {return _TimeToDistance;}
 
     /**
-     * Sets the calculated distance (in cm) from the time (in ns)
+     * Sets the calculated distance (in cm) from the time (in ns).
      * @param cosTrkAngle NOTE: Missing description
      * @param B           NOTE: Missing description
      * @param tab         NOTE: Missing description
@@ -333,7 +333,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * Calculates the approximate uncertainty on the hit's positions using the inverse of the gemc
-     *         smearing function.
+     * smearing function.
      * @param B          NOTE: Missing description
      * @param constants0 NOTE: Missing description
      * @param constants1 NOTE: Missing description
@@ -398,7 +398,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * A method to update the hit position information after the fit to the local coordinate
-     *     system's wire positions.
+     * system's wire positions.
      * @param DcDetector DC detector geometry
      */
     public void updateHitPosition(DCGeant4Factory DcDetector) {
@@ -414,7 +414,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * A method to update the hit position information after the fit to the wire positions employing
-     *         hit-based tracking algorithms has been performed.
+     * hit-based tracking algorithms has been performed.
      * @param cosTrkAngle NOTE: Missing description
      * @param B           NOTE: Missing description
      * @param tab         NOTE: Missing description
@@ -521,7 +521,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * Compares to hits based on basic descriptors, returning true if the hits are the same and
-     *         false otherwise.
+     * false otherwise.
      * @param otherHit the other hit
      * @return         a boolean describing the result of the comparison
      */

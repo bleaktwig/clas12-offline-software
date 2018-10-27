@@ -12,12 +12,12 @@ public class Hit implements Comparable<Hit> {
     // Class implements Comparable interface to allow for sorting a collection of hits by wire
     //     number values
 
+    private int _Id;
     private int _Sector;      //     sector [1, ..., 6]
     private int _Superlayer;  // superlayer [1, ..., 6]
     private int _Layer;    	  //     layer  [1, ..., 6]
     private int _Wire;    	  //     wire [1, ..., 112]
     private int _TDC;         // NOTE: What does TDC stand for?
-    private int _Id;
     private double _cellSize; // NOTE: What is this cell size?
     private double _DocaErr;  // Doca uncertainty, or error on the time in ns (4ns time window used
                               //     by default in reconstructing simulated data).
@@ -89,7 +89,7 @@ public class Hit implements Comparable<Hit> {
 
     /**
      * Returns an int to sort a collection of hits by wire number. Sorting by wire is used in
-     *         clustering.
+     * clustering.
      * @param arg0 hit to compare to
      * @return     the sorting int
      */
@@ -112,7 +112,7 @@ public class Hit implements Comparable<Hit> {
 
     /**
      * Calculates the center of the cell as a function of wire number in the local superlayer
-     *         coordinate system.
+     * coordinate system.
      * @param layer layer number from 1 to 6
      * @param wire wire number from 1 to 112
      */

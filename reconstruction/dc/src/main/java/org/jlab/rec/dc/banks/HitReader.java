@@ -60,7 +60,6 @@ public class HitReader {
      * Reads the hits using clas-io methods to get the EvioBank for the DC and
      * fill the values to instantiate the DChit and MChit classes. This methods
      * fills the DChit list of hits.
-     *
      * @param event         Data event
      * @param noiseAnalysis NOTE: Missing description
      * @param parameters    NOTE: Missing description
@@ -224,7 +223,6 @@ public class HitReader {
 
     /**
      * Reads HB DC hits written to the DC bank
-     *
      * @param event      Data event
      * @param constants0 NOTE: Missing description
      * @param constants1 NOTE: Missing description
@@ -348,7 +346,6 @@ public class HitReader {
 
     /**
      * Reads TB DC hits written to the DC bank
-     *
      * @param event      Data event
      * @param constants0 NOTE: Missing description
      * @param constants1 NOTE: Missing description
@@ -457,7 +454,6 @@ public class HitReader {
 
     /**
      * NOTE: Missing description
-     *
      * @param event Data event
      * @param tkrId NOTE: Missing description
      * @return      NOTE: Missing description
@@ -486,7 +482,6 @@ public class HitReader {
 
     /**
      * NOTE: Missing description
-     *
      * @param sector     NOTE: Missing description
      * @param superlayer NOTE: Missing description
      * @param layer      NOTE: Missing description
