@@ -4,7 +4,7 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 /**
  * A DC hit characterized by superlayer, layer, sector, wire number, and time. The TDC to time
- *         conversion has been done.
+ * conversion has been done.
  *
  * @author ziegler
  */
@@ -165,11 +165,12 @@ public class Hit implements Comparable<Hit> {
      * @return hit's information encoded in a string
      */
     public String printInfo() {
-        return "DC Hit: ID "  + this.get_Id() +
-               " Sector "     + this.get_Sector() +
-               " Superlayer " + this.get_Superlayer() +
-               " Layer "      + this.get_Layer() +
-               " Wire "       + this.get_Wire() +
-               " TDC "        + this.get_TDC();
+        return "DC Hit:" +
+               "\nID         : " + this.get_Id() +
+               "\nSector     : " + this.get_Sector() +
+               "\nSuperlayer : " + this.get_Superlayer() +
+               "\nLayer      : " + this.get_Layer() +
+               "\nWire       : " + this.get_Wire() +
+               "\nTDC        : " + this.get_TDC();
     }
 }
