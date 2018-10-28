@@ -3,10 +3,6 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-// TODO: Uncomment
-// import org.jlab.clas.clas.math.FastMath;
-import org.apache.commons.math3.util.FastMath;
-
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.geom.prim.Line3D;

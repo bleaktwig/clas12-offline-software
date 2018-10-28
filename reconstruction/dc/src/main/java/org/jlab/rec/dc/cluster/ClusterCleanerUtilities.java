@@ -11,6 +11,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
 
+// NOTE: Maybe changing the Math methods here to FastMath would be practical?
 // NOTE: Lacks JavaDoc description
 public class ClusterCleanerUtilities {
 

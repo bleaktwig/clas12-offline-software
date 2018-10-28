@@ -18,10 +18,9 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
- * A class to fill in lists of hits corresponding to DC reconstructed hits
- * characterized by the wire, its location in the detector (superlayer, layer,
- * sector), its reconstructed time. The class also returns a MC hit, which has
- * truth-information (i.e. Left-Right ambiguity).
+ * A class to fill in lists of hits corresponding to DC reconstructed hits characterized by the
+ * wire, its location in the detector (superlayer, layer, sector), its reconstructed time. The class
+ * also returns a MC hit, which has truth-information (i.e. Left-Right ambiguity).
  *
  * @author ziegler
  */
@@ -57,9 +56,8 @@ public class HitReader {
     }
 
     /**
-     * Reads the hits using clas-io methods to get the EvioBank for the DC and
-     * fill the values to instantiate the DChit and MChit classes. This methods
-     * fills the DChit list of hits.
+     * Reads the hits using clas-io methods to get the EvioBank for the DC and fill the values to
+     * instantiate the DChit and MChit classes. This methods fills the DChit list of hits.
      * @param event         Data event
      * @param noiseAnalysis NOTE: Missing description
      * @param parameters    NOTE: Missing description
@@ -223,7 +221,7 @@ public class HitReader {
 
     /**
      * Reads HB DC hits written to the DC bank
-     * @param event      Data event
+     * @param event      data event
      * @param constants0 NOTE: Missing description
      * @param constants1 NOTE: Missing description
      * @param T0         NOTE: Missing description
@@ -516,15 +514,14 @@ public class HitReader {
         return ((wire1to112 - 1) / 16) + 1;
     }
 
-    // 96 channels are grouped into 6 groups of 16 channels and each group joins
-    //     with a connector & a corresponding cable (with IDs 1, 2, 3, 4 & 6).
+    // 96 channels are grouped into 6 groups of 16 channels and each group joins with a connector
+    //     and a corresponding cable (with IDs 1, 2, 3, 4 & 6).
     private int getCableID1to6(int layer1to6, int wire1to112) {
         int wire1to16 = ((wire1to112 - 1) % 16 + 1);
         return this.CableID[layer1to6 - 1][wire1to16 - 1];
     }
 
-    // Map of Cable ID (1, ..., 6) in terms of Layer number (1, ..., 6) and
-    //     localWire #(1, ..., 16).
+    // Map of Cable ID (1, ..., 6) in terms of Layer number (1, ..., 6) and localWire #(1, ..., 16).
     private final int[][] CableID = {
             // [nLayer][nLocWire] => nLocWire=16, 7 groups of 16 wires in each layer
             {1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6}, // Layer 1
