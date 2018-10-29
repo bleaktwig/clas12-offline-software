@@ -2,12 +2,13 @@ package org.jlab.rec.dc.hit;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 
+import org.jlab.geom.prim.Point3D;
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.trajectory.StateVec;
-import org.jlab.utils.groups.IndexedTable;
 
 /**
  * A hit that was used in a fitted cluster. It extends the Hit class and contains local and sector

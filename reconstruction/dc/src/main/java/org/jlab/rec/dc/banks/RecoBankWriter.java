@@ -2,17 +2,18 @@ package org.jlab.rec.dc.banks;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.jnp.hipo.data.HipoEvent;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.jnp.hipo.data.HipoEvent;
+
+import org.jlab.rec.dc.hit.Hit;
+import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
+import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
-import org.jlab.rec.dc.hit.FittedHit;
-import org.jlab.rec.dc.hit.Hit;
-import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 
 import trackfitter.fitter.utilities.*;

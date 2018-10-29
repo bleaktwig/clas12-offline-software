@@ -5,17 +5,17 @@ import java.util.List;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.dc.hit.FittedHit;
-import org.jlab.rec.dc.hit.Hit;
-import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
 import cnuphys.snr.clas12.Clas12NoiseResult;
 import org.jlab.clas.swimtools.Swimmer;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
-import org.jlab.rec.dc.Constants;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
+import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.hit.Hit;
+import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 
 /**
  * A class to fill in lists of hits corresponding to DC reconstructed hits characterized by the

@@ -4,8 +4,6 @@
  * bank.
  * The FittedHit class extends the hit class and has fields representing the results of fits to the
  * clusters including the hits.
- */
-/**
  *
  * @author ziegler
  */

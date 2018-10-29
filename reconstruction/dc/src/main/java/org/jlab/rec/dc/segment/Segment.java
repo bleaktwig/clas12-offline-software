@@ -2,14 +2,15 @@ package org.jlab.rec.dc.segment;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.trajectory.SegmentTrajectory;
 
 /**

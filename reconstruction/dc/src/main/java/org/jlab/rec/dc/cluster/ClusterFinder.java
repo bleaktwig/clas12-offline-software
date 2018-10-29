@@ -3,15 +3,16 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
-import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.hit.Hit;
-import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
+import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
+import org.jlab.rec.dc.hit.Hit;
+import org.jlab.rec.dc.hit.FittedHit;
 
 /**
  * A hit pruning algorithm to reject noise that gives a pattern of hits that are continguous in the

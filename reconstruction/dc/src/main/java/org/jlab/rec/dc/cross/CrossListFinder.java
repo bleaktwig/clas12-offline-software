@@ -1,43 +1,46 @@
 package org.jlab.rec.dc.cross;
 
-import Jama.Matrix;
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
+import Jama.Matrix;
+
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
+import org.jlab.clas.swimtools.Swim;
+import trackfitter.fitter.LineFitter;
+import org.jlab.utils.groups.IndexedTable;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-import org.jlab.utils.groups.IndexedTable;
-import trackfitter.fitter.LineFitter;
 
 /**
+ * A class with methods used to find lists of crosses. This is the Pattern Recognition step used in
+ * track seeding, to find the points that are consistent with belonging to the same track. This step
+ * precedes the initial estimates of the track parameters.
  *
- * A class with methods used to find lists of crosses. This is the Pattern
- * Recognition step used in track seeding, to find the points that are
- * consistent with belonging to the same track. This step precedes the initial
- * estimates of the track parameters.
  * @author ziegler
  */
-
-
 public class CrossListFinder  {
 
-    /**
-     *
-     * @param dccrosslist the list of crosses in the event
-     * @return the list of crosses determined to be consistent with belonging to
-     *         a track in the DC
-     */
     private final List<BaseCand> trkCnds = new ArrayList<BaseCand>();
     ClusterFitter cf = new ClusterFitter();
     SegmentFinder segFinder = new SegmentFinder();
 
+    /**
+     * Determines which crosses from a list are consistent with belonging to a track in the DC.
+     * @param dccrosslist the list of crosses in the event
+     * @param TimeBased   flag telling if the detection is hit-based or time-based
+     * @param tab         NOTE: Lacks description
+     * @param DcDetector  DC detector utility
+     * @param tde         NOTE: Lacks description
+     * @param swimmer     NOTE: Lacks description
+     * @return the list of crosses determined to be consistent with belonging to a track in the DC
+     */
     public CrossList candCrossLists(List<Cross> dccrosslist,
                                     boolean TimeBased,
                                     IndexedTable tab,
@@ -57,15 +60,15 @@ public class CrossListFinder  {
             if (dc.get_Region() == 3) dccrosslistRg3.add(dc);
         }
 
-        // need 3 crosses
-        if (!dccrosslistRg1.isEmpty() &&
-            !dccrosslistRg2.isEmpty() &&
-            !dccrosslistRg3.isEmpty()) {
+        // Need 3 crosses
+        if (!dccrosslistRg1.isEmpty()
+                && !dccrosslistRg2.isEmpty()
+                && !dccrosslistRg3.isEmpty()) {
             for (Cross c1 : dccrosslistRg1) {
                 for (Cross c2 : dccrosslistRg2) {
                     for (Cross c3 : dccrosslistRg3) {
-                        if (c1.get_Sector() != c2.get_Sector() ||
-                            c1.get_Sector() != c3.get_Sector()) {
+                        if (c1.get_Sector() != c2.get_Sector()
+                                || c1.get_Sector() != c3.get_Sector()) {
                             continue;
                         }
 
@@ -91,8 +94,7 @@ public class CrossListFinder  {
                         errX[2] = c3.get_PointErr().x();
                         errY[2] = c3.get_PointErr().y();
 
-                        // ignore point errors and assume the track vertex is
-                        //     close to the origin
+                        // Ignore point errors and assume the track vertex is close to the origin
                         TrajectoryParametriz qf1 = new TrajectoryParametriz();
                         qf1.evaluate(Z, X, errX, Y, errY);
 
@@ -110,11 +112,11 @@ public class CrossListFinder  {
                         double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
                         double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
 
-                        // require that the cross direction estimate be in the
-                        //     direction of the trajectory
-                        if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE ||
-                            cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE ||
-                            cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                        // Require that the cross direction estimate be in the  direction of the
+                        //     trajectory
+                        if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE
+                                || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE
+                                || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
                             continue;
                         }
 
@@ -139,13 +141,11 @@ public class CrossListFinder  {
                                         c3.get_PointErr().y());
                         }
 
-                        // fit the  projection with a line
-                        // the track is ~ constant in phi
+                        // Fit the  projection with a line
+                        // The track is ~ constant in phi
                         LineFitter linefit = new LineFitter();
-                        if (!linefit.fitStatus(X, Y, errX, errY, Z.length)) {
-                            // fit failed
-                            continue;
-                        }
+                        if (!linefit.fitStatus(X, Y, errX, errY, Z.length)) continue;
+
                         this.updateBFittedHits(c1, tab, DcDetector, tde, swimmer);
                         this.updateBFittedHits(c2, tab, DcDetector, tde, swimmer);
                         this.updateBFittedHits(c3, tab, DcDetector, tde, swimmer);
@@ -157,8 +157,7 @@ public class CrossListFinder  {
                         bCand.CrossesOnTrack.add(c3);
                         bCand.Chisq = fitchsq;
 
-                        if (bCand.Chisq < Constants.CROSSLISTSELECTQFMINCHSQ)
-                            trkCnds.add(bCand);
+                        if (bCand.Chisq < Constants.CROSSLISTSELECTQFMINCHSQ) trkCnds.add(bCand);
                     }
                 }
             }
@@ -168,27 +167,28 @@ public class CrossListFinder  {
         for (int i = 0; i < trkCnds.size(); i++) {
             crossList.add(i,trkCnds.get(i).CrossesOnTrack);
         }
+
         return crossList;
     }
 
-
-
-
+    /**
+     * Recalculates the direction of a cross
+     * @param c1    the cross
+     * @param slope NOTE: Lacks description
+     */
     @SuppressWarnings("unused")
     private void RecalculateCrossDir(Cross c1, double slope) {
-        double val_sl2 = c1.get_Segment2()
-                           .get_fittedCluster()
-                           .get_clusterLineFitSlope();
+        double val_sl2 = c1.get_Segment2().get_fittedCluster().get_clusterLineFitSlope();
         double tanThX = val_sl2;
         double tanThY = slope;
-        double uz = 1. / Math.sqrt( 1 + tanThX*tanThX + tanThY*tanThY);
+        double uz = 1. / Math.sqrt(1 + tanThX*tanThX + tanThY*tanThY);
         double ux = uz*tanThX;
         double uy = uz*tanThY;
-        // set the dir
+
         c1.set_Dir(new Point3D(ux, uy, uz));
     }
 
-
+    // NOTE: Lacks JavaDoc Description
     @SuppressWarnings("unused")
     private void RecalculateCrossDirErr(Cross c1,
                                         double slope,
@@ -218,45 +218,35 @@ public class CrossListFinder  {
         c1.set_DirErr(estimDirErr);
     }
 
+    // NOTE: Lacks JavaDoc Description
     private void recalcParsSegment(Segment _Segment,
                                    IndexedTable tab,
                                    DCGeant4Factory DcDetector,
                                    TimeToDistanceEstimator tde) {
-        // refit
+        // Refit
         double cosTrkAngle = 1. / Math.sqrt(1. +
                 _Segment.get_fittedCluster().get_clusterLineFitSlope() *
                 _Segment.get_fittedCluster().get_clusterLineFitSlope());
 
-        // update the hits
+        // Update the hits
         for (FittedHit fhit : _Segment.get_fittedCluster()) {
-            fhit.updateHitPositionWithTime(cosTrkAngle,
-                                           fhit.getB(),
-                                           tab,
-                                           DcDetector,
-                                           tde);
+            fhit.updateHitPositionWithTime(cosTrkAngle, fhit.getB(), tab, DcDetector, tde);
         }
 
         cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
         cf.Fit(_Segment.get_fittedCluster(), true);
-        cosTrkAngle = 1. / Math.sqrt(1. +
-                _Segment.get_fittedCluster().get_clusterLineFitSlope() *
-                _Segment.get_fittedCluster().get_clusterLineFitSlope());
+        cosTrkAngle = 1. / Math.sqrt(1. + _Segment.get_fittedCluster().get_clusterLineFitSlope() *
+                                          _Segment.get_fittedCluster().get_clusterLineFitSlope());
 
         for (FittedHit fhit : _Segment.get_fittedCluster()) {
-            fhit.updateHitPositionWithTime(cosTrkAngle,
-                                           fhit.getB(),
-                                           tab,
-                                           DcDetector,
-                                           tde);
+            fhit.updateHitPositionWithTime(cosTrkAngle, fhit.getB(), tab, DcDetector, tde);
         }
 
         cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
         cf.Fit(_Segment.get_fittedCluster(), true);
-        // calcTimeResidual = false, resetLRAmbig = false
-        cf.SetResidualDerivedParams(_Segment.get_fittedCluster(),
-                                    true,
-                                    false,
-                                    DcDetector);
+
+        // calcTimeResidual = false, resetLRAmbig = false // NOTE: Is this comment correct?
+        cf.SetResidualDerivedParams(_Segment.get_fittedCluster(), true, false, DcDetector);
 
         cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
         cf.Fit(_Segment.get_fittedCluster(), false);
@@ -265,25 +255,23 @@ public class CrossListFinder  {
                                     _Segment.get_fittedCluster());
     }
 
+    // NOTE: Lacks JavaDoc Description
     public List<List<Cross>> get_CrossesInSectors(List<Cross> crosses) {
-        List<List<Cross>> CrossesBySectors = new ArrayList<List<Cross>>();
 
-        for (int s =0; s<6; s++) {
-            CrossesBySectors.add(s, new ArrayList<Cross>());
-        }
-        for(Cross cross : crosses) {
-            //if(cross.isPseudoCross==false)
-            CrossesBySectors.get(cross.get_Sector()-1).add(cross);
-        }
+        List<List<Cross>> CrossesBySectors = new ArrayList<List<Cross>>();
+        for (int s = 0; s < 6; s++) CrossesBySectors.add(s, new ArrayList<Cross>());
+        for (Cross cross : crosses) CrossesBySectors.get(cross.get_Sector()-1).add(cross);
+
         return CrossesBySectors;
     }
 
     /**
-     *
-     * @param c cross
-     * @param tab table of constants
+     * Updates B for the fitted hits in a cross.
+     * @param c          cross
+     * @param tab        table of constants
      * @param DcDetector detector geometry
-     * @param tde  time-to-distance utility
+     * @param tde        time-to-distance utility
+     * @param swimmer    NOTE: Lacks description
      * Updates the B-field information of the hits in the cross segments.
      */
     private void updateBFittedHits(Cross c,
@@ -315,14 +303,17 @@ public class CrossListFinder  {
             this.recalcParsSegment(c.get_Segment2(), tab, DcDetector, tde);
         }
 
-        // remake cross
+        // Remake cross
         c.set_CrossParams(DcDetector);
     }
+
+    // NOTE: Lacks JavaDoc description
     private class BaseCand {
         public double Chisq;
         public List<Cross> CrossesOnTrack = new ArrayList<Cross>();
     }
 
+    // NOTE: Lacks JavaDoc description
     private class TrajectoryParametriz {
         private double[][] fitResult = {{0.,0.,0.},
                                         {0.,0.,0.},
@@ -331,8 +322,8 @@ public class CrossListFinder  {
                                         {0.,0.,0.},
                                         {0.,0.,0.}};
 
-        public double[] evaluate(double[] x, double[] y, double[] err,
-                                 double[] y2, double[] err2) {
+        // NOTE: Lacks JavaDoc description
+        public double[] evaluate(double[] x, double[] y, double[] err, double[] y2, double[] err2) {
 
             LineFitter linefit = new LineFitter();
             linefit.fitStatus(x, y2, err, err, x.length);

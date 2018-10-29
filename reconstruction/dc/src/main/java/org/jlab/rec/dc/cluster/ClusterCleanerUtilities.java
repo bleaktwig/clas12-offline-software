@@ -3,13 +3,14 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.hit.FittedHit;
-import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-import org.jlab.utils.groups.IndexedTable;
+import org.jlab.rec.dc.hit.Hit;
+import org.jlab.rec.dc.hit.FittedHit;
 
 // NOTE: Maybe changing the Math methods here to FastMath would be practical?
 // NOTE: Lacks JavaDoc description

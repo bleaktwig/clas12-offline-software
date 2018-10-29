@@ -3,16 +3,13 @@ package org.jlab.rec.dc.segment;
 import java.util.ArrayList;
 import java.util.List;
 
-// NOTE: Uncomment
-// import org.jlab.clas.clas.math.FastMath;
-import org.apache.commons.math3.util.FastMath;
-
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.trajectory.SegmentTrajectory;
 
 /**
