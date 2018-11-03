@@ -11,9 +11,7 @@ import java.util.List;
  */
 public class TrackListFinder {
 
-    public TrackListFinder() {
-        // TODO Auto-generated constructor stub
-    }
+    public TrackListFinder() {}
 
     public List<Track> getTracks(List<Track> cands) {
         List<Track> tracks = new ArrayList<Track>();

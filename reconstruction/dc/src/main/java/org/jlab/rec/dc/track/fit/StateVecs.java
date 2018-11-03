@@ -3,9 +3,6 @@ package org.jlab.rec.dc.track.fit;
 import Jama.Matrix;
 import java.util.HashMap;
 import java.util.Map;
-// NOTE: Uncomment
-// import org.jlab.clas.clas.math.FastMath;
-import org.apache.commons.math3.util.FastMath;
 
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Point3D;

@@ -737,7 +737,7 @@ public class ClusterCleanerUtilities {
 
         hits.clear();
         for(int l = 0; l < 6; l++) {
-            if(sortedHits.get(l).size()>0) hits.addAll(sortedHits.get(l));
+            if (sortedHits.get(l).size() > 0) hits.addAll(sortedHits.get(l));
         }
         return hits;
     }

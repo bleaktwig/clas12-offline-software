@@ -279,7 +279,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     public double calc_SignalPropagAlongWire(double X, double Y, DCGeant4Factory DcDetector) {
 
         Vector3d WireEnd;
-        if(Constants.STBLOC[this.get_Sector()-1][this.get_Superlayer()-1] > 0) {
+        if (Constants.STBLOC[this.get_Sector()-1][this.get_Superlayer()-1] > 0) {
             WireEnd = DcDetector.getWireRightend(this.get_Sector() - 1, this.get_Superlayer() - 1,
                                                  this.get_Layer() - 1,  this.get_Wire() - 1);
         } else {

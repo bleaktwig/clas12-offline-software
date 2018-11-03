@@ -1,7 +1,7 @@
 package org.jlab.rec.dc.cross;
 
 import java.util.ArrayList;
-// NOTE: Uncomment
+// TODO: Uncomment
 // import org.jlab.clas.clas.math.FastMath;
 import org.apache.commons.math3.util.FastMath;
 

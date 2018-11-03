@@ -3,7 +3,7 @@ package org.jlab.rec.dc.track;
 import java.util.ArrayList;
 import java.util.List;
 
-// NOTE: Uncomment
+// TODO: Uncomment
 // import org.jlab.clas.clas.math.FastMath;
 import org.apache.commons.math3.util.FastMath;
 
@@ -231,13 +231,11 @@ public class TrackCandListFinder {
                                      cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
                                      cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                     cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
-                    /* NOTE: /!\ KFitter INITIALIZATION */
                     // initialize the fitter with the candidate track
                     KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
                     kFit.totNumIter = 1;
 
                     if (debug) startTime = System.currentTimeMillis();
-                    /* NOTE: /!\ KFitter RUNNING */
                     kFit.runFitter(cand.get(0).get_Sector());
                     if (debug) System.out.println("Kalman fitter = " +
                                                   (System.currentTimeMillis() - startTime));
@@ -462,7 +460,6 @@ public class TrackCandListFinder {
                                             cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                             cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
                             // initialize the fitter with the candidate track
-                            /* NOTE: /!\ KFitter INITIALIZATION */
                             KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
                             // if (this.trking.equalsIgnoreCase("TimeBased"))
                             //     kFit.totNumIter=30;
@@ -471,7 +468,6 @@ public class TrackCandListFinder {
                             StateVec fn = new StateVec();
 
                             if (debug) startTime = System.currentTimeMillis();
-                            /* NOTE: /!\ KFitter RUNNING */
                             kFit.runFitter(cand.get(0).get_Sector());
                             if (debug)
                                 System.out.println("Kalman fitter - 2 = " +
@@ -665,7 +661,8 @@ public class TrackCandListFinder {
         double pz = cand.get_P() / Math.sqrt(stateVec.tanThetaX() * stateVec.tanThetaX() +
                     stateVec.tanThetaY() * stateVec.tanThetaY() + 1);
 
-        // System.out.println("Setting track params for ");stateVec.printInfo();
+        // System.out.println("Setting track params for ");
+        // System.out.println(stateVec.printInfo());
         dcSwim.SetSwimParameters(stateVec.x(), stateVec.y(), z,
                 pz * stateVec.tanThetaX(), pz * stateVec.tanThetaY(), pz,
                 cand.get_Q());

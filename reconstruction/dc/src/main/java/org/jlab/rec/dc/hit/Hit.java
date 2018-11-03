@@ -13,10 +13,10 @@ public class Hit implements Comparable<Hit> {
     //     number values
 
     private int _Id;
-    private int _Sector;      //     sector [1, ..., 6]
-    private int _Superlayer;  // superlayer [1, ..., 6]
-    private int _Layer;    	  //     layer  [1, ..., 6]
-    private int _Wire;    	  //     wire [1, ..., 112]
+    private int _Sector;      // sector     [1...6]
+    private int _Superlayer;  // superlayer [1...6]
+    private int _Layer;    	  // layer      [1...6]
+    private int _Wire;    	  // wire     [1...112]
     private int _TDC;         // NOTE: What does TDC stand for?
     private double _cellSize; // NOTE: What is this cell size?
     private double _DocaErr;  // Doca uncertainty, or error on the time in ns (4ns time window used
@@ -31,61 +31,42 @@ public class Hit implements Comparable<Hit> {
         this._Id = Id;
     }
 
-    public int get_Sector() {
-        return _Sector;
+    public int get_Sector() {return _Sector;}
+    public void set_Sector(int _Sector) {this._Sector = _Sector;}
+
+    public int get_Superlayer() {return _Superlayer;}
+    public void set_Superlayer(int _Superlayer) {this._Superlayer = _Superlayer;}
+
+    public int get_Layer() {return _Layer;}
+    public void set_Layer(int _Layer) {this._Layer = _Layer;}
+
+    public int get_Wire() {return _Wire;}
+    public void set_Wire(int _Wire) {this._Wire = _Wire;}
+
+    public int get_TDC() {return _TDC;}
+    public void set_TDC(int TDC) {this._TDC = TDC;}
+
+    public int get_Id() {return _Id;}
+    public void set_Id(int _Id) {this._Id = _Id;}
+
+    public int get_Region() {return (this._Superlayer + 1) / 2;}
+    public int get_RegionSlayer() {return (this._Superlayer + 1) % 2 + 1;}
+
+    public double get_CellSize() {return _cellSize;}
+    public void set_CellSize(double cellSize) {_cellSize = cellSize;}
+
+    // NOTE: Lacks JavaDoc comment
+    public void calc_CellSize(DCGeant4Factory DcDetector) {
+        double layerDiffAtMPln = DcDetector.getWireMidpoint(this.get_Sector() - 1,
+                                                            this.get_Superlayer() - 1, 0, 0).x -
+                                 DcDetector.getWireMidpoint(this.get_Sector() - 1,
+                                                            this.get_Superlayer() - 1, 0, 1).x;
+
+        _cellSize = 0.5 * Math.abs(layerDiffAtMPln);
     }
 
-    public void set_Sector(int _Sector) {
-        this._Sector = _Sector;
-    }
-
-    public int get_Superlayer() {
-        return _Superlayer;
-    }
-
-    public void set_Superlayer(int _Superlayer) {
-        this._Superlayer = _Superlayer;
-    }
-
-    public int get_Layer() {
-        return _Layer;
-    }
-
-    public void set_Layer(int _Layer) {
-        this._Layer = _Layer;
-    }
-
-    public int get_Wire() {
-        return _Wire;
-    }
-
-    public void set_Wire(int _Wire) {
-        this._Wire = _Wire;
-    }
-
-    public int get_TDC() {
-        return _TDC;
-    }
-
-    public void set_TDC(int TDC) {
-        this._TDC = TDC;
-    }
-
-    public int get_Id() {
-        return _Id;
-    }
-
-    public void set_Id(int _Id) {
-        this._Id = _Id;
-    }
-
-    public int get_Region() {
-        return (this._Superlayer + 1) / 2;
-    }
-
-    public int get_RegionSlayer() {
-        return (this._Superlayer + 1) % 2 + 1;
-    }
+    public double get_DocaErr() {return _DocaErr;}
+    public void set_DocaErr(double _docaErr) {this._DocaErr = _docaErr;}
 
     /**
      * Returns an int to sort a collection of hits by wire number. Sorting by wire is used in
@@ -132,32 +113,6 @@ public class Hit implements Comparable<Hit> {
             y -= brickwallSign * 0.5773502691896257;
         }
         return y;
-    }
-
-    public double get_CellSize() {
-        return _cellSize;
-    }
-
-    public void set_CellSize(double cellSize) {
-        _cellSize = cellSize;
-    }
-
-    // TODO: Lacks JavaDoc comment
-    public void calc_CellSize(DCGeant4Factory DcDetector) {
-        double layerDiffAtMPln = DcDetector.getWireMidpoint(this.get_Sector() - 1,
-                                                            this.get_Superlayer() - 1, 0, 0).x -
-                                 DcDetector.getWireMidpoint(this.get_Sector() - 1,
-                                                            this.get_Superlayer() - 1, 0, 1).x;
-
-        _cellSize = 0.5 * Math.abs(layerDiffAtMPln);
-    }
-
-    public double get_DocaErr() {
-        return _DocaErr;
-    }
-
-    public void set_DocaErr(double _docaErr) {
-        this._DocaErr = _docaErr;
     }
 
     /**
