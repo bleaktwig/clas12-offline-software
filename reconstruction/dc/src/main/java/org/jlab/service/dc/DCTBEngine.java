@@ -10,6 +10,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
@@ -30,13 +31,11 @@ import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
 import org.jlab.rec.dc.trajectory.TrajectoryFinder;
 
+/**
+ * The DC Time-based engine.
+ * @author ziegler
+ */
 public class DCTBEngine extends DCEngine {
-
-    // DCGeant4Factory dcDetector;
-    // FTOFGeant4Factory ftofDetector;
-    // ECGeant4Factory ecDetector;
-    // PCALGeant4Factory pcalDetector;
-    // TrajectorySurfaces tSurf;
 
     private TimeToDistanceEstimator tde;
     private double tarCent = -1.942;
@@ -51,6 +50,8 @@ public class DCTBEngine extends DCEngine {
         return true;
     }
 
+    // NOTE: A detailed javadoc description of the engine itself would be useful for newcomers to
+    //       the code.
     @Override
     public boolean processDataEvent(DataEvent event) {
         if (event.hasBank("RUN::config") == false) {
@@ -58,8 +59,8 @@ public class DCTBEngine extends DCEngine {
             return true;
         }
         if (event.hasBank("MC::Event") == true) tarCent = 0;
-        // if(event.getBank("RECHB::Event").getFloat("STTime", 0) < 0)
-        //     return true; // require the start time to reconstruct the tracks in the event
+        // if (event.getBank("RECHB::Event").getFloat("STTime", 0) < 0)
+        //     return true; // Require the start time to reconstruct the tracks in the event
 
         DataBank bank = event.getBank("RUN::config");
 
@@ -68,14 +69,13 @@ public class DCTBEngine extends DCEngine {
         if (newRun == 0) return true;
 
         double T_Start = 0;
-        if (Constants.isUSETSTART() == true) {
-            if (event.hasBank("RECHB::Event") == true) {
+        if (Constants.isUSETSTART()) {
+            if (event.hasBank("RECHB::Event")) {
                 T_Start = event.getBank("RECHB::Event").getFloat("STTime", 0);
                 // Quit if start time not found in data
                 if (T_Start < 0) return true;
-            } else {
-                return true; // No REC HB bank
             }
+            else return true; // No REC HB bank
         }
 
         // Get field
@@ -93,51 +93,44 @@ public class DCTBEngine extends DCEngine {
         RecoBankWriter rbc = new RecoBankWriter();
 
         HitReader hitRead  = new HitReader();
-        hitRead.readHBHits(event,
-            super.getConstantsManager()
-                 .getConstants(newRun,
-                               "/calibration/dc/signal_generation/doca_resolution"),
-            super.getConstantsManager()
-                 .getConstants(newRun,
-                               "/calibration/dc/time_to_distance/time2dist"),
-            Constants.getT0(), Constants.getT0Err(), dcDetector, tde
-        );
+        hitRead.readHBHits(
+                event,
+                super.getConstantsManager().getConstants(newRun,
+                                                "/calibration/dc/signal_generation/doca_resolution"),
+                super.getConstantsManager().getConstants(newRun,
+                                                "/calibration/dc/time_to_distance/time2dist"),
+                Constants.getT0(), Constants.getT0Err(), dcDetector, tde);
 
-        hitRead.readTBHits(event,
-            super.getConstantsManager()
-                 .getConstants(newRun,
-                               "/calibration/dc/signal_generation/doca_resolution"),
-            super.getConstantsManager()
-                 .getConstants(newRun,
-                               "/calibration/dc/time_to_distance/time2dist"),
-                               tde, Constants.getT0(), Constants.getT0Err()
+        hitRead.readTBHits(
+                event,
+                super.getConstantsManager().getConstants(newRun,
+                                                "/calibration/dc/signal_generation/doca_resolution"),
+                super.getConstantsManager().getConstants(newRun,
+                                                "/calibration/dc/time_to_distance/time2dist"),
+                tde, Constants.getT0(), Constants.getT0Err()
         );
 
         List<FittedHit> hits = new ArrayList<FittedHit>();
-// I) Get the hits =============================================================
+        // I) Get the hits =============================================================
         hits = hitRead.get_HBHits();
 
-// II) Process the hits ========================================================
-// 1)  Exit if hit list is empty -----------------------------------------------
-        if(hits.isEmpty() ) {
-                return true;
-        }
+        // II) Process the hits ========================================================
+        // 1)  Exit if hit list is empty -----------------------------------------------
+        if(hits.isEmpty()) return true;
 
-// 2)  Find the clusters from these hits ---------------------------------------
+        // 2)  Find the clusters from these hits ---------------------------------------
         ClusterFinder clusFinder = new ClusterFinder();
 
         clusters = clusFinder.FindTimeBasedClusters(hits, cf, ct,
             super.getConstantsManager()
-                 .getConstants(newRun,
-                               "/calibration/dc/time_to_distance/time2dist"),
-                               dcDetector, tde);
+                 .getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"), dcDetector, tde);
 
         if (clusters.isEmpty()) {
             rbc.fillAllBanks(event, rbc, hits, null, null, null, null, true);
             return true;
         }
 
-// 3)  Find the segments from the fitted clusters ------------------------------
+        // 3)  Find the segments from the fitted clusters ------------------------------
         SegmentFinder segFinder = new SegmentFinder();
 
         List<FittedCluster> pclusters = segFinder.selectTimeBasedSegments(clusters);
@@ -164,10 +157,8 @@ public class DCTBEngine extends DCEngine {
 
         CrossMaker crossMake = new CrossMaker();
 
-        // Also need Track bank
-        if (event.hasBank("HitBasedTrkg::HBTracks") == false) {
-            return true;
-        }
+        // The track bank is also needed
+        if (event.hasBank("HitBasedTrkg::HBTracks") == false) return true;
 
         DataBank trkbank    = event.getBank("HitBasedTrkg::HBTracks");
         DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
@@ -220,13 +211,13 @@ public class DCTBEngine extends DCEngine {
                 TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
         }
 
-// 4)  Find the list of track candidates ---------------------------------------
+        // 4)  Find the list of track candidates ---------------------------------------
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
         TrajectoryFinder trjFind = new TrajectoryFinder();
         for (int i = 0; i < TrackArray.length; i++) {
-            if (TrackArray[i] == null ||
-                TrackArray[i].get_ListOfHBSegments() == null ||
-                TrackArray[i].get_ListOfHBSegments().size() < 4) {
+            if (TrackArray[i] == null
+                    || TrackArray[i].get_ListOfHBSegments() == null
+                    || TrackArray[i].get_ListOfHBSegments().size() < 4) {
                 continue;
             }
 
@@ -236,14 +227,10 @@ public class DCTBEngine extends DCEngine {
             if (TrackArray[i].size() < 1) continue;
             crosses.addAll(TrackArray[i]);
 
-            // NOTE: DCTB1Engine ends
-            // NOTE: DCKFEngine starts
             KFitter kFit = new KFitter(TrackArray[i], dcDetector, true, dcSwim);
 
             StateVec fn = new StateVec();
             kFit.runFitter(TrackArray[i].get(0).get_Sector());
-            // NOTE: DCKFEngine ends
-            // NOTE: DCTB2Engine starts
 
             if (kFit.setFitFailed == false && kFit.finalStateVec != null) {
                 // Set the state vector at the last measurement site
@@ -278,8 +265,6 @@ public class DCTBEngine extends DCEngine {
         int trkId = 1;
 
         if (trkcands.size() > 0) {
-            // trkcandFinder.removeOverlappingTracks(trkcands); // remove overlaps
-
             for (Track trk : trkcands) {
                 // Reset the id
                 trk.set_Id(trkId);
@@ -314,8 +299,8 @@ public class DCTBEngine extends DCEngine {
         }
 
         if (trkcands.isEmpty()) {
-            // No candidates found, stop here and save the hits, the clusters, the
-            //     segments and the crosses.
+            // No candidates found, stop here and save the hits, the clusters, the segments and the
+            //     crosses.
             rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, null, true);
         }
         else {
