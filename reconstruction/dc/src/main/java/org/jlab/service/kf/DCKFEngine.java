@@ -16,8 +16,8 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.banks.RecoBankReader;
+import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
@@ -130,40 +130,8 @@ public class DCKFEngine extends ReconstructionEngine {
         for (int c = 0; c < nCrosses; c++) {
             crosses.add(rbr.getCross(crossesBank, segmentsBank,
                                      clustersBank, hitsBank, c));
-
-            if (eventCounter == 1 && debug >= 2) {
-                /**************************************************************/
-                System.out.println(
-                    "      Cross " + crosses.get(c).get_Id() + " retrieved. Data:\n" +
-                    "        " + crosses.get(c).printInfo() + "\n\n" +
-                    /**********************************************************/
-                    "      Segments " + crosses.get(c).get_Segment1().get_Id() +
-                    " and "           + crosses.get(c).get_Segment2().get_Id() + " retrieved. Data:\n" +
-                    "         " + crosses.get(c).get_Segment1().printInfo() + "\n" +
-                    "         " + crosses.get(c).get_Segment2().printInfo() + "\n\n" +
-                    /**********************************************************/
-                    "      Clusters " + crosses.get(c).get_Segment1().get_fittedCluster().get_Id() +
-                    " and "           + crosses.get(c).get_Segment2().get_fittedCluster().get_Id() +
-                    " retrieved. Data:\n" +
-                    "         " + crosses.get(c).get_Segment1().get_fittedCluster().printInfo() + "\n" +
-                    "         " + crosses.get(c).get_Segment2().get_fittedCluster().printInfo() + "\n"
-                );
-                /**************************************************************/
-                FittedCluster cluster1 = crosses.get(c).get_Segment1().get_fittedCluster();
-                FittedCluster cluster2 = crosses.get(c).get_Segment2().get_fittedCluster();
-                System.out.println("       Hits in Cluster " + cluster1.get_Id() + ":");
-                for (int i = 0; i < cluster1.size(); i++) {
-                    System.out.println("         " + cluster1.get(i).printInfo());
-                }
-                System.out.println("");
-                System.out.println("       Hits in Cluster " + cluster2.get_Id() + ":");
-                for (int i = 0; i < cluster2.size(); i++) {
-                    System.out.println("         " + cluster2.get(i).printInfo());
-                }
-                System.out.println("");
-                /**************************************************************/
-            }
         }
+        if (eventCounter == 1 && debug >= 2) RecoBankReader.printCrossesInfo(crosses);
         if (debug >= 1) {
             System.out.println("[DCKF] " + eventCounter + ".3: crosses loaded.");
         }

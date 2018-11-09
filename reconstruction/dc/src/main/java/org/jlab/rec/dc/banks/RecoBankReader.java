@@ -12,14 +12,31 @@ import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.track.Track;
 
+/**
+ * A class to retrieve the data from the reconstructed DC banks.
+ * @author benkel
+ */
 public class RecoBankReader {
 
     // TODO: Write a manager method to avoid creating multiple copies of
     //       referenced objects.
     // TODO: Write variation methods to be called by the DCKF engine that only
     //       return the required data to run the CrossListFinder and the
-    //       TrackCandListFinder methods to avoid getting more data than what's
+    //       TrackCandListFinder methods to avoid pulling more data than what's
     //       explicitly required.
+
+    /**
+     * Gets one cross from a crosses databank given by an index along with its
+     *         two referenced segments.
+     * @param crBank bank containing the crosses
+     * @param sBank  bank containing the segments, referenced by the crosses
+     * @param clBank bank containing the fitted clusters, referenced by the
+     *               segments
+     * @param hBank  bank containing the fitted hits, referenced by the fitted
+     *               clusters
+     * @param idx    index of the cross to be retrieved
+     * @return       the retrieved cross
+     */
     public Cross getCross(DataBank crBank, DataBank sBank,
                           DataBank clBank, DataBank hBank,
                           int idx) {
@@ -87,6 +104,17 @@ public class RecoBankReader {
         return cross;
     }
 
+    /**
+     * Gets one segment from a segments databank given by an index along with
+     *         its referenced fitted cluster.
+     * @param sBank  bank containing the segments
+     * @param clBank bank containing the fitted clusters, referenced by the
+     *               segments
+     * @param hBank  bank containing the fitted hits, referenced by the fitted
+     *               clusters
+     * @param sAddr  address of the segment to be retrieved
+     * @return       the segment retrieved from the bank
+     */
     public Segment getSegment(DataBank sBank, DataBank clBank,
                               DataBank hBank, int sAddr) {
         if (sBank.rows() == 0) {
@@ -138,6 +166,7 @@ public class RecoBankReader {
                .set_clusterLineFitInterceptErr((double) sBank.getFloat("fitInterc", sAddr));
         segment.get_fittedCluster()
                .set_clusterLineFitInterceptErr((double) sBank.getFloat("fitIntercErr", sAddr));
+        segment.get_fittedCluster().set_fitProb((double) sBank.getFloat("fitChisqProb", sAddr));
 
         /* WARNING:
         SEGMENT DATA IN BANK CURRENTLY UNUSED:
@@ -148,6 +177,15 @@ public class RecoBankReader {
         return segment;
     }
 
+    /**
+     * Gets one fitted cluster from a clusters databank given by an index along
+     *         with its referenced list of hits.
+     * @param clBank bank containing the fitted clusters
+     * @param hBank  bank containing the fitted hits, referenced by the fitted
+     *               clusters
+     * @param clAddr address of the cluster to be retrieved
+     * @return       the cluster retrieved from the bank
+     */
     public FittedCluster getCluster(DataBank clBank, DataBank hBank, int clAddr) {
         if (clBank.rows() == 0) {
             System.out.println("[DCKF] ERROR: clusters bank is empty.");
@@ -195,7 +233,7 @@ public class RecoBankReader {
         cluster.set_clusterLineFitSlopeErr    ((double) clBank.getFloat("fitSlopeErr",  clAddr));
         cluster.set_clusterLineFitIntercept   ((double) clBank.getFloat("fitInterc",    clAddr));
         cluster.set_clusterLineFitInterceptErr((double) clBank.getFloat("fitIntercErr", clAddr));
-
+        cluster.set_fitProb                   ((double) clBank.getFloat("fitChisqProb", clAddr));
         /* WARNING:
         CLUSTER DATA IN BANK CURRENTLY UNUSED:
         bank.setShort("status", i, (short) status);
@@ -206,6 +244,12 @@ public class RecoBankReader {
         return cluster;
     }
 
+    /**
+     * Gets one fitted hit from a hits databank given by an index.
+     * @param hBank  bank containing the fitted hits
+     * @param addr   address of the hit to be retrieved
+     * @return       the hit retrieved from the bank
+     */
     public FittedHit getHit(DataBank bank, int addr) {
         if (bank.rows() == 0) {
             System.out.println("[DCKF] ERROR: hits bank is empty.");
@@ -224,6 +268,7 @@ public class RecoBankReader {
                                             bank.getInt  ("TDC",        addr),
                                       (int) bank.getShort("id",         addr));
 
+        hit.set_Id                 ((int)    bank.getShort("id",        addr));
         hit.set_TrkgStatus         ((int)    bank.getShort("status",    addr));
         hit.set_DocaErr            ((double) bank.getFloat("docaError", addr));
         hit.set_ClusFitDoca        ((double) bank.getFloat("trkDoca",   addr));
@@ -239,5 +284,44 @@ public class RecoBankReader {
         hit.setTFlight             ((double) bank.getFloat("TFlight",   addr));
 
         return hit;
+    }
+
+    /**
+     * Prints the data contained in a list of crosses along with all the
+     *         referenced objects.
+     * @param cList the list of crosses to be printed
+     */
+    public static void printCrossesInfo(List<Cross> cList) {
+        for (int c = 0; c < cList.size(); c++) {
+            System.out.println(
+                "      Cross " + cList.get(c).get_Id() + " retrieved. Data:\n" +
+                "        " + cList.get(c).printInfo() + "\n\n");
+            System.out.println(
+                "      Segments " + cList.get(c).get_Segment1().get_Id() +
+                " and "           + cList.get(c).get_Segment2().get_Id() + " retrieved. Data:\n" +
+                "         " + cList.get(c).get_Segment1().printInfo() + "\n" +
+                "         " + cList.get(c).get_Segment2().printInfo() + "\n\n");
+            System.out.println(
+                "      Clusters " + cList.get(c).get_Segment1().get_fittedCluster().get_Id() +
+                " and "           + cList.get(c).get_Segment2().get_fittedCluster().get_Id() +
+                " retrieved. Data:\n" +
+                "         " + cList.get(c).get_Segment1().get_fittedCluster().printInfo() + "\n" +
+                "         " + cList.get(c).get_Segment2().get_fittedCluster().printInfo() + "\n"
+            );
+            /**************************************************************/
+            FittedCluster cluster1 = cList.get(c).get_Segment1().get_fittedCluster();
+            FittedCluster cluster2 = cList.get(c).get_Segment2().get_fittedCluster();
+            System.out.println("       Hits in Cluster " + cluster1.get_Id() + ":");
+            for (int i = 0; i < cluster1.size(); i++) {
+                System.out.println("         " + cluster1.get(i).printInfo());
+            }
+            System.out.println("");
+            System.out.println("       Hits in Cluster " + cluster2.get_Id() + ":");
+            for (int i = 0; i < cluster2.size(); i++) {
+                System.out.println("         " + cluster2.get(i).printInfo());
+            }
+            System.out.println("");
+        }
+        return;
     }
 }

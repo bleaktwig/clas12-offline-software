@@ -61,6 +61,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
      * identifying outoftimehits;
      */
     private boolean _OutOfTimeFlag;
+    // NOTE: Shouldn't this constructor also set the id?
     /**
      *
      * @param sector (1...6)

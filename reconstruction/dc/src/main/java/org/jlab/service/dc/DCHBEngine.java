@@ -40,7 +40,6 @@ import org.jlab.utils.groups.IndexedTable;
  * @since 08.09.2018 updated by gurjyan
  */
 public class DCHBEngine extends DCEngine {
-
     private AtomicInteger Run = new AtomicInteger(0);
     private double triggerPhase;
     private int newRun = 0;
@@ -204,6 +203,7 @@ public class DCHBEngine extends DCEngine {
         if (crosses.isEmpty()) {
             rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, null, null);
             return true;
+            // TODO: Somehow signal that the KF engine should not run.
         }
         else {
             rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null);
@@ -211,8 +211,6 @@ public class DCHBEngine extends DCEngine {
         }
 
         // /* 17 */
-        // NOTE: DCHB1 ends
-        // NOTE: DCKF  starts
         // CrossListFinder crossLister = new CrossListFinder();
         //
         // CrossList crosslist = crossLister.candCrossLists(crosses,
@@ -228,8 +226,6 @@ public class DCHBEngine extends DCEngine {
         //                 dcDetector,
         //                 Swimmer.getTorScale(),
         //                 dcSwim);
-        // // NOTE: DCKF  ends
-        // // NOTE: DCHB2 starts
         // /* 19 */
         //
         // // track found
@@ -309,14 +305,10 @@ public class DCHBEngine extends DCEngine {
         //         dcDetector,
         //         null,
         //         dcSwim);
-        // // NOTE: DCHB2 ends
-        // // NOTE: DCKF  starts
         // List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
         //         dcDetector,
         //         Swimmer.getTorScale(),
         //         dcSwim);
-        // // NOTE: DCKF  ends
-        // // NOTE: DCHB3 starts
         //
         // // remove overlaps
         // if (mistrkcands.size() > 0) {
