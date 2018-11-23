@@ -124,10 +124,6 @@ public class DCKFEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (debug >= 1) {
-            System.out.println("[DCKF] Summary for DataEvent number " + currentEvent + ":");
-        }
-
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
@@ -139,13 +135,8 @@ public class DCKFEngine extends ReconstructionEngine {
         RecoBankWriter rbw = new RecoBankWriter();
         RecoBankReader rbr = new RecoBankReader();
 
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + currentEvent + ".1: initialization done.");
-        }
-
         // === GET CROSSES =============================================================
         if (!event.hasBank("HitBasedTrkg::HBCrosses")) {
-            System.out.println("[DCKF] ERROR: Banks not written correctly in the DCHB engine.");
             return true;
         }
 
@@ -154,37 +145,17 @@ public class DCKFEngine extends ReconstructionEngine {
         DataBank clustersBank = event.getBank("HitBasedTrkg::HBClusters");
         DataBank hitsBank     = event.getBank("HitBasedTrkg::HBHits");
 
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + currentEvent + ".2: banks loaded.");
-        }
-
         // Pull the crosses from the bank.
-        if (crossesBank.rows() == 0) {
-            System.out.println("[DCKF] ERROR: No crosses found in HitBasedTrkg::HBCrosses bank.");
-            return true;
-        }
+        if (crossesBank.rows() == 0) return true;
         List<Cross> crosses = new ArrayList();
 
         for (int c = 0; c < crossesBank.rows(); c++) {
             crosses.add(rbr.getCross(crossesBank, segmentsBank, clustersBank, hitsBank, c));
-            // TODO: after all is up and running I should check what data from the
-            //       crosses/segments/clusters/hits I can ignore so that I minimize
-            //       what RecoBankReader has to read and accelerate the whole ordeal
         }
 
-        // // TODO: Solve the chi2 inconsistency
-        // if (currentEvent >= 3 && currentEvent <= 6) {
-        //     System.out.println("[DCKF." + currentEvent + "] - 3 - cluster "
-        //                     + crosses.get(0).get_Segment1().get_fittedCluster().get_Id()
-        //                     + "'s fit chi2: "
-        //                     + crosses.get(0).get_Segment1().get_fittedCluster().get_fitProb()
-        //                     + "\n\n");
-        // }
-
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + currentEvent + ".3: crosses loaded.");
-        }
-
+        // TODO: after all is up and running I should check what data from the
+        //       crosses/segments/clusters/hits I can ignore so that I minimize
+        //       what RecoBankReader has to read and accelerate the whole ordeal
         // if (currentEvent == 0) {
         //     System.out.println("\n\n\n\nDCKF DATA\n");
         //     RecoBankReader.printSample(crosses.get(0));
@@ -199,39 +170,18 @@ public class DCKFEngine extends ReconstructionEngine {
                 dcDetector,
                 null,
                 dcSwim);
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + currentEvent + ".4: cross lists found.");
-        }
 
         // === INSTANCE AND RUN TrackCandListFinder ====================================
-        if (currentEvent == 1) {
-            TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
-            List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
-                                                               dcDetector,
-                                                               Swimmer.getTorScale(),
-                                                               dcSwim);
-            if (debug >= 1) {
-                System.out.println("[DCKF] " + currentEvent + ".5: tracks found.");
-            }
+        TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
+        List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
+                                                           dcDetector,
+                                                           Swimmer.getTorScale(),
+                                                           dcSwim);
 
-            if (trkcands.size() > 0) {
-                trkCandFinder.removeOverlappingTracks(trkcands);
-                rbw.fillTracksBank(event, trkcands, false);
-                rbw.fillTrackCovMatBank(event, trkcands);
-                if (debug >= 1) {
-                    System.out.println("[DCKF] " + currentEvent + ".6: tracks written on bank.");
-                }
-            }
-            else if (debug >= 1) {
-                System.out.println("[DCKF] " + currentEvent + ".6: no tracks found.");
-            }
-
-            if (debug >= 1) {
-                System.out.println("[DCKF].7 processed evio event " + currentEvent
-                                 + " successfully!\n");
-            }
-
-            // TODO: remove crosses, segments, clusters and hits from banks.
+        if (trkcands.size() > 0) {
+            trkCandFinder.removeOverlappingTracks(trkcands);
+            rbw.fillTracksBank(event, trkcands, false);
+            rbw.fillTrackCovMatBank(event, trkcands);
         }
 
         return true;
