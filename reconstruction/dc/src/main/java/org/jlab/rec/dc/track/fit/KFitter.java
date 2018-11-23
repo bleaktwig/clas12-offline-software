@@ -2,11 +2,11 @@ package org.jlab.rec.dc.track.fit;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import Jama.Matrix;
 
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.fit.StateVecs.CovMat;
 import org.jlab.rec.dc.track.fit.StateVecs.StateVec;
@@ -66,6 +66,7 @@ public class KFitter {
         for (int i = 0; i < mSize; i++) {
             sv.Z[i] = mv.measurements.get(i).z;
         }
+
         sv.init(trk, sv.Z[0], this);
     }
 
@@ -79,7 +80,7 @@ public class KFitter {
             this.chi2kf = 0;
             if (i > 1) {
                 // get new state vec at 1st measurement after propagating back
-                //     from the last filtered state.
+                //     from the last filtered state
                 sv.transport(sector,
                              svzLength - 1,
                              0,

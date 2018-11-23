@@ -15,6 +15,7 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.clas.reco.ReconstructionEngine;
+
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
@@ -27,6 +28,55 @@ import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 
+/*
+    Data in Hit:
+    * _Sector                    * _Superlayer                * _Layer
+    * _Wire                      * _TDC                       * _Id
+    * _CellSize                  * _DocaErr
+
+    Data in Fitted Hit:
+    * B                          * _Id                        * _Doca
+    * _lX                        * _lY                        * _TimeResidual
+    * _Residual                  * _QualityFac                * _TrkgStatus
+    * _TimeToDistance            * AssociatedStateVec         * _ClusFitDoca
+    * _TrkFitDoca                * _X                         * _XMP
+    * _Z                         * _WireLength                * _WireMaxSag
+    * _TrkResid
+    * _AssociatedClusterID       * _AssociatedHBTrackID       * _AssociatedTBTrackID
+    * CrossDirIntersWire         * _Beta                      * _SignalPropagAlongWire
+    * SignalPropagTimeAlongWire  * SignalTimeOfFlight         * TStart
+    * T0                         * TFlight                    * TProp
+    * _Time                      * _OutOfTimeFlag             * _DeltaTimeBeta
+    * _PosErr
+
+    Data in Cluster:
+    * _Id                        * _Status
+    * _fitProb                   * _Chisq
+    * _clusLine                  * _clusLineErr
+    ! _clusterLineFitSlope       * _clusterLineFitSlopeErr
+    * _clusterLineFitIntercept   * _clusterLineFitInterceptErr
+    * _clusterLineFitSlopeMP     * _clusterLineFitSlopeErrMP
+    * _clusterLineFItInterceptMP * _clusterLineFitInterceptErrMP
+    * _clusterLineFitSlIntCov
+    * _TrkgStatus
+    * List<fittedHit>
+
+    Data in Segment:
+    ! _Id                        * _Sector                    * _Superlayer
+    * _Region                    * _ResiSum                   * _TimeSum
+    * _fitPlane                  * _Trajectory                * _SegmentEndPoints
+    * Status()
+    ! _fittedCluster
+
+    Data in Cross:
+    * _Id                        ! _Sector                    ! _Region
+    ! _Point                     ! _PointErr
+    ! _Dir                       ! _DirErr
+    ! _Segment1                  ! _Segment2
+
+    Data in Track: (TODO)
+*/
+
 /**
  * An engine to run the Kalman filtering process for the DC software.
  * @author benkel
@@ -34,8 +84,8 @@ import org.jlab.rec.dc.track.TrackCandListFinder;
 public class DCKFEngine extends ReconstructionEngine {
 
     DCGeant4Factory dcDetector;
-    private int eventCounter;
-    private int debug = 2;
+    private int eventCounter = 0;
+    private int debug = 1;
 
     public DCKFEngine() {
         super("DCKF", "benkel", "0.11");
@@ -55,6 +105,7 @@ public class DCKFEngine extends ReconstructionEngine {
             // "/calibration/dc/time_jitter",
             // "/calibration/dc/tracking/wire_status",
         };
+
         // Load constants
         requireConstants(Arrays.asList(dcTables));
 
@@ -66,19 +117,18 @@ public class DCKFEngine extends ReconstructionEngine {
                                              Optional.ofNullable(geomDBVar).orElse("default"));
         dcDetector = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON);
 
-        eventCounter = -1;
         return true;
     }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
+        int currentEvent = eventCounter;
         eventCounter++;
         if (debug >= 1) {
-            System.out.println("[DCKF] Summary for DataEvent number " +
-                               eventCounter + ":");
+            System.out.println("[DCKF] Summary for DataEvent number " + currentEvent + ":");
         }
 
-// === INITIAL CHECKUP =========================================================
+        // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
 
@@ -88,56 +138,59 @@ public class DCKFEngine extends ReconstructionEngine {
         Swim dcSwim = new Swim();
         RecoBankWriter rbw = new RecoBankWriter();
         RecoBankReader rbr = new RecoBankReader();
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + eventCounter + ".1: initialization done.");
-        }
-// === GET CROSSES =============================================================
-        if (!event.hasBank("HitBasedTrkg::HBCrosses")  ||
-            !event.hasBank("HitBasedTrkg::HBSegments") ||
-            !event.hasBank("HitBasedTrkg::HBClusters") ||
-            !event.hasBank("HitBasedTrkg::HBHits")) {
 
-            System.out.println("[DCKF] ERROR: The banks were not written " +
-                               "correctly in the DCHB1 engine.");
+        if (debug >= 1) {
+            System.out.println("[DCKF] " + currentEvent + ".1: initialization done.");
+        }
+
+        // === GET CROSSES =============================================================
+        if (!event.hasBank("HitBasedTrkg::HBCrosses")) {
+            System.out.println("[DCKF] ERROR: Banks not written correctly in the DCHB engine.");
             return true;
         }
+
         DataBank crossesBank  = event.getBank("HitBasedTrkg::HBCrosses");
         DataBank segmentsBank = event.getBank("HitBasedTrkg::HBSegments");
         DataBank clustersBank = event.getBank("HitBasedTrkg::HBClusters");
         DataBank hitsBank     = event.getBank("HitBasedTrkg::HBHits");
-        if (eventCounter == 1 && debug >= 2) {
-            crossesBank.show();
-            segmentsBank.show();
-            clustersBank.show();
-            hitsBank.show();
-        }
 
         if (debug >= 1) {
-            System.out.println("[DCKF] " + eventCounter + ".2: banks loaded.");
+            System.out.println("[DCKF] " + currentEvent + ".2: banks loaded.");
         }
+
         // Pull the crosses from the bank.
-        int nCrosses = crossesBank.rows();
-        if (nCrosses == 0) {
-            System.out.println("[DCKF] ERROR: No crosses found in " +
-                               "HitBasedTrkg::HBCrosses bank.");
+        if (crossesBank.rows() == 0) {
+            System.out.println("[DCKF] ERROR: No crosses found in HitBasedTrkg::HBCrosses bank.");
             return true;
         }
         List<Cross> crosses = new ArrayList();
 
-        // TODO: after all is up and running I should check what data from the
-        //       crosses/segments/clusters/hits I can ignore so that I minimize
-        //       what RecoBankReader has to read and accelerate the whole ordeal
-        for (int c = 0; c < nCrosses; c++) {
-            crosses.add(rbr.getCross(crossesBank, segmentsBank,
-                                     clustersBank, hitsBank, c));
+        for (int c = 0; c < crossesBank.rows(); c++) {
+            crosses.add(rbr.getCross(crossesBank, segmentsBank, clustersBank, hitsBank, c));
+            // TODO: after all is up and running I should check what data from the
+            //       crosses/segments/clusters/hits I can ignore so that I minimize
+            //       what RecoBankReader has to read and accelerate the whole ordeal
         }
-        if (eventCounter == 1 && debug >= 2) RecoBankReader.printCrossesInfo(crosses);
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + eventCounter + ".3: crosses loaded.");
-        }
-        // TODO: remove crosses, segments, clusters and hits from banks.
 
-// === CREATE CROSSLIST FROM CROSSES ===========================================
+        // // TODO: Solve the chi2 inconsistency
+        // if (currentEvent >= 3 && currentEvent <= 6) {
+        //     System.out.println("[DCKF." + currentEvent + "] - 3 - cluster "
+        //                     + crosses.get(0).get_Segment1().get_fittedCluster().get_Id()
+        //                     + "'s fit chi2: "
+        //                     + crosses.get(0).get_Segment1().get_fittedCluster().get_fitProb()
+        //                     + "\n\n");
+        // }
+
+        if (debug >= 1) {
+            System.out.println("[DCKF] " + currentEvent + ".3: crosses loaded.");
+        }
+
+        // if (currentEvent == 0) {
+        //     System.out.println("\n\n\n\nDCKF DATA\n");
+        //     RecoBankReader.printSample(crosses.get(0));
+        // }
+
+        // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
 
         CrossList crosslist = crossLister.candCrossLists(crosses,
@@ -147,36 +200,40 @@ public class DCKFEngine extends ReconstructionEngine {
                 null,
                 dcSwim);
         if (debug >= 1) {
-            System.out.println("[DCKF] " + eventCounter + ".4: cross lists found.");
+            System.out.println("[DCKF] " + currentEvent + ".4: cross lists found.");
         }
 
-// === INSTANCE AND RUN TrackCandListFinder ====================================
-        TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
-        List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
-                                                           dcDetector,
-                                                           Swimmer.getTorScale(),
-                                                           dcSwim);
-        if (debug >= 1) {
-            System.out.println("[DCKF] " + eventCounter + ".5: tracks found.");
-        }
-        if (trkcands.size() > 0) {
-            trkCandFinder.removeOverlappingTracks(trkcands);
-            rbw.fillHBTracksBank(event, trkcands);
-            rbw.fillTrackCovMatBank(event, trkcands);
+        // === INSTANCE AND RUN TrackCandListFinder ====================================
+        if (currentEvent == 1) {
+            TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
+            List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
+                                                               dcDetector,
+                                                               Swimmer.getTorScale(),
+                                                               dcSwim);
             if (debug >= 1) {
-                System.out.println("[DCKF] " + eventCounter + ".6: tracks " +
-                                   "written on bank.");
+                System.out.println("[DCKF] " + currentEvent + ".5: tracks found.");
             }
-        }
-        else if (debug >= 1) {
-            System.out.println("[DCKF] " + eventCounter + ".6: no tracks" +
-                               " found.");
+
+            if (trkcands.size() > 0) {
+                trkCandFinder.removeOverlappingTracks(trkcands);
+                rbw.fillTracksBank(event, trkcands, false);
+                rbw.fillTrackCovMatBank(event, trkcands);
+                if (debug >= 1) {
+                    System.out.println("[DCKF] " + currentEvent + ".6: tracks written on bank.");
+                }
+            }
+            else if (debug >= 1) {
+                System.out.println("[DCKF] " + currentEvent + ".6: no tracks found.");
+            }
+
+            if (debug >= 1) {
+                System.out.println("[DCKF].7 processed evio event " + currentEvent
+                                 + " successfully!\n");
+            }
+
+            // TODO: remove crosses, segments, clusters and hits from banks.
         }
 
-        if (debug >= 1) {
-            System.out.println("[DCKF].7 processed evio event " +
-                               eventCounter + " successfully!\n");
-        }
         return true;
     }
 }

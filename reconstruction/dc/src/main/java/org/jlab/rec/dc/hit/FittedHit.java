@@ -1,914 +1,622 @@
 package org.jlab.rec.dc.hit;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
+
+import org.jlab.geom.prim.Point3D;
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
+
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.trajectory.StateVec;
-import org.jlab.utils.groups.IndexedTable;
+
 /**
- * A hit that was used in a fitted cluster. It extends the Hit class and
- * contains local and sector coordinate information at the MidPlane. An estimate
- * for the Left-right Ambiguity is assigned based on the linear fit to the wire
- * position residual.
+ * A hit that was used in a fitted cluster. It extends the Hit class and contains local and sector
+ * coordinate information at the MidPlane. An estimate for the Left-right Ambiguity is assigned
+ * based on the linear fit to the wire position residual.
  *
  * @author ziegler
  *
  */
 public class FittedHit extends Hit implements Comparable<Hit> {
 
+    private double _X;                // The hit's x-position at the mid-plane (y = 0) in the tilted
+                                      //     sector's coordinate system.
+    private double _XMP;              // X at the MidPlane in sector coordinates system.
+    private double _Z;                // The hit's z-position at the mid-plane (y = 0) in the tilted
+                                      //     sector's coordinate system.
+    private double _lX;			      // X in local coordinate system used in hit-based fit to
+                                      //     cluster line, used in the cluster-finding algorithm to
+                                      //     fit the hit-based wire positions, from 1 to 6.
+    private double _lY;			      // Y in local coordinate system used in hit-based fit to
+                                      //     cluster line, used in the cluster-finding algorithm to
+                                      //     fit the hit-based wire positions.
+    private double _Residual;		  // Cluster line to the wire position's residual, or the
+                                      // residual from the fit to the wire positions in the
+                                      // superlayer.
+    private double _TimeResidual = 0; // Cluster line to the wire position's time-residual, or
+                                      //     |fit| - |y| from the fit to the wire positions in the
+                                      //     superlayer.
+    private int _LeftRightAmb;		  // Left-Right Ambiguity value. An integer representative of
+                                      //     estimate of the left-right ambiguity obtained from
+                                      //     pattern recognition:
+                                      //     -1: the track went to the left of the wire.
+                                      //      0: the left-right ambiguity could not be resolved.
+                                      //     +1: the track went to the right of the wire.
+    private double _QualityFac;       // A quality factor representative of the quality of the fit
+                                      //     to the hit.
+    private int _TrkgStatus = -1;	  // An integer representative of the pattern recognition and
+                                      //     subsequent KF fit for the hit.
+                                      //     -1: the hit has not yet been fit and is the input of
+                                      //         hit-based tracking, having a well-defined time-to-
+                                      //         distance value.
+                                      //      0: the hit has been successfully involved in hit-based
+                                      //         tracking and has a wel-defined time-to-distance.
+                                      //     +1: the hit has been succesfully involved in track
+                                      //         fitting.
 
-    private double _X;              	// X at Z in local coord. system
-    private double _XMP;            	// X at the MidPlane in sector coord. system
-    private double _Z;              	// Z in the sector coord. system
-    private double _lX;			// X in local coordinate system used in hit-based fit to cluster line
-    private double _lY;			// Y in local coordinate system used in hit-based fit to cluster line
-    private double _Residual;		// cluster line  to the wire position resid
-    private double _TimeResidual = 0;	// cluster line  to the wire position time-resid
-    private int _LeftRightAmb;		// Left-Right Ambiguity value	-1 --> y-fit <0 --> to the left of the wire ==> y = y-_leftRight*TimeToDist
+    private double _ClusFitDoca = -1;   // Doca to cluster fit line in cm.
+    private double _TrkFitDoca = -1;    // Doca to track trajectory at hit layer plane in cm.
+    private double _TimeToDistance = 0; // the calculated distance in cm from the time in ns.
+    private double _Beta = 1.0;         // NOTE: Needs description
 
-    private double _QualityFac;
-    private int _TrkgStatus = -1;	//  TrkgStatusFlag factor (-1: no fit; 0: hit-based trking fit; 1: time-based trking fit)
-    private double _ClusFitDoca = -1;
-    private double _TrkFitDoca = -1;
-    private double _TimeToDistance = 0;
-    private double _Beta = 1.0;
+    private StateVec _AssociatedStateVec; // State vector (x, y, tx, ty, q/p) associated with the
+                                          //     hit.
 
-    private StateVec _AssociatedStateVec;
-    private double _Doca;							//         Reconstructed doca, for now it is using the linear parametrization that is in  gemc
-    //private double _DocaErr;      						//	   Error on doca
-    private double _B;								// 	   B-field at hit location
-    private int _Id;
-    public int _lr;
-    private int _AssociatedClusterID = -1;
+    private double _Doca;	 // Reconstructed doca, for now it is using the linear parametrization
+                             //     that is in gemc. Measured in cm.
+    // private double _DocaErr; // Error on doca.
+    private double _B;		 // B-field intensity at hit location along wire, measured in T.
+    private int _Id;         // The ID corresponds to the hit index in the EvIO column.
+    public int _lr;          // NOTE: Needs description
+
     public boolean RemoveFlag = false;
-    private int _AssociatedHBTrackID = -1;
-    private int _AssociatedTBTrackID = -1;
-
+    private int _AssociatedClusterID = -1; // ID of the cluster associated to the fitted hit.
+    private int _AssociatedHBTrackID = -1; // ID of the HB track associated to the fitted hit.
+    private int _AssociatedTBTrackID = -1; // ID of the TB track associated to the fitted hit.
 
     // intersection of cross direction line with the hit wire (TCS)
-    private Point3D CrossDirIntersWire;
-    private double _SignalPropagAlongWire;
-    private double _SignalPropagTimeAlongWire;
-    private double _SignalTimeOfFlight;
-    private double _T0;
-    private double _tFlight;
-    private double _tProp;
-    private double _tStart;   // The event start time
-    private double _Time;     //Time = TDC - tFlight - tProp - T0 - TStart
-    /**
-     * identifying outoftimehits;
-     */
-    private boolean _OutOfTimeFlag;
-    // NOTE: Shouldn't this constructor also set the id?
-    /**
-     *
-     * @param sector (1...6)
-     * @param superlayer (1...6)
-     * @param layer (1...6)
-     * @param wire (1...112)
-     * @param TDC
-     */
-    public FittedHit(int sector, int superlayer, int layer, int wire,
-            int TDC, int id) {
+    private Point3D CrossDirIntersWire;        // NOTE: Needs description
+    private double _SignalPropagAlongWire;     // NOTE: Needs description
+    private double _SignalPropagTimeAlongWire; // NOTE: Needs description
+    private double _SignalTimeOfFlight;        // Signal time of flight to the track doca of the hit
+                                               // in ns.
+
+    private double _T0;      // T0 calibration constant in ns
+    private double _tFlight; // Flight time to the track's closest point to the hit wire in ns
+    private double _tProp;   // Propagation time along the wire in ns
+    private double _tStart;  // The event start time in ns from EB bank.
+    private double _Time;    // Time = TDC - tFlight - tProp - T0 - TStart in ns
+
+    private boolean _OutOfTimeFlag; // Boolean flag for identifying out of time hits.
+    private double _WireLength;     // Length of the wire.
+    private double _WireMaxSag;     // NOTE: Needs description
+    private double _TrkResid = 999; // NOTE: Needs description
+
+    private double _deltatime_beta; // NOTE: Needs description
+
+    public FittedHit(int sector, int superlayer, int layer, int wire, int TDC, int id) {
         super(sector, superlayer, layer, wire, TDC, id);
 
         this.set_lX(layer);
         this.set_lY(layer, wire);
     }
 
-    /**
-     *
-     * @return B at location along wire
-     */
-    public double getB() {
-        return _B;
-    }
-    /**
-     *
-     * @param _B B field intensity in T
-     */
-    public void setB(double _B) {
-        this._B = _B;
-    }
+    public double getB() {return _B;}
+    public void setB(double _B) {this._B = _B;}
+
+    public int get_Id() {return _Id;}
+    public void set_Id(int _Id) {this._Id = _Id;}
+
+    public double get_Doca() {return _Doca;}
+    public void set_Doca(double _Doca) {this._Doca = _Doca;}
+
+    public double get_lX() {return _lX;}
+    public void set_lX(double layerValue) {this._lX = layerValue;}
+
+    public double get_lY() {return _lY;}
+
+    /** @param lY explicit definition for lY */
+    public void set_lY(double _lY) {this._lY = _lY;}
 
     /**
-     *
-     * @return the ID
-     */
-    public int get_Id() {
-        return _Id;
-    }
-
-    /**
-     * Sets the hit ID. The ID corresponds to the hit index in the EvIO column.
-     *
-     * @param _Id
-     */
-    public void set_Id(int _Id) {
-        this._Id = _Id;
-    }										//		Hit Id
-
-    /**
-     *
-     * @return calc doca in cm
-     */
-    public double get_Doca() {
-        return _Doca;
-    }
-    /**
-     *
-     * @param _Doca doca in cm
-     */
-    public void set_Doca(double _Doca) {
-        this._Doca = _Doca;
-    }
-
-
-    /**
-     *
-     * @return the local hit x-position in the local superlayer coordinate
-     * system; used in cluster-finding algo. to fit the hit-based wire positions
-     */
-    public double get_lX() {
-        return _lX;
-    }
-
-    /**
-     *
-     * @param layerValue layer number from 1 to 6
-     */
-    public void set_lX(double layerValue) {
-        this._lX = layerValue;
-    }
-
-    /**
-     *
-     * @return the local hit y-position in the local superlayer coordinate
-     * system; used in cluster-finding algo. to fit the hit-based wire positions
-     */
-    public double get_lY() {
-        return _lY;
-    }
-
-    /**
-     *
+     * Calculates the center of the cell utilizing the layer and the wire in the local superlayer
+     * coordinate system and sets it.
      * @param layer layer number from 1 to 6
-     * @param wire wire number from 1 to 112 sets the center of the cell as a
-     * function of wire number in the local superlayer coordinate system.
+     * @param wire  wire number from 1 to 112 sets the center of the cell as a function of wire
+     *              number in the local superlayer coordinate system.
      */
-    public void set_lY(int layer, int wire) {
-        double y = this.calcLocY(layer, wire);
-        this._lY = y;
+    public void set_lY(int layer, int wire) {this._lY = this.calcLocY(layer, wire);}
+
+    public double get_TimeResidual() {return _TimeResidual;}
+    public void set_TimeResidual(double _TimeResidual) {this._TimeResidual = _TimeResidual;}
+
+    public double get_Residual() {return _Residual;}
+    public void set_Residual(double _Residual) {this._Residual = _Residual;}
+
+    public int get_LeftRightAmb() {return _LeftRightAmb;}
+    public void set_LeftRightAmb(int leftRightAmb) {this._LeftRightAmb = leftRightAmb;}
+
+    public double get_QualityFac() {return _QualityFac;}
+    public void set_QualityFac(double _QualityFac) {this._QualityFac = _QualityFac;}
+
+    public int get_TrkgStatus() {return _TrkgStatus;}
+    public void set_TrkgStatus(int trkgStatus) {_TrkgStatus = trkgStatus;}
+
+    public double get_TimeToDistance() {return _TimeToDistance;}
+
+    /**
+     * Sets the calculated distance (in cm) from the time (in ns).
+     * @param cosTrkAngle NOTE: Missing description
+     * @param B           NOTE: Missing description
+     * @param tab         NOTE: Missing description
+     * @param tde         NOTE: Missing description
+     */
+    public void set_TimeToDistance(double cosTrkAngle,
+                                   double B,
+                                   IndexedTable tab,
+                                   TimeToDistanceEstimator tde) {
+
+        double distance = 0;
+        int slIdx  = this.get_Superlayer() - 1;
+        int secIdx = this.get_Sector() - 1;
+
+        if (_TrkgStatus != -1 && this.get_Time() > 0) {
+            double alpha  = Math.acos(cosTrkAngle);
+            double ralpha = this.reducedAngle(alpha);
+            double beta   = this.get_Beta();
+            double x      = this.get_ClusFitDoca();
+            double deltatime_beta = 0;
+
+            if (x != -1) {
+                double V_0 = Constants.V0AVERAGED;
+                deltatime_beta = (Math.sqrt(x * x +
+                        (tab.getDoubleValue("distbeta", this.get_Sector(),
+                                            this.get_Superlayer(),0) * beta * beta) *
+                        (tab.getDoubleValue("distbeta", this.get_Sector(),
+                                            this.get_Superlayer(),0) * beta * beta)) - x
+                                 ) / V_0;
+            }
+            this.set_DeltaTimeBeta(deltatime_beta);
+            double correctedTime = (this.get_Time() - deltatime_beta);
+            if (correctedTime <= 0) correctedTime = 0.01;
+
+            distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), correctedTime, secIdx, slIdx);
+        }
+
+        this.set_Doca(distance);
+        this._TimeToDistance = distance;
     }
 
     /**
-     *
-     * @param lY explicit definition for lY.
+     * NOTE: Missing description
+     * @param cellSize the cell size in cm
      */
-    public void set_lY(double _lY) {
-        this._lY = _lY;
+    public void fix_TimeToDistance(double cellSize) {this._TimeToDistance = cellSize;}
+
+    public StateVec getAssociatedStateVec() {return _AssociatedStateVec;}
+    public void setAssociatedStateVec(StateVec _AssociatedStateVec) {
+        this._AssociatedStateVec = _AssociatedStateVec;
+    }
+
+    public double get_ClusFitDoca() {return _ClusFitDoca;}
+    public void set_ClusFitDoca(double _ClusFitDoca) {this._ClusFitDoca = _ClusFitDoca;}
+
+    public double get_TrkFitDoca() {return _TrkFitDoca;}
+    public void set_TrkFitDoca(double _TrkFitDoca) {this._TrkFitDoca = _TrkFitDoca;}
+
+    public double get_X() {return _X;}
+    public void set_X(double _X) {this._X = _X;}
+
+    public double get_XMP() {return _XMP;}
+    public void set_XMP(double _XMP) {this._XMP = _XMP;}
+
+    public double get_Z() {return _Z;}
+    public void set_Z(double _Z) {this._Z = _Z;}
+
+    public double get_WireLength() {return _WireLength;}
+    public void set_WireLength(double _WireLength) {this._WireLength = _WireLength;}
+
+    public double get_WireMaxSag() {return _WireMaxSag;}
+    public void set_WireMaxSag(double _WireMaxSag) {this._WireMaxSag = _WireMaxSag;}
+
+    public double get_TrkResid() {return _TrkResid;}
+    public void set_TrkResid(double _TrkResid) {this._TrkResid = _TrkResid;}
+
+    public int get_AssociatedClusterID() {return _AssociatedClusterID;}
+    public void set_AssociatedClusterID(int _AssociatedClusterID) {
+        this._AssociatedClusterID = _AssociatedClusterID;
+    }
+
+    public int get_AssociatedHBTrackID() {return _AssociatedHBTrackID;}
+    public void set_AssociatedHBTrackID(int _id) {_AssociatedHBTrackID = _id;}
+
+    public int get_AssociatedTBTrackID() {return _AssociatedTBTrackID;}
+    public void set_AssociatedTBTrackID(int _id) {_AssociatedTBTrackID = _id;}
+
+    public Point3D getCrossDirIntersWire() {return CrossDirIntersWire;}
+    public void setCrossDirIntersWire(Point3D CrossDirIntersWire) {
+        this.CrossDirIntersWire = CrossDirIntersWire;
+    }
+
+    public double get_Beta() {return _Beta;}
+    public void set_Beta(double beta) {_Beta = beta;}
+
+    public double getSignalPropagAlongWire() {return _SignalPropagAlongWire;}
+    public void setSignalPropagAlongWire(DCGeant4Factory DcDetector) {
+        this._SignalPropagAlongWire = this.calc_SignalPropagAlongWire(DcDetector);
     }
 
     /**
-     *
-     * @return The approximate uncertainty on the hit position using the inverse
-     * of the gemc smearing function
+     * Calculates the signal propagation time along the wire in ns.
+     * @param DcDetector DC detector geometry
+     * @return           signal propagation time along the wire
      */
-    public double get_PosErr(double B, IndexedTable constants0, IndexedTable constants1, TimeToDistanceEstimator tde) {
+    public double calc_SignalPropagAlongWire(DCGeant4Factory DcDetector) {
+
+        Vector3d WireEnd;
+        if (Constants.STBLOC[this.get_Sector() - 1][this.get_Superlayer() - 1] > 0) {
+            WireEnd = DcDetector.getWireRightend(this.get_Sector()-1,  this.get_Superlayer() - 1,
+                                                 this.get_Layer() - 1, this.get_Wire() - 1);
+        } else {
+            WireEnd = DcDetector.getWireLeftend(this.get_Sector()-1,  this.get_Superlayer() - 1,
+                                                this.get_Layer() - 1, this.get_Wire() - 1);
+        }
+
+        double X = this.getCrossDirIntersWire().x();
+        double Y = this.getCrossDirIntersWire().y();
+
+        return Math.sqrt((X - WireEnd.x) * (X - WireEnd.x) + (Y - WireEnd.y) * (Y - WireEnd.y));
+    }
+
+    /**
+     * Calculates the signal propagation time along the wire in ns given an explicit X and Y.
+     * @param X          NOTE: Missing description
+     * @param Y          NOTE: Missing description
+     * @param DcDetector DC detector geometry
+     * @return           signal propagation time along the wire
+     */
+    public double calc_SignalPropagAlongWire(double X, double Y, DCGeant4Factory DcDetector) {
+
+        Vector3d WireEnd;
+        if (Constants.STBLOC[this.get_Sector()-1][this.get_Superlayer()-1] > 0) {
+            WireEnd = DcDetector.getWireRightend(this.get_Sector() - 1, this.get_Superlayer() - 1,
+                                                 this.get_Layer() - 1,  this.get_Wire() - 1);
+        } else {
+            WireEnd = DcDetector.getWireLeftend(this.get_Sector() - 1, this.get_Superlayer() - 1,
+                                                this.get_Layer() - 1,  this.get_Wire() - 1);
+        }
+
+        return Math.sqrt((X - WireEnd.x) * (X - WireEnd.x) + (Y - WireEnd.y) * (Y - WireEnd.y));
+    }
+
+    public double getSignalPropagTimeAlongWire() {return _SignalPropagTimeAlongWire;}
+    public void setSignalPropagTimeAlongWire(DCGeant4Factory DcDetector) {
+        this.setSignalPropagAlongWire(DcDetector);
+        this._SignalPropagTimeAlongWire = this._SignalPropagAlongWire / (Constants.SPEEDLIGHT*0.7);
+        this._tProp = this._SignalPropagTimeAlongWire;
+    }
+
+    public double getSignalTimeOfFlight() {return _SignalTimeOfFlight;}
+
+    /** Sets signal time of flight to the track doca to the hit wire in ns. */
+    public void setSignalTimeOfFlight() {
+        if (this.get_Beta() > 0 && this.getAssociatedStateVec() != null) {
+            this._SignalTimeOfFlight = (this.getAssociatedStateVec().getPathLength()) /
+                                       (Constants.SPEEDLIGHT * this.get_Beta());
+        }
+        this._tFlight = this._SignalTimeOfFlight;
+    }
+
+    public double getTStart() {return _tStart;}
+    public void setTStart(double tStart) {this._tStart = tStart;}
+
+    public double getT0() {return _T0;}
+    public void setT0(double T0) {this._T0 = T0;}
+
+    public double getTFlight() {return _tFlight;}
+    public void setTFlight(double tFlight) {this._tFlight = tFlight;}
+
+    public double getTProp() {return _tProp;}
+    public void setTProp(double tProp) {this._tProp = tProp;}
+
+    public double get_Time() {return _Time;}
+    public void set_Time(double _Time) {this._Time = _Time;}
+
+    public boolean get_OutOfTimeFlag() {return _OutOfTimeFlag;}
+    public void set_OutOfTimeFlag(boolean b) {_OutOfTimeFlag = b;}
+
+    public double get_DeltaTimeBeta() {return _deltatime_beta ;}
+    public void set_DeltaTimeBeta(double deltatime_beta) {_deltatime_beta = deltatime_beta;}
+
+    /**
+     * Calculates the approximate uncertainty on the hit's positions using the inverse of the gemc
+     * smearing function.
+     * @param B          NOTE: Missing description
+     * @param constants0 NOTE: Missing description
+     * @param constants1 NOTE: Missing description
+     * @param tde        NOTE: Missing description
+     * @return           the approximate uncertainty on the hit position
+     */
+    public double get_PosErr(double B,
+                             IndexedTable constants0,
+                             IndexedTable constants1,
+                             TimeToDistanceEstimator tde) {
 
         double err = this.get_DocaErr();
 
         if (this._TrkgStatus != -1) {
-            if (this.get_TimeToDistance() == 0) // if the time-to-dist is not set ... set it
-            {
+            if (this.get_TimeToDistance() == 0) {
+                // If the time-to-dist is not set, set it
                 set_TimeToDistance(1.0, B, constants1, tde);
             }
 
-            err = Constants.CELLRESOL; // default
+            err = Constants.CELLRESOL; // Default
             double x = this.get_Doca() / this.get_CellSize();
-            double p1 = constants0.getDoubleValue("parameter1", this.get_Sector(),this.get_Superlayer(),0);
-            double p2 = constants0.getDoubleValue("parameter2", this.get_Sector(),this.get_Superlayer(),0);
-            double p3 = constants0.getDoubleValue("parameter3", this.get_Sector(),this.get_Superlayer(),0);
-            double p4 = constants0.getDoubleValue("parameter4", this.get_Sector(),this.get_Superlayer(),0);
-            double scale = constants0.getDoubleValue("scale", this.get_Sector(),this.get_Superlayer(),0);
+            double p1 = constants0.getDoubleValue("parameter1",
+                                                  this.get_Sector(),this.get_Superlayer(), 0);
+            double p2 = constants0.getDoubleValue("parameter2",
+                                                  this.get_Sector(),this.get_Superlayer(), 0);
+            double p3 = constants0.getDoubleValue("parameter3",
+                                                  this.get_Sector(),this.get_Superlayer(), 0);
+            double p4 = constants0.getDoubleValue("parameter4",
+                                                  this.get_Sector(),this.get_Superlayer(), 0);
+            double scale = constants0.getDoubleValue("scale",
+                                                     this.get_Sector(),this.get_Superlayer(), 0);
 
-            err = (p1 + p2 / ((p3 + x) * (p3 + x)) + p4 * Math.pow(x, 8)) * scale * 0.1; //gives a reasonable approximation to the measured CLAS resolution (in cm! --> scale by 0.1 )
-
+            // Gives a reasonable approximation to the measured CLAS resolution
+            //     in cm! --> scale by 0.1
+            err = (p1 + p2 / ((p3 + x) * (p3 + x)) + p4 * Math.pow(x, 8)) * scale * 0.1;
         }
 
         return err;
     }
 
     /**
-     *
-     * @return the time residual |fit| - |y| from the fit to the wire positions
-     * in the superlayer
-     */
-    public double get_TimeResidual() {
-        return _TimeResidual;
-    }
-
-    /**
-     *
-     * @param _TimeResidual the residual |fit| - |y| from the fit to the hit
-     * positions in the superlayer
-     */
-    public void set_TimeResidual(double _TimeResidual) {
-        this._TimeResidual = _TimeResidual;
-    }
-
-    /**
-     *
-     * @return the residual from the fit to the wire positions in the superlayer
-     */
-    public double get_Residual() {
-        return _Residual;
-    }
-
-    /**
-     *
-     * @param _Residual the residual from the fit to the hit positions in the
-     * superlayer
-     */
-    public void set_Residual(double _Residual) {
-        this._Residual = _Residual;
-    }
-
-    /**
-     *
-     * @return an integer representative of the estimate of the left-right
-     * ambiguity obtained from pattern recognition. -1(+1): the track went to
-     * the left(right) of the wire; 0: the left-right ambiguity could not be
-     * resolved.
-     */
-    public int get_LeftRightAmb() {
-        return _LeftRightAmb;
-    }
-
-    /**
-     *
-     * @param leftRightAmb an integer representative of the estimate of the
-     * left-right ambiguity obtained from pattern recognition. -1(+1): the track
-     * went to the left(right) of the wire; 0: the left-right ambiguity could
-     * not be resolved.
-     */
-    public void set_LeftRightAmb(int leftRightAmb) {
-        this._LeftRightAmb = leftRightAmb;
-    }
-
-    /**
-     *
-     * @return a quality factor representative of the quality of the fit to the
-     * hit
-     */
-    public double get_QualityFac() {
-        return _QualityFac;
-    }
-
-    /**
-     *
-     * @param _QualityFac is a quality factor representative of the quality of
-     * the fit to the hit
-     */
-    public void set_QualityFac(double _QualityFac) {
-        this._QualityFac = _QualityFac;
-    }
-
-    /**
-     *
-     * @return an integer representative of the stage of the pattern recognition
-     * and subsequent KF fit for that hit. -1: the hit has not yet been fit and
-     * is the input of hit-based tracking; 0: the hit has been successfully
-     * involved in hit-based tracking and has a well-defined time-to-distance
-     * value; 1: the hit has been successfully involved in track fitting.
-     */
-    public int get_TrkgStatus() {
-        return _TrkgStatus;
-    }
-
-    /**
-     *
-     * @param trkgStatus is an integer representative of the stage of the
-     * pattern recognition and subsequent KF fit for that hit. -1: the hit has
-     * not yet been fit and is the input of hit-based tracking; 0: the hit has
-     * been successfully involved in hit-based tracking and has a well-defined
-     * time-to-distance value; 1: the hit has been successfully involved in
-     * track fitting.
-     */
-    public void set_TrkgStatus(int trkgStatus) {
-        _TrkgStatus = trkgStatus;
-    }
-
-    /**
-     *
-     * @return the calculated distance (in cm) from the time (in ns)
-     */
-    public double get_TimeToDistance() {
-        return _TimeToDistance;
-    }
-
-    /**
-     *
+     * Reduces a given angle between the range of 0 and 30 degrees.
      * @param alpha the local angle of the track
-     * @return the reduced angle in radians between the range of 0 and 30 deg.
+     * @return      the reduced angle
      */
     double reducedAngle(double alpha) {
-        double ralpha = 0;
+        // Math.PI / 3. = 1.0471975511965976
+        // Math.PI / 6. = 0.5235987755982988
 
-        ralpha = Math.abs(alpha);
+        double ralpha = Math.abs(alpha);
 
-        while (ralpha > Math.PI / 3.) {
-            ralpha -= Math.PI / 3.;
+        while (ralpha > 1.0471975511965976) {
+            ralpha -= 1.0471975511965976;
         }
-        if (ralpha > Math.PI / 6.) {
-            ralpha = Math.PI / 3. - ralpha;
+
+        if (ralpha > 0.5235987755982988) {
+            ralpha = 1.0471975511965976 - ralpha;
         }
 
         return ralpha;
     }
-    /**
-     *
-     * @return state vector associated with the hit
-     */
-    public StateVec getAssociatedStateVec() {
-        return _AssociatedStateVec;
-    }
-    /**
-     *
-     * @param _AssociatedStateVec state vector (x,y,tx,ty,q/p) associated with the hit
-     */
-    public void setAssociatedStateVec(StateVec _AssociatedStateVec) {
-        this._AssociatedStateVec = _AssociatedStateVec;
-    }
-    /**
-     * sets the calculated distance (in cm) from the time (in ns)
-     */
-    public void set_TimeToDistance(double cosTrkAngle, double B, IndexedTable tab,TimeToDistanceEstimator tde) {
-
-        double distance = 0;
-        int slIdx = this.get_Superlayer() - 1;
-        int secIdx = this.get_Sector() - 1;
-        if (_TrkgStatus != -1 && this.get_Time() > 0) {
-
-            double alpha = Math.acos(cosTrkAngle);
-            double ralpha = this.reducedAngle(alpha);
-            double beta = this.get_Beta();
-            double x = this.get_ClusFitDoca();
-            //TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
-            double deltatime_beta = 0;
-
-            if (x != -1) {
-                //double V_0 = tab.getDoubleValue("v0", this.get_Sector(), this.get_Superlayer(),0); ==> floating cst must be fixed
-                double V_0 = Constants.V0AVERAGED;
-                //deltatime_beta = (Math.sqrt(x * x + (CCDBConstants.getDISTBETA()[this.get_Sector() - 1][this.get_Superlayer() - 1] * beta * beta) * (CCDBConstants.getDISTBETA()[this.get_Sector() - 1][this.get_Superlayer() - 1] * beta * beta)) - x) / CCDBConstants.getV0()[this.get_Sector() - 1][this.get_Superlayer() - 1];
-                deltatime_beta = (Math.sqrt(x * x + (tab.getDoubleValue("distbeta", this.get_Sector(), this.get_Superlayer(),0) * beta * beta) * (tab.getDoubleValue("distbeta", this.get_Sector(), this.get_Superlayer(),0) * beta * beta)) - x) / V_0;
-
-            }
-            this.set_DeltaTimeBeta(deltatime_beta);
-            double correctedTime = (this.get_Time() - deltatime_beta);
-            if(correctedTime<=0)
-                correctedTime=0.01;
-
-            distance = tde.interpolateOnGrid(B, Math.toDegrees(ralpha), correctedTime, secIdx, slIdx) ;
-
-        }
-
-        this.set_Doca(distance);
-        this._TimeToDistance = distance;
-    }
-    /**
-     *
-     * @return doca to cluster fit line (cm)
-     */
-    public double get_ClusFitDoca() {
-        return _ClusFitDoca;
-    }
-    /**
-     *
-     * @param _ClusFitDoca doca to cluster fit line (cm)
-     */
-    public void set_ClusFitDoca(double _ClusFitDoca) {
-        this._ClusFitDoca = _ClusFitDoca;
-    }
 
     /**
-     *
-     * @return doca to track trajectory at hit layer plane (cm)
-     */
-    public double get_TrkFitDoca() {
-        return _TrkFitDoca;
-    }
-    /**
-     *
-     * @param _TrkFitDoca doca to track trajectory at hit layer plane (cm)
-     */
-    public void set_TrkFitDoca(double _TrkFitDoca) {
-        this._TrkFitDoca = _TrkFitDoca;
-    }
-
-    /**
-     *
-     * @param cellSize the cell size in cm
-     */
-    public void fix_TimeToDistance(double cellSize) {
-        this._TimeToDistance = cellSize;
-    }
-
-    /**
-     *
-     * @return the hit x-position at the mid-plane (y=0) in the tilted sector
-     * coordinate system
-     */
-    public double get_X() {
-        return _X;
-    }
-
-    /**
-     *
-     * @param _X is the hit x-position at the mid-plane (y=0) in the tilted
-     * sector coordinate system
-     */
-    public void set_X(double _X) {
-        this._X = _X;
-    }
-
-    public double get_XMP() {
-        return _XMP;
-    }
-
-    public void set_XMP(double _XMP) {
-        this._XMP = _XMP;
-    }
-
-    /**
-     *
-     * @return the hit z-position at the mid-plane (y=0) in the tilted sector
-     * coordinate system
-     */
-    public double get_Z() {
-        return _Z;
-    }
-
-    /**
-     *
-     * @param _Z is the hit z-position at the mid-plane (y=0) in the tilted
-     * sector coordinate system
-     */
-    public void set_Z(double _Z) {
-        this._Z = _Z;
-    }
-
-
-    /**
-     * A method to update the hit position information after the fit to the
-     * local coord.sys. wire positions
+     * A method to update the hit position information after the fit to the local coordinate
+     * system's wire positions.
+     * @param DcDetector DC detector geometry
      */
     public void updateHitPosition(DCGeant4Factory DcDetector) {
+        double z = DcDetector.getWireMidpoint(this.get_Sector() - 1,
+                                              this.get_Superlayer() - 1,
+                                              this.get_Layer() - 1,
+                                              this.get_Wire() - 1).z;
+        double x = this.calc_GeomCorr(DcDetector, 0);
 
-        //double z = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(this.get_Layer()-1).getComponent(this.get_Wire()-1).getMidpoint().z();
-        double z = DcDetector.getWireMidpoint(this.get_Sector() - 1, this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1).z;
-        double x= this.calc_GeomCorr(DcDetector, 0);
-        //
         this.set_X(x);
         this.set_Z(z);
     }
 
     /**
-     * A method to update the hit position information after the fit to the wire
-     * positions employing hit-based tracking algorithms has been performed.
+     * A method to update the hit position information after the fit to the wire positions employing
+     * hit-based tracking algorithms has been performed.
+     * @param cosTrkAngle NOTE: Missing description
+     * @param B           NOTE: Missing description
+     * @param tab         NOTE: Missing description
+     * @param DcDetector  DC detector geometry
+     * @param tde         NOTE: Missing description
      */
-    public void updateHitPositionWithTime(double cosTrkAngle, double B, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
-        if (this.get_Time() > 0) {
-            this.set_TimeToDistance(cosTrkAngle, B, tab, tde);
-        }
+    public void updateHitPositionWithTime(double cosTrkAngle,
+                                          double B,
+                                          IndexedTable tab,
+                                          DCGeant4Factory DcDetector,
+                                          TimeToDistanceEstimator tde) {
 
-        double z = DcDetector.getWireMidpoint(this.get_Sector() - 1, this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1).z;
-        //double x = DcDetector.getWireMidpoint(this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1).x;
+        if (this.get_Time() > 0) this.set_TimeToDistance(cosTrkAngle, B, tab, tde);
+
+        double z = DcDetector.getWireMidpoint(this.get_Sector() - 1,
+                                              this.get_Superlayer() - 1,
+                                              this.get_Layer() - 1,
+                                              this.get_Wire() - 1).z;
         double x = this.calc_GeomCorr(DcDetector, 0);
-        //this.set_X(x+this.get_LeftRightAmb()*this.get_TimeToDistance());
         double MPCorr = 1;
-        if (cosTrkAngle > 0.8 & cosTrkAngle <= 1) {
-            MPCorr = cosTrkAngle;
-        }
+        if (cosTrkAngle > 0.8 && cosTrkAngle <= 1) MPCorr = cosTrkAngle;
 
-        this.set_X(x + this.get_LeftRightAmb() * (this.get_TimeToDistance() / MPCorr) / Math.cos(Math.toRadians(6.)));
+        // Math.cos(Math.toRadians(6.)) = 0.9945218953682733
+        this.set_X(x + this.get_LeftRightAmb() *
+                       (this.get_TimeToDistance() / MPCorr) / 0.9945218953682733);
         this.set_Z(z);
-
     }
 
     public double XatY(DCGeant4Factory DcDetector, double y) {
-        double x = this.calc_GeomCorr(DcDetector, y);
-        return x + this.get_LeftRightAmb() * (this.get_TimeToDistance()) ;
-    }
-
-    private double _WireLength;
-
-    public double get_WireLength() {
-        return _WireLength;
-    }
-
-    public void set_WireLength(double _WireLength) {
-        this._WireLength = _WireLength;
-    }
-
-    private double _WireMaxSag;
-
-    public double get_WireMaxSag() {
-        return _WireMaxSag;
-    }
-
-    public void set_WireMaxSag(double _WireMaxSag) {
-        this._WireMaxSag = _WireMaxSag;
-    }
-
-    private double _TrkResid=999;
-
-    public double get_TrkResid() {
-        return _TrkResid;
-    }
-
-    public void set_TrkResid(double _TrkResid) {
-        this._TrkResid = _TrkResid;
+        return this.calc_GeomCorr(DcDetector, y) +
+               this.get_LeftRightAmb() * (this.get_TimeToDistance());
     }
 
     private double calc_GeomCorr(DCGeant4Factory DcDetector, double y) {
 
-        double xL = DcDetector.getWireLeftend(this.get_Sector()-1, this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).x;
-        double xR = DcDetector.getWireRightend(this.get_Sector()-1, this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).x;
-        double yL = DcDetector.getWireLeftend(this.get_Sector()-1, this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).y;
-        double yR = DcDetector.getWireRightend(this.get_Sector()-1, this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).y;
+        double xL = DcDetector.getWireLeftend(this.get_Sector() - 1, this.get_Superlayer() - 1,
+                                              this.get_Layer() - 1,  this.get_Wire() - 1).x;
+        double xR = DcDetector.getWireRightend(this.get_Sector() - 1, this.get_Superlayer() - 1,
+                                               this.get_Layer() - 1,  this.get_Wire() - 1).x;
+        double yL = DcDetector.getWireLeftend(this.get_Sector() - 1, this.get_Superlayer() - 1,
+                                              this.get_Layer() - 1,  this.get_Wire() - 1).y;
+        double yR = DcDetector.getWireRightend(this.get_Sector() - 1, this.get_Superlayer() - 1,
+                                               this.get_Layer() - 1, this.get_Wire() - 1).y;
 
-        double DL = Constants.MAXENDPLTDEFLEC[this.get_Region()-1][this.get_Sector()-1][0];
-        double DR = Constants.MAXENDPLTDEFLEC[this.get_Region()-1][this.get_Sector()-1][1];
+        double DL = Constants.MAXENDPLTDEFLEC[this.get_Region() - 1][this.get_Sector() - 1][0];
+        double DR = Constants.MAXENDPLTDEFLEC[this.get_Region() - 1][this.get_Sector() - 1][1];
 
         double wire = this.get_Wire();
         double normW = (double) wire/112.;
 
-        xL-=Constants.getWIREDIST()*DL*(normW-3*normW*normW*normW+2*normW*normW*normW*normW);
-        xR-=Constants.getWIREDIST()*DR*(normW-3*normW*normW*normW+2*normW*normW*normW*normW);
+        xL -= Constants.getWIREDIST()*DL*(normW - 3*normW*normW*normW + 2*normW*normW*normW*normW);
+        xR -= Constants.getWIREDIST()*DR*(normW - 3*normW*normW*normW + 2*normW*normW*normW*normW);
 
-        double x = xR -(yR-y)*((xR-xL)/(yR-yL));
+        double x = xR - (yR - y)*((xR - xL)/(yR - yL));
+        double wireLen = Math.sqrt((xL - xR)*(xL - xR) + (yL - yR)*(yL - yR));
 
-        double wireLen = Math.sqrt((xL-xR)*(xL-xR)+(yL-yR)*(yL-yR));
         int sector = this.get_Sector();
         int A = 0;
+        switch (sector) {
+            case (1): A = 0;
+                      break;
+            case (2): A = -1;
+                      break;
+            case (3): A = -1;
+                      break;
+            case (4): A = 0;
+                      break;
+            case (5): A = 1;
+                      break;
+            case (6): A = 1;
+                      break;
+            default:  throw new RuntimeException("invalid sector");
+        }
+
+        int region = this.get_Region();
         double C = 0;
         double ConvFac = 1000000;
-        switch (sector) {
-            case (1):
-                A=0;
-                break;
-            case (2):
-                A=-1;
-                break;
-             case (3):
-                A=-1;
-                break;
-            case (4):
-                A=0;
-                break;
-            case (5):
-                A=1;
-                break;
-            case (6):
-                A=1;
-                break;
-            default:
-                throw new RuntimeException("invalid sector");
-        }
-        int region = this.get_Region();
         switch (region) {
-            case (1):
-                C=2.0/ConvFac;
-                break;
-            case (2):
-                C=4.95/ConvFac;
-                break;
-             case (3):
-                if(wire<69)
-                    C=12.5/ConvFac;
-                if(wire>68 && wire<92)
-                    C=7.49/ConvFac;
-                if(wire>91)
-                    C=5.98/ConvFac;
-                break;
-            default:
-                throw new RuntimeException("invalid region");
+            case (1): C = 2.0/ConvFac;
+                      break;
+            case (2): C = 4.95/ConvFac;
+                      break;
+            case (3): if      (wire < 69) C = 12.5/ConvFac;
+                      else if (wire < 92) C = 7.49/ConvFac;
+                      else                C = 5.98/ConvFac;
+                      break;
+            default:  throw new RuntimeException("invalid region");
         }
 
-        double MaxSag = Constants.getWIREDIST()*A*C*wire*wire*Math.cos(Math.toRadians(25.))*Math.cos(Math.toRadians(30.));
+        // Math.cos(Math.toRadians(25.)) = 0.9063077870366499
+        // Math.cos(Math.toRadians(30.)) = 0.8660254037844387
+        double MaxSag = Constants.getWIREDIST() * A * C * wire * wire *
+                        0.9063077870366499 * 0.8660254037844387;
 
-        double delta_x = MaxSag*(1.-y/(0.5*wireLen))*(1.-y/(0.5*wireLen));
+        double delta_x = MaxSag * (1. - y/(0.5*wireLen)) * (1. - y/(0.5*wireLen));
 
-        x+=delta_x;
+        x += delta_x;
 
         this.set_WireLength(wireLen);
         this.set_WireMaxSag(MaxSag);
 
         return x;
-        //System.out.println(this.printInfo()+ "x0 "+ DcDetector.getWireMidpoint(this.get_Superlayer()-1, this.get_Layer()-1, this.get_Wire()-1).x
-        //+" x "+x);
     }
 
     /**
-     *
-     * @param otherHit
-     * @return a boolean comparing 2 hits based on basic descriptors; returns
-     * true if the hits are the same
+     * Compares to hits based on basic descriptors, returning true if the hits are the same and
+     * false otherwise.
+     * @param otherHit the other hit
+     * @return         a boolean describing the result of the comparison
      */
     public boolean isSameAs(FittedHit otherHit) {
-        FittedHit thisHit = this;
         boolean cmp = false;
-        if (thisHit.get_Time() == otherHit.get_Time()
-                && thisHit.get_Sector() == otherHit.get_Sector()
-                && thisHit.get_Superlayer() == otherHit.get_Superlayer()
-                && thisHit.get_Layer() == otherHit.get_Layer()
-                && thisHit.get_Wire() == otherHit.get_Wire()) {
+        if (this.get_Time() == otherHit.get_Time()
+                && this.get_Sector() == otherHit.get_Sector()
+                && this.get_Superlayer() == otherHit.get_Superlayer()
+                && this.get_Layer() == otherHit.get_Layer()
+                && this.get_Wire() == otherHit.get_Wire()) {
             cmp = true;
         }
         return cmp;
     }
 
     /**
-     *
-     * @param arg0 the other hit
-     * @return an int used to sort a collection of hits by layer number
+     * Compares hits to sort them by layer number.
+     * @param otherHit the other hit
+     * @return         an int used to sort a collection of hits
      */
-    public int compareTo(FittedHit arg0) {
-        if (this.get_Layer() > arg0.get_Layer()) {
-            return 1;
-        } else {
-            return -1;
-        }
-    }
-
-
-    /**
-     *
-     * @return string with hit output
-     */
-    public String printInfo() {
-        //double xr = this._X*Math.cos(Math.toRadians(25.))+this._Z*Math.sin(Math.toRadians(25.));
-        //double zr = this._Z*Math.cos(Math.toRadians(25.))-this._X*Math.sin(Math.toRadians(25.));
-        String s = "DC Fitted Hit: ID " + this.get_Id() + " Sector " + this.get_Sector() + " Superlayer " + this.get_Superlayer() + " Layer " + this.get_Layer() + " Wire " + this.get_Wire() + " TDC " + this.get_TDC()+ " Time " + this.get_Time()
-                + "  LR " + this.get_LeftRightAmb() + " doca " + this.get_TimeToDistance()+ " +/- " +this.get_DocaErr() + " updated pos  " + this._X + " clus "
-                + this._AssociatedClusterID;
-        return s;
+    public int compareTo(FittedHit otherHit) {
+        if (this.get_Layer() > otherHit.get_Layer()) return 1;
+        else                                         return -1;
     }
 
     /**
-     *
-     * @return  cluster ID associated with the hit
+     * Writes and returns a string containing the fitted hit's information.
+     * @return hit's information encoded in a string
      */
-    public int get_AssociatedClusterID() {
-        return _AssociatedClusterID;
-    }
-    /**
-     *
-     * @param _AssociatedClusterID associated cluster ID
-     */
-    public void set_AssociatedClusterID(int _AssociatedClusterID) {
-        this._AssociatedClusterID = _AssociatedClusterID;
+    public String getInfo() {
+        return "DC Fitted Hit:" +
+               "\nID          : " + this.get_Id() +
+               "\nSector      : " + this.get_Sector() +
+               "\nSuperlayer  : " + this.get_Superlayer() +
+               "\nLayer       : " + this.get_Layer() +
+               "\nWire        : " + this.get_Wire() +
+               "\nTDC         : " + this.get_TDC() +
+               "\nTime        : " + this.get_Time() +
+               "\nLR          : " + this.get_LeftRightAmb() +
+               "\ndoca        : " + this.get_TimeToDistance() +
+               "\n+/-         : " + this.get_DocaErr() +
+               "\nupdated pos : " + this._X +
+               "\nclus        : " + this._AssociatedClusterID;
     }
 
     /**
-     *
-     * @param _id associated track id for Hit-Based tracking
+     * Writes and returns a string containing all of the fitted hit's data.
+     * @return fitted hit's data encoded in a string
      */
-    public void set_AssociatedHBTrackID(int _id) {
-        _AssociatedHBTrackID = _id;
-    }
-    /**
-     *
-     * @return track id associated with the hit for Hit-Based tracking
-     */
-    public int get_AssociatedHBTrackID() {
-        return _AssociatedHBTrackID;
-    }
-    /**
-     *
-     * @param _id associated track id for Time-Based tracking
-     */
-    public void set_AssociatedTBTrackID(int _id) {
-        _AssociatedTBTrackID = _id;
-    }
-    /**
-     *
-     * @return track id associated with the hit for Time-Based tracking
-     */
-    public int get_AssociatedTBTrackID() {
-        return _AssociatedTBTrackID;
-    }
-    /**
-     *
-     * @return
-     */
-    public Point3D getCrossDirIntersWire() {
-        return CrossDirIntersWire;
-    }
-
-    public void setCrossDirIntersWire(Point3D CrossDirIntersWire) {
-        this.CrossDirIntersWire = CrossDirIntersWire;
-    }
-    /**
-     *
-     * @return beta of track at the hit location
-     */
-    public double get_Beta() {
-        return _Beta;
-    }
-    /**
-     *
-     * @param beta beta of the track at the hit location (position of the track closest to the wire)
-     */
-    public void set_Beta(double beta) {
-        _Beta = beta;
-    }
-    /**
-     *
-     * @param DcDetector detector geometry
-     * @return signal propagation time along the wire in ns
-     */
-    public double calc_SignalPropagAlongWire(DCGeant4Factory DcDetector) {
-
-        Vector3d WireEnd;
-        int end = Constants.STBLOC[this.get_Sector()-1][this.get_Superlayer()-1];
-        if(end>0) {
-            WireEnd = DcDetector.getWireRightend(this.get_Sector()-1, this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1);
-        } else {
-            WireEnd = DcDetector.getWireLeftend(this.get_Sector()-1, this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1);
-        }
-
-        double X = this.getCrossDirIntersWire().x();
-        double Y = this.getCrossDirIntersWire().y();
-
-        double r2 = (X-WireEnd.x)*(X-WireEnd.x) + (Y-WireEnd.y)*(Y-WireEnd.y);
-
-        return Math.sqrt(r2);
-    }
-
-    public double calc_SignalPropagAlongWire(double X, double Y, DCGeant4Factory DcDetector) {
-
-        Vector3d WireEnd;
-        int end = Constants.STBLOC[this.get_Sector()-1][this.get_Superlayer()-1];
-        if(end>0) {
-            WireEnd = DcDetector.getWireRightend(this.get_Sector()-1, this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1);
-        } else {
-            WireEnd = DcDetector.getWireLeftend(this.get_Sector()-1, this.get_Superlayer() - 1, this.get_Layer() - 1, this.get_Wire() - 1);
-        }
-
-        double r2 = (X-WireEnd.x)*(X-WireEnd.x) + (Y-WireEnd.y)*(Y-WireEnd.y);
-
-        return Math.sqrt(r2);
-    }
-    /**
-     *
-     * @return signal propagation time along the wire in ns
-     */
-    public double getSignalPropagAlongWire() {
-        return _SignalPropagAlongWire;
-    }
-    /**
-     *
-     * @param DcDetector DC detector geometry
-     */
-    public void setSignalPropagAlongWire(DCGeant4Factory DcDetector) {
-        this._SignalPropagAlongWire = this.calc_SignalPropagAlongWire( DcDetector);
-    }
-
-    /**
-     *
-     * @return signal propagation time along the wire in ns
-     */
-    public double getSignalPropagTimeAlongWire() {
-        return _SignalPropagTimeAlongWire;
-    }
-    /**
-     *
-     * @param DcDetector DC detector geometry
-     */
-    public void setSignalPropagTimeAlongWire(DCGeant4Factory DcDetector) {
-        this.setSignalPropagAlongWire( DcDetector);
-        this._SignalPropagTimeAlongWire = this._SignalPropagAlongWire/(Constants.SPEEDLIGHT*0.7);
-        this._tProp= this._SignalPropagTimeAlongWire;
-    }
-
-    /**
-     *
-     * @return signal time of flight to the track doca to the hit wire in ns
-     */
-    public double getSignalTimeOfFlight() {
-        return _SignalTimeOfFlight;
-    }
-    /**
-     * sets signal time of flight to the track doca to the hit wire in ns
-     */
-    public void setSignalTimeOfFlight(double pathToFirstSite) {
-        if(this.get_Beta()>0 && this.getAssociatedStateVec()!=null)
-            this._SignalTimeOfFlight = (this.getAssociatedStateVec().getPathLength() + pathToFirstSite)/(Constants.SPEEDLIGHT*this.get_Beta());
-            this._tFlight = this._SignalTimeOfFlight;
-    }
-
-
-    /**
-     *
-     * @return start time from EB bank (ns)
-     */
-    public double getTStart() {
-        return _tStart;
-    }
-    /**
-     *
-     * @param tStart start time in ns
-     */
-    public void setTStart(double tStart) {
-        this._tStart = tStart;
-    }
-
-    /**
-     *
-     * @return T0 calibration constant in ns
-     */
-    public double getT0() {
-        return _T0;
-    }
-    /**
-     *
-     * @param T0 calibration constant in ns
-     */
-    public void setT0(double T0) {
-        this._T0 = T0;
-    }
-
-    /**
-     *
-     * @return Flight time to the track's closest point to the hit wire in ns
-     */
-    public double getTFlight() {
-        return _tFlight;
-    }
-    /**
-     *
-     * @param tFlight Flight time to the track's closest point to the hit wire in ns
-     */
-    public void setTFlight(double tFlight) {
-        this._tFlight = tFlight;
-    }
-    /**
-     *
-     * @return propagation time along the wire in ns
-     */
-    public double getTProp() {
-        return _tProp;
-    }
-    /**
-     *
-     * @param tProp propagation time along the wire in ns
-     */
-    public void setTProp(double tProp) {
-        this._tProp = tProp;
-    }
-
-    /**
-     *
-     * @return the time in ns
-     */
-    public double get_Time() {
-        return _Time;
-    }
-
-    /**
-     * Sets the time
-     *
-     * @param _Time
-     */
-    public void set_Time(double _Time) {
-        this._Time = _Time;
-    }
-
-
-    /**
-     *
-     * @param b boolean to flag out-of-time hits
-     */
-    public void set_OutOfTimeFlag(boolean b) {
-        _OutOfTimeFlag = b;
-    }
-    /**
-     *
-     * @return boolean to flag out-of-time hits
-     */
-    public boolean get_OutOfTimeFlag() {
-        return _OutOfTimeFlag;
-    }
-
-    private double _deltatime_beta;
-    public void set_DeltaTimeBeta(double deltatime_beta) {
-        _deltatime_beta = deltatime_beta;
-    }
-    public double get_DeltaTimeBeta() {
-        return _deltatime_beta ;
+    public String getDetailedInfo() {
+        return "DC Fitted Hit " + this.get_Id() + ":" +
+               "\n  Hit Data:" +
+               "\n    Sector                        : " + this.get_Sector() +
+               "\n    Superlayer                    : " + this.get_Superlayer() +
+               "\n    Layer                         : " + this.get_Layer() +
+               "\n    Wire                          : " + this.get_Wire() +
+               "\n    TDC                           : " + this.get_TDC() +
+               "\n    Cell size                     : " + this.get_CellSize() +
+               "\n    Doca err                      : " + this.get_DocaErr() +
+               "\n  Fitted Hit Data:" +
+               "\n    B                             : " + this.getB() +
+               "\n    Doca (_Doca)                  : " + this.get_Doca() +
+               "\n    Doca (_TimeToDistance)        : " + this.get_TimeToDistance() +
+               "\n    Doca Error                    : " + this.get_DocaErr() +
+               "\n    _lX                           : " + this.get_lX() +
+               "\n    _lY                           : " + this.get_lY() +
+               "\n    Time Residual                 : " + this.get_TimeResidual() +
+               "\n    Residual                      : " + this.get_Residual() +
+               "\n    Left Right Ambiguity          : " + this.get_LeftRightAmb() +
+               "\n    Quality Fac                   : " + this.get_QualityFac() +
+               "\n    Tracking Status               : " + this.get_TrkgStatus() +
+               "\n    Time to Distance              : " + this.get_TimeToDistance() +
+               "\n    Associated State Vector       : " + this.getAssociatedStateVec() +
+               "\n    Cluster Fit Doca              : " + this.get_ClusFitDoca() +
+               "\n    Tracking Fit Doca             : " + this.get_TrkFitDoca() +
+               "\n    Updated Position (_X)         : " + this.get_X() +
+               "\n    _XMP                          : " + this.get_XMP() +
+               "\n    _Z                            : " + this.get_Z() +
+               "\n    Wire Length                   : " + this.get_WireLength() +
+               "\n    _WireMaxSag                   : " + this.get_WireMaxSag() +
+               "\n    Tracking Residual             : " + this.get_TrkResid() +
+               "\n    Associated Cluster Id         : " + this.get_AssociatedClusterID() +
+               "\n    Associated HB Track Id        : " + this.get_AssociatedHBTrackID() +
+               "\n    Associated TB Track Id        : " + this.get_AssociatedTBTrackID() +
+               "\n    Cross Dir Inters Wire         : " + this.getCrossDirIntersWire() +
+               "\n    Beta                          : " + this.get_Beta() +
+               "\n    Signal Propag Along Wire      : " + this.getSignalPropagAlongWire() +
+               "\n    Signal Propag Time Along Wire : " + this.getSignalPropagTimeAlongWire() +
+               "\n    Signal Time of Flight         : " + this.getSignalTimeOfFlight() +
+               "\n    T Start                       : " + this.getTStart() +
+               "\n    T0                            : " + this.getT0() +
+               "\n    TFlight                       : " + this.getTFlight() +
+               "\n    TProp                         : " + this.getTProp() +
+               "\n    Time (_Time)                  : " + this.get_Time() +
+               "\n    Out of Time Flag              : " + this.get_OutOfTimeFlag() +
+               "\n    Delta Time Beta               : " + this.get_DeltaTimeBeta() +
+               // "\n    Position Error                : " + this.get_PosErr() +
+               "\n----------------------\n";
     }
 }

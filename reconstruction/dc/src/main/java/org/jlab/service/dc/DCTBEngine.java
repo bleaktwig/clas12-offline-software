@@ -133,7 +133,7 @@ public class DCTBEngine extends DCEngine {
                                dcDetector, tde);
 
         if (clusters.isEmpty()) {
-            rbc.fillAllTBBanks(event, rbc, hits, null, null, null, null);
+            rbc.fillAllBanks(event, rbc, hits, null, null, null, null, true);
             return true;
         }
 
@@ -152,7 +152,7 @@ public class DCTBEngine extends DCEngine {
                     fhits.add(hit);
                 }
             }
-            rbc.fillAllTBBanks(event, rbc, fhits, clusters, null, null, null);
+            rbc.fillAllBanks(event, rbc, fhits, clusters, null, null, null, true);
             return true;
         }
 
@@ -313,10 +313,10 @@ public class DCTBEngine extends DCEngine {
         if (trkcands.isEmpty()) {
             // No candidates found, stop here and save the hits, the clusters, the
             //     segments and the crosses.
-            rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, null);
+            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, null, true);
         }
         else {
-            rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
+            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, trkcands, true);
         }
         return true;
     }

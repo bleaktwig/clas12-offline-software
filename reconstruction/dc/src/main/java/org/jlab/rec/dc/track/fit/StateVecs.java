@@ -377,8 +377,8 @@ public class StateVecs {
         public double tx;   // track px/pz in the tilted sector coordinate system at z
         public double ty;   // track py/pz in the tilted sector coordinate system at z
         public double Q;    // track q/p
-        double B;
-        double deltaPath;
+        double B;           // saved information of the B field
+        double deltaPath;   // difference in path lengths from one measurement to the next one
 
         StateVec(int k) {
             this.k = k;

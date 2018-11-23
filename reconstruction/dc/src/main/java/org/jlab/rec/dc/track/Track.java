@@ -25,11 +25,12 @@ public class Track extends Trajectory implements Comparable<Track>{
      */
     private static final long serialVersionUID = 1763744434903318419L;
 
-    private int _Q;
-    private double _P;
+    private int _Q;         // The charge
+    private double _P;      // The total momentum value
     private Matrix _CovMat;
 
-    private Point3D _Region3CrossPoint;
+    private Point3D _Region3CrossPoint; // A point along the track's trajectory between the last
+                                        // layer of region 3 and the TOF panel 1b.
     private Point3D _Region3CrossDir;
     private Point3D _Region1CrossPoint;
     private Point3D _Region1CrossDir;
@@ -55,66 +56,27 @@ public class Track extends Trajectory implements Comparable<Track>{
     private List<Segment> _ListOfHBSegments = new ArrayList<Segment>();
 
     /** empty constructor. */
-    public Track() {
-    }
+    public Track() {}
 
-    /** @return missing superlayer of the track. */
-    public int get_MissingSuperlayer() {
-        return _missingSuperlayer;
-    }
-    /** @param missingSuperlayer track missing superlayer. */
+    public int get_MissingSuperlayer() {return _missingSuperlayer;}
     public void set_MissingSuperlayer(int missingSuperlayer) {
         this._missingSuperlayer = missingSuperlayer;
     }
-    // NOTE: Lacks javadoc comment.
-    public int get_Status() {
-        return _Status;
-    }
-    // NOTE: Lacks javadoc comment.
-    public void set_Status(int _Status) {
-        this._Status = _Status;
-    }
-    /** @return track's ID. */
-    public int get_Id() {
-        return _Id;
-    }
-    /** @param _Id track's ID. */
-    public void set_Id(int _Id) {
-        this._Id = _Id;
-    }
-    /** @return the charge. */
-    public int get_Q() {
-        return _Q;
-    }
-    /** @param _Q the charge. */
-    public void set_Q(int _Q) {
-        this._Q = _Q;
-    }
-    /** @return the total momentum value. */
-    public double get_P() {
-        return _P;
-    }
-    /** @param _P the total momentum value. */
-    public void set_P(double _P) {
-        this._P = _P;
-    }
-    // NOTE: descriptions for get and set methods for PostRegion3CrossPoint are
-    //       inconsistent with each other, one implied multiple points while the
-    //       other only describes one point.
-    /**
-     * @return points along track between the last layer of region 3 and the TOF
-     *         panel 1b.
-     */
-    public Point3D get_PostRegion3CrossPoint() {
-        return _Region3CrossPoint;
-    }
-    /**
-     * @param point a point along the track's trajectory between the last layer
-     *              of region 3 and the TOF panel 1b.
-     */
-    public void set_PostRegion3CrossPoint(Point3D point) {
-        _Region3CrossPoint = point;
-    }
+
+    public int get_Status() {return _Status;}
+    public void set_Status(int _Status) {this._Status = _Status;}
+
+    public int get_Id() {return _Id;}
+    public void set_Id(int _Id) {this._Id = _Id;}
+
+    public int get_Q() {return _Q;}
+    public void set_Q(int _Q) {this._Q = _Q;}
+
+    public double get_P() {return _P;}
+    public void set_P(double _P) {this._P = _P;}
+
+    public Point3D get_PostRegion3CrossPoint() {return _Region3CrossPoint;}
+    public void set_PostRegion3CrossPoint(Point3D point) {_Region3CrossPoint = point;}
     /**
      * @return unit direction vector of the track at a point along the track's
      *         trajectory between the last layer of region 3 and the TOF panel
