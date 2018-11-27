@@ -59,22 +59,6 @@ public class DCHBEngine extends DCEngine {
         Constants.Load();
         super.setStartTimeOption();
         super.LoadTables();
-        // newRun = 809;
-        // long timeStamp = 371468548086L;
-        // if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-        //     IndexedTable tabJ = super.getConstantsManager().getConstants(newRun,
-        //             Constants.TIMEJITTER);
-        //     double period = tabJ.getDoubleValue("period", 0, 0, 0);
-        //     int phase = tabJ.getIntValue("phase", 0, 0, 0);
-        //     int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
-        //
-        //     if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
-        //
-        //     TableLoader.FillT0Tables(newRun, super.variationName);
-        //     TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
-        //
-        //     Run.set(newRun);
-        // }
         return true;
     }
 
@@ -125,7 +109,7 @@ public class DCHBEngine extends DCEngine {
 
         ClusterFitter cf = new ClusterFitter();
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
-        RecoBankWriter rbc = new RecoBankWriter();
+        RecoBankWriter rbw = new RecoBankWriter();
         HitReader hitRead = new HitReader();
         hitRead.fetch_DCHits(event,
                 noiseAnalysis,
@@ -145,8 +129,8 @@ public class DCHBEngine extends DCEngine {
         ClusterFinder clusFinder = new ClusterFinder();
         List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits, ct, cf, dcDetector);
         if (clusters.isEmpty()) return true;
-        List<FittedHit> fhits = rbc.createRawHitList(hits);
-        rbc.updateHitsListWithClusterInfo(fhits, clusters);
+        List<FittedHit> fhits = rbw.createRawHitList(hits);
+        rbw.updateHitsListWithClusterInfo(fhits, clusters);
 
         // Segments
         SegmentFinder segFinder = new SegmentFinder();
@@ -154,7 +138,7 @@ public class DCHBEngine extends DCEngine {
 
         // Build trajectory using segments
         if (segments.isEmpty()) {
-            rbc.fillAllBanks(event, rbc, fhits, clusters, null, null, null, false);
+            rbw.fillAllHBBanks(event, rbw, fhits, clusters, null, null, null);
             return true;
         }
         List<Segment> rmSegs = new ArrayList<>();
@@ -177,141 +161,141 @@ public class DCHBEngine extends DCEngine {
         List<Cross> crosses = crossMake.find_Crosses(segments, dcDetector);
 
         if (crosses.isEmpty()) {
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, null, null, false);
-            return true;
+            rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, null, null);
         }
         else {
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, null, false);
+            rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
         }
-
-        // TODO: DCKF RUNS HERE
-
-        /* 17 */
-        CrossListFinder crossLister = new CrossListFinder();
-
-        CrossList crosslist = crossLister.candCrossLists(crosses,
-                false,
-                super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
-                dcDetector,
-                null,
-                dcSwim);
-
-        /* 18 */
-        //6) find the list of  track candidates
-        TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
-        List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
-                dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim);
-        /* 19 */
-
-        // TODO: UP TO HERE
-
-        // track found
-        int trkId = 1;
-        if (trkcands.size() > 0) {
-            // remove overlaps
-            trkcandFinder.removeOverlappingTracks(trkcands);
-            for (Track trk : trkcands) {
-                // reset the id
-                trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
-                for (Cross c : trk) {
-                    c.get_Segment1().isOnTrack = true;
-                    c.get_Segment2().isOnTrack = true;
-
-                    for (FittedHit h1 : c.get_Segment1()) {
-                        h1.set_AssociatedHBTrackID(trk.get_Id());
-                    }
-                    for (FittedHit h2 : c.get_Segment2()) {
-                        h2.set_AssociatedHBTrackID(trk.get_Id());
-                    }
-                }
-                trkId++;
-            }
-        }
-        List<Segment> crossSegsNotOnTrack = new ArrayList<>();
-        List<Segment> psegments = new ArrayList<>();
-
-        for (Cross c : crosses) {
-            if (!c.get_Segment1().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment1());
-            if (!c.get_Segment2().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment2());
-        }
-
-        RoadFinder rf = new RoadFinder();
-        List<Road> allRoads = rf.findRoads(segments, dcDetector);
-        List<Segment> Segs2Road = new ArrayList<>();
-        for (Road r : allRoads) {
-            Segs2Road.clear();
-            int missingSL = -1;
-            for (int ri = 0; ri < 3; ri++) {
-                if (r.get(ri).associatedCrossId == -1) {
-                    if (r.get(ri).get_Superlayer() % 2 == 1) {
-                        missingSL = r.get(ri).get_Superlayer() + 1;
-                    } else {
-                        missingSL = r.get(ri).get_Superlayer() - 1;
-                    }
-                }
-            }
-            for (int ri = 0; ri < 3; ri++) {
-                for (Segment s : crossSegsNotOnTrack) {
-                    if (s.get_Sector() == r.get(ri).get_Sector()
-                            && s.get_Region() == r.get(ri).get_Region()
-                            && s.associatedCrossId == r.get(ri).associatedCrossId
-                            && r.get(ri).associatedCrossId != -1) {
-
-                        if (s.get_Superlayer() % 2 == missingSL % 2) Segs2Road.add(s);
-                    }
-                }
-            }
-            if (Segs2Road.size() == 2) {
-                Segment pSegment = rf.findRoadMissingSegment(Segs2Road, dcDetector, r.a);
-                if (pSegment != null) psegments.add(pSegment);
-            }
-        }
-
-        segments.addAll(psegments);
-        List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
-        CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
-                false,
-                super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
-                dcDetector,
-                null,
-                dcSwim);
-        List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
-                dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim);
-
-        // remove overlaps
-        if (mistrkcands.size() > 0) {
-            trkcandFinder.removeOverlappingTracks(mistrkcands);
-            for (Track trk : mistrkcands) {
-
-                // reset the id
-                trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
-                for (Cross c : trk) {
-                    for (FittedHit h1 : c.get_Segment1()) {
-                        h1.set_AssociatedHBTrackID(trk.get_Id());
-                    }
-                    for (FittedHit h2 : c.get_Segment2()) {
-                        h2.set_AssociatedHBTrackID(trk.get_Id());
-                    }
-                }
-                trkId++;
-            }
-        }
-        trkcands.addAll(mistrkcands);
-
-        // no candidate found, stop here and save the hits,
-        // the clusters, the segments, the crosses
-        if (trkcands.isEmpty()) {
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, null, false);
-            return true;
-        }
-        rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, trkcands, false);
 
         return true;
+        // // TODO: DCKF RUNS HERE
+        //
+        // /* 17 */
+        // CrossListFinder crossLister = new CrossListFinder();
+        //
+        // CrossList crosslist = crossLister.candCrossLists(crosses,
+        //         false,
+        //         super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
+        //         dcDetector,
+        //         null,
+        //         dcSwim);
+        //
+        // /* 18 */
+        // //6) find the list of  track candidates
+        // TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
+        // List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
+        //         dcDetector,
+        //         Swimmer.getTorScale(),
+        //         dcSwim);
+        // /* 19 */
+        //
+        // // TODO: UP TO HERE
+        //
+        // // track found
+        // int trkId = 1;
+        // if (trkcands.size() > 0) {
+        //     // remove overlaps
+        //     trkcandFinder.removeOverlappingTracks(trkcands);
+        //     for (Track trk : trkcands) {
+        //         // reset the id
+        //         trk.set_Id(trkId);
+        //         trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
+        //         for (Cross c : trk) {
+        //             c.get_Segment1().isOnTrack = true;
+        //             c.get_Segment2().isOnTrack = true;
+        //
+        //             for (FittedHit h1 : c.get_Segment1()) {
+        //                 h1.set_AssociatedHBTrackID(trk.get_Id());
+        //             }
+        //             for (FittedHit h2 : c.get_Segment2()) {
+        //                 h2.set_AssociatedHBTrackID(trk.get_Id());
+        //             }
+        //         }
+        //         trkId++;
+        //     }
+        // }
+        // List<Segment> crossSegsNotOnTrack = new ArrayList<>();
+        // List<Segment> psegments = new ArrayList<>();
+        //
+        // for (Cross c : crosses) {
+        //     if (!c.get_Segment1().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment1());
+        //     if (!c.get_Segment2().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment2());
+        // }
+        //
+        // RoadFinder rf = new RoadFinder();
+        // List<Road> allRoads = rf.findRoads(segments, dcDetector);
+        // List<Segment> Segs2Road = new ArrayList<>();
+        // for (Road r : allRoads) {
+        //     Segs2Road.clear();
+        //     int missingSL = -1;
+        //     for (int ri = 0; ri < 3; ri++) {
+        //         if (r.get(ri).associatedCrossId == -1) {
+        //             if (r.get(ri).get_Superlayer() % 2 == 1) {
+        //                 missingSL = r.get(ri).get_Superlayer() + 1;
+        //             } else {
+        //                 missingSL = r.get(ri).get_Superlayer() - 1;
+        //             }
+        //         }
+        //     }
+        //     for (int ri = 0; ri < 3; ri++) {
+        //         for (Segment s : crossSegsNotOnTrack) {
+        //             if (s.get_Sector() == r.get(ri).get_Sector()
+        //                     && s.get_Region() == r.get(ri).get_Region()
+        //                     && s.associatedCrossId == r.get(ri).associatedCrossId
+        //                     && r.get(ri).associatedCrossId != -1) {
+        //
+        //                 if (s.get_Superlayer() % 2 == missingSL % 2) Segs2Road.add(s);
+        //             }
+        //         }
+        //     }
+        //     if (Segs2Road.size() == 2) {
+        //         Segment pSegment = rf.findRoadMissingSegment(Segs2Road, dcDetector, r.a);
+        //         if (pSegment != null) psegments.add(pSegment);
+        //     }
+        // }
+        //
+        // segments.addAll(psegments);
+        // List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
+        // CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
+        //         false,
+        //         super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
+        //         dcDetector,
+        //         null,
+        //         dcSwim);
+        // List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
+        //         dcDetector,
+        //         Swimmer.getTorScale(),
+        //         dcSwim);
+        //
+        // // remove overlaps
+        // if (mistrkcands.size() > 0) {
+        //     trkcandFinder.removeOverlappingTracks(mistrkcands);
+        //     for (Track trk : mistrkcands) {
+        //
+        //         // reset the id
+        //         trk.set_Id(trkId);
+        //         trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
+        //         for (Cross c : trk) {
+        //             for (FittedHit h1 : c.get_Segment1()) {
+        //                 h1.set_AssociatedHBTrackID(trk.get_Id());
+        //             }
+        //             for (FittedHit h2 : c.get_Segment2()) {
+        //                 h2.set_AssociatedHBTrackID(trk.get_Id());
+        //             }
+        //         }
+        //         trkId++;
+        //     }
+        // }
+        // trkcands.addAll(mistrkcands);
+        //
+        // // no candidate found, stop here and save the hits,
+        // // the clusters, the segments, the crosses
+        // if (trkcands.isEmpty()) {
+        //     rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
+        //     return true;
+        // }
+        // rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, trkcands);
+        //
+        // return true;
     }
 }

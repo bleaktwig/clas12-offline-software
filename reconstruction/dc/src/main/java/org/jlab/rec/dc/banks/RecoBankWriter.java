@@ -25,8 +25,6 @@ import trackfitter.fitter.utilities.*;
  */
 public class RecoBankWriter {
 
-    // NOTE: I feel like this method shouldn't be in this class. Maybe it would fit better in
-    //       FittedHit?
     /**
      * Transforms a list hits into one of fitted hits.
      * @param hits list of hits to be transformed
@@ -123,8 +121,9 @@ public class RecoBankWriter {
                     bank.setFloat("TFlight", i, (float) hitlist.get(i).getSignalTimeOfFlight());
                 }
                 continue;
-            } // else
+            }
 
+            // else
             bank.setShort("status", i, (short) hitlist.get(i).get_QualityFac());
 
             // Checks the existing schema to fill the time
@@ -318,7 +317,7 @@ public class RecoBankWriter {
      * @param TB        boolean set to 1 if time-based and 0 otherwise.
      * @return          crosses bank
      */
-     private DataBank fillCrossesBank(DataEvent event, List<Cross> crosslist, boolean TB) {
+    private DataBank fillCrossesBank(DataEvent event, List<Cross> crosslist, boolean TB) {
 
         if (TB && event.hasBank("TimeBasedTrkg::TBCrosses")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCrosses");
@@ -362,7 +361,6 @@ public class RecoBankWriter {
         return bank;
     }
 
-
     /**
      * Writes a list of tracks into the EvioEvent's bank.
      * @param event    the EvioEvent
@@ -370,7 +368,7 @@ public class RecoBankWriter {
      * @param TB       boolean set to 1 if time-based and 0 otherwise.
      * @return         tracks bank
      */
-    public DataBank fillTracksBank(DataEvent event, List<Track> candlist, boolean TB) {
+    private DataBank fillTracksBank(DataEvent event, List<Track> candlist, boolean TB) {
 
         if (TB && event.hasBank("TimeBasedTrkg::TBTracks")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBTracks");
@@ -427,7 +425,9 @@ public class RecoBankWriter {
                 bank.setShort("Cross2_ID",  i, (short) candlist.get(i).get(1).get_Id());
                 bank.setShort("Cross3_ID",  i, (short) candlist.get(i).get(2).get_Id());
                 continue;
-            } // else
+            }
+
+            // else
             if (candlist.get(i).size() == 3) {
                 bank.setShort("Cross1_ID", i, (short) candlist.get(i).get(0).get_Id());
                 bank.setShort("Cross2_ID", i, (short) candlist.get(i).get(1).get_Id());
@@ -453,7 +453,7 @@ public class RecoBankWriter {
      * @param candlist list of tracks
      * @return         covariance matrix
      */
-    public DataBank fillTrackCovMatBank(DataEvent event, List<Track> candlist) {
+    private DataBank fillTrackCovMatBank(DataEvent event, List<Track> candlist) {
 
         if (event == null) return null;
         DataBank bank = event.createBank("TimeBasedTrkg::TBCovMat", candlist.size());
@@ -533,10 +533,10 @@ public class RecoBankWriter {
     }
 
     /**
-     * writes the hits, clusters, segments, crosses and track candidates into the EvioEvent's
-     *         Hit-based or Time-based bank.
+     * Writes the hits, clusters, segments, crosses and track candidates into the EvioEvent's
+     * Hit-based or Time-based bank.
      * @param event    hipo event
-     * @param rbc      RecoBankWriter's instance where everything is written to
+     * @param rbw      RecoBankWriter's instance where everything is written to
      * @param fhits    list of hits
      * @param clusters list of clusters
      * @param segments list of segments
@@ -544,7 +544,7 @@ public class RecoBankWriter {
      * @param trkcands list of tracks
      * @param TB       boolean set to 1 if time-based and 0 otherwise.
      */
-    public void fillAllBanks(DataEvent event, RecoBankWriter rbc,
+    private void fillAllBanks(DataEvent event, RecoBankWriter rbw,
                              List<FittedHit>     fhits,
                              List<FittedCluster> clusters,
                              List<Segment>       segments,
@@ -553,27 +553,51 @@ public class RecoBankWriter {
                              boolean             TB) {
 
         if (event == null) return;
-        if (fhits != null) event.appendBanks(rbc.fillHitsBank(event, fhits, TB));
+        if (fhits != null) event.appendBanks(rbw.fillHitsBank(event, fhits, TB));
         else return;
 
-        if (clusters != null) event.appendBanks(rbc.fillClustersBank(event, clusters, TB));
+        if (clusters != null) event.appendBanks(rbw.fillClustersBank(event, clusters, TB));
         else return;
 
-        if (segments != null) event.appendBanks(rbc.fillSegmentsBank(event, segments, TB));
+        if (segments != null) event.appendBanks(rbw.fillSegmentsBank(event, segments, TB));
         else return;
 
-        if (crosses != null) event.appendBanks(rbc.fillCrossesBank(event, crosses, TB));
+        if (crosses != null) event.appendBanks(rbw.fillCrossesBank(event, crosses, TB));
         else return;
 
         if (trkcands != null) {
-            event.appendBanks(rbc.fillTracksBank(event, trkcands, TB));
-            if (!TB) event.appendBanks(rbc.fillTrackCovMatBank(event, trkcands));
-            else     event.appendBanks(rbc.fillTrajectoryBank(event, trkcands));
+            event.appendBanks(rbw.fillTracksBank(event, trkcands, TB));
+            if (!TB) event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
+            else     event.appendBanks(rbw.fillTrajectoryBank(event, trkcands));
         }
         return;
     }
 
-    // TODO: Write two methods to access the fillAllBanks:
-    //       fillAllHBBanks()
-    //       fillAllTBBanks()
+    public void fillAllHBBanks(DataEvent event, RecoBankWriter rbw,
+                               List<FittedHit>     fhits,
+                               List<FittedCluster> clusters,
+                               List<Segment>       segments,
+                               List<Cross>         crosses,
+                               List<Track>         trkcands) {
+        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, false);
+        return;
+    }
+
+    public void fillHBTracksBanks(DataEvent event, RecoBankWriter rbw, List<Track> trkcands) {
+        if (trkcands != null) {
+            event.appendBanks(rbw.fillTracksBank(event, trkcands, false));
+            event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
+        }
+        return;
+    }
+
+    public void fillAllTBBanks(DataEvent event, RecoBankWriter rbw,
+                               List<FittedHit>     fhits,
+                               List<FittedCluster> clusters,
+                               List<Segment>       segments,
+                               List<Cross>         crosses,
+                               List<Track>         trkcands) {
+        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, true);
+        return;
+    }
 }

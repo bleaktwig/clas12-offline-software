@@ -180,8 +180,7 @@ public class DCKFEngine extends ReconstructionEngine {
 
         if (trkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(trkcands);
-            rbw.fillTracksBank(event, trkcands, false);
-            rbw.fillTrackCovMatBank(event, trkcands);
+            rbw.fillHBTracksBanks(event, rbw, trkcands);
         }
 
         return true;

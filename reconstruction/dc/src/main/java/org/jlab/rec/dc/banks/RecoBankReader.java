@@ -27,9 +27,9 @@ public class RecoBankReader {
 
     /**
      * Gets one fitted hit from a hits databank given by an index.
-     * @param hBank bank containing the fitted hits
-     * @param addr  address of the hit to be retrieved
-     * @return      the hit retrieved from the bank
+     * @param hBank hits bank
+     * @param addr  address of the fitted hit to be retrieved
+     * @return      the fitted hit retrieved from the bank
      */
     public FittedHit getHit(DataBank bank, int addr) {
         if (bank.rows() == 0) {
@@ -68,10 +68,10 @@ public class RecoBankReader {
     }
 
     /**
-     * Gets one fitted cluster from a clusters databank given by an index along with its referenced
+     * Gets a fitted cluster from a clusters databank given by an index along with its referenced
      * list of hits.
-     * @param clBank bank containing the fitted clusters
-     * @param hBank  bank containing the fitted hits, referenced by the fitted clusters
+     * @param clBank clusters bank
+     * @param hBank  hits bank
      * @param clAddr address of the cluster to be retrieved
      * @return       the cluster retrieved from the bank
      */
@@ -140,11 +140,10 @@ public class RecoBankReader {
     }
 
     /**
-     * Gets one segment from a segments databank given by an index along with its referenced fitted
-     * cluster.
-     * @param sBank  bank containing the segments
-     * @param clBank bank containing the fitted clusters, referenced by the segments
-     * @param hBank  bank containing the fitted hits, referenced by the fitted clusters
+     * Gets a segment from a segments databank given by an index along with its referenced cluster.
+     * @param sBank  segments bank
+     * @param clBank clusters bank
+     * @param hBank  hits bank
      * @param sAddr  address of the segment to be retrieved
      * @return       the segment retrieved from the bank
      */
@@ -207,18 +206,16 @@ public class RecoBankReader {
     }
 
     /**
-     * Gets one cross from a crosses databank given by an index along with its two referenced
-     * segments.
-     * @param crBank bank containing the crosses
-     * @param sBank  bank containing the segments, referenced by the crosses
-     * @param clBank bank containing the fitted clusters, referenced by the segments
-     * @param hBank  bank containing the fitted hits, referenced by the fitted clusters
+     * Gets a cross from a crosses databank given by an index along with its two referenced objects.
+     * @param crBank crosses bank
+     * @param sBank  segments bank
+     * @param clBank fitted clusters bank
+     * @param hBank  fitted hits bank
      * @param idx    index of the cross to be retrieved
      * @return       the retrieved cross
      */
-    public Cross getCross(DataBank crBank, DataBank sBank,
-                          DataBank clBank, DataBank hBank,
-                          int idx) {
+    public Cross getCross(DataBank crBank, DataBank sBank,  DataBank clBank,
+                          DataBank hBank,  int idx) {
         if (crBank.rows() == 0) {
             System.out.println("[DCKF] ERROR: crosses bank is empty.");
             return null;
@@ -282,6 +279,23 @@ public class RecoBankReader {
         cross.set_CrossDirIntersSegWires();
 
         return cross;
+    }
+
+    /**
+     * Gets a track from the tracks bank along with all of its referenced objects.
+     * @param trBank tracks bank
+     * @param crBank crosses bank
+     * @param sBank  segments bank
+     * @param clBank clusters bank
+     * @param hBank  hits bank
+     * @param idx    index of the track to be retrieved
+     * @return       the retrieved track
+     */
+    public Track getTrack(DataBank trBank, DataBank crBank, DataBank sBank,
+                          DataBank clBank, DataBank hBank,  int idx) {
+        // TODO
+
+        return null;
     }
 
     /**

@@ -90,7 +90,7 @@ public class DCTBEngine extends DCEngine {
         List<Track> trkcands         = new ArrayList<Track>();
 
         // Instantiate bank writer
-        RecoBankWriter rbc = new RecoBankWriter();
+        RecoBankWriter rbw = new RecoBankWriter();
 
         HitReader hitRead  = new HitReader();
         hitRead.read_HBHits(event,
@@ -133,7 +133,7 @@ public class DCTBEngine extends DCEngine {
                                dcDetector, tde);
 
         if (clusters.isEmpty()) {
-            rbc.fillAllBanks(event, rbc, hits, null, null, null, null, true);
+            rbw.fillAllTBBanks(event, rbw, hits, null, null, null, null);
             return true;
         }
 
@@ -152,7 +152,7 @@ public class DCTBEngine extends DCEngine {
                     fhits.add(hit);
                 }
             }
-            rbc.fillAllBanks(event, rbc, fhits, clusters, null, null, null, true);
+            rbw.fillAllTBBanks(event, rbw, fhits, clusters, null, null, null);
             return true;
         }
 
@@ -313,10 +313,10 @@ public class DCTBEngine extends DCEngine {
         if (trkcands.isEmpty()) {
             // No candidates found, stop here and save the hits, the clusters, the
             //     segments and the crosses.
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, null, true);
+            rbw.fillAllTBBanks(event, rbw, fhits, clusters, segments, crosses, null);
         }
         else {
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, trkcands, true);
+            rbw.fillAllTBBanks(event, rbw, fhits, clusters, segments, crosses, trkcands);
         }
         return true;
     }
