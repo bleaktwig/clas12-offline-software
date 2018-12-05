@@ -1,13 +1,11 @@
 package org.jlab.service.kf;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
-import org.jlab.geom.prim.Point3D;
+// import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
@@ -15,13 +13,15 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
 
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
-import org.jlab.rec.dc.hit.FittedHit;
-import org.jlab.rec.dc.cluster.FittedCluster;
-import org.jlab.rec.dc.segment.Segment;
+// import org.jlab.rec.dc.hit.FittedHit;
+// import org.jlab.rec.dc.cluster.FittedCluster;
+// import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
@@ -124,6 +124,8 @@ public class DCKFEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
+        if (currentEvent != 42) return true;
+        System.out.println("DCKF RUNNING on run " + currentEvent);
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
@@ -140,10 +142,10 @@ public class DCKFEngine extends ReconstructionEngine {
             return true;
         }
 
-        DataBank crossesBank  = event.getBank("HitBasedTrkg::HBCrosses");
-        DataBank segmentsBank = event.getBank("HitBasedTrkg::HBSegments");
-        DataBank clustersBank = event.getBank("HitBasedTrkg::HBClusters");
         DataBank hitsBank     = event.getBank("HitBasedTrkg::HBHits");
+        DataBank clustersBank = event.getBank("HitBasedTrkg::HBClusters");
+        DataBank segmentsBank = event.getBank("HitBasedTrkg::HBSegments");
+        DataBank crossesBank  = event.getBank("HitBasedTrkg::HBCrosses");
 
         // Pull the crosses from the bank.
         if (crossesBank.rows() == 0) return true;
@@ -178,8 +180,10 @@ public class DCKFEngine extends ReconstructionEngine {
                                                            Swimmer.getTorScale(),
                                                            dcSwim);
 
+        System.out.println("trkcands size before running: " + trkcands.size());
         if (trkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(trkcands);
+            System.out.println("trkcands size after running: " + trkcands.size());
             rbw.fillHBTracksBanks(event, rbw, trkcands);
         }
 

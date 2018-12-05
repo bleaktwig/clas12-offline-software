@@ -206,7 +206,8 @@ public class RecoBankReader {
     }
 
     /**
-     * Gets a cross from a crosses databank given by an index along with its two referenced objects.
+     * Gets a cross from a crosses databank given by an index along with its two referenced segments,
+     * obtained from a segments databank.
      * @param crBank crosses bank
      * @param sBank  segments bank
      * @param clBank fitted clusters bank
@@ -282,6 +283,67 @@ public class RecoBankReader {
     }
 
     /**
+     * Gets a cross from a crosses databank given by an index along with its two referenced segments,
+     * obtained from a segment list.
+     * @param crBank   crosses bank
+     * @param segments list of segments
+     * @param idx      index of the cross to be retrieved
+     * @return         the retrieved cross
+     */
+    public Cross getCross(DataBank crBank, List<Segment> segments, int idx) {
+        if (crBank.rows() == 0) {
+            System.out.println("[DCKF] ERROR: crosses bank is empty.");
+            return null;
+        }
+        if (idx > crBank.rows()) {
+            System.out.println("[DCKF] ERROR: index given is greater than " +
+                               "crosses bank's size.");
+            return null;
+        }
+        Cross cross = new Cross((int)  crBank.getByte ("sector", idx),
+                                (int)  crBank.getByte ("region", idx),
+                                (int)  crBank.getShort("id",     idx));
+
+        cross.set_Point   (new Point3D(crBank.getFloat("x",      idx),
+                                       crBank.getFloat("y",      idx),
+                                       crBank.getFloat("z",      idx)));
+        cross.set_PointErr(new Point3D(crBank.getFloat("err_x",  idx),
+                                       crBank.getFloat("err_y",  idx),
+                                       crBank.getFloat("err_z",  idx)));
+        cross.set_Dir     (new Point3D(crBank.getFloat("ux",     idx),
+                                       crBank.getFloat("uy",     idx),
+                                       crBank.getFloat("uz",     idx)));
+        cross.set_DirErr  (new Point3D(crBank.getFloat("err_ux", idx),
+                                       crBank.getFloat("err_uy", idx),
+                                       crBank.getFloat("err_uz", idx)));
+
+        // get the segments
+        for (int i = 1; i < 3; i++) {
+            int sID = (int) crBank.getShort("Segment" + i + "_ID", idx);
+            Segment fSegment;
+            for (Segment segment : segments) {
+                if (sID == segment.get_Id()) {
+                    fSegment = segment;
+                    break;
+                }
+            }
+            if (sAddress == null) return null;
+
+            if (i == 1)      cross.set_Segment1(fSegment);
+            else if (i == 2) cross.set_Segment2(fSegment);
+            cross.add(fSegment);
+        }
+
+        if (cross.get_Segment1().get_Id() == -1 || cross.get_Segment2().get_Id() == -1) {
+            cross.isPseudoCross = true;
+        }
+
+        cross.set_CrossDirIntersSegWires();
+
+        return cross;
+    }
+
+    /**
      * Gets a track from the tracks bank along with all of its referenced objects.
      * @param trBank tracks bank
      * @param crBank crosses bank
@@ -293,6 +355,12 @@ public class RecoBankReader {
      */
     public Track getTrack(DataBank trBank, DataBank crBank, DataBank sBank,
                           DataBank clBank, DataBank hBank,  int idx) {
+        // TODO
+
+        return null;
+    }
+
+    public Track getTrack(DataBank trBank, List<Cross> crosses, int idx) {
         // TODO
 
         return null;

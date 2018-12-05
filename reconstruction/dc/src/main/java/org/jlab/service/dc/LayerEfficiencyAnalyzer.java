@@ -12,13 +12,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import org.jlab.clas.swimtools.MagFieldsEngine;
-import org.jlab.clas.swimtools.Swim;
-
-import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.rec.dc.Constants;
-
 import org.jlab.utils.options.OptionParser;
+import org.jlab.clas.swimtools.Swim;
+import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.clas.swimtools.MagFieldsEngine;
 
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.TDirectory;
@@ -27,6 +24,9 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
+
+import org.jlab.service.kf.DCKFEngine;
+import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
@@ -637,11 +637,17 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
         screensize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setSize((int) (screensize.getHeight() * .75 * 1.618), (int) (screensize.getHeight() * .75));
 
+
+        MagFieldsEngine enf        = new MagFieldsEngine();
+        DCHB1Engine dchb1          = new DCHB1Engine();
+        DCKFEngine dckf            = new DCKFEngine();
+        DCHB2Engine dchb2          = new DCHB2Engine();
         LayerEfficiencyAnalyzer tm = new LayerEfficiencyAnalyzer();
-        MagFieldsEngine enf = new MagFieldsEngine();
+
         enf.init();
-        DCHBEngine en = new DCHBEngine();
-        en.init();
+        dchb1.init();
+        dckf.init();
+        dchb2.init();
         tm.init();
 
         frame.add(tm.mainPanel);
@@ -651,25 +657,26 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
         parser.addOption("-i","");
         parser.parse(args);
 
-        if(parser.hasOption("-i")==true){
-            String inputFile    = parser.getOption("-i").stringValue();
-            int counter =0;
+        if (parser.hasOption("-i") == true) {
+            String inputFile = parser.getOption("-i").stringValue();
+            int counter = 0;
             HipoDataSource reader = new HipoDataSource();
             reader.open(inputFile);
+
             while (reader.hasEvent()) {
                 counter++;
                 DataEvent event = reader.getNextEvent();
                 enf.processDataEvent(event);
-                en.processDataEvent(event);
+                dchb1.processDataEvent(event);
+                dckf.processDataEvent(event);
+                dchb2.processDataEvent(event);
                 tm.processDataEvent(event);
                 tm.ProcessLayerEffs(event);
-                //event.show();
-                if(counter%1000==0)
-                    tm.drawPlots();
+
+                if (counter % 1000 == 0) tm.drawPlots();
             }
             tm.drawPlots();
             tm.saveHistosToFile("dclayereffs.hipo");
         }
     }
-
 }
