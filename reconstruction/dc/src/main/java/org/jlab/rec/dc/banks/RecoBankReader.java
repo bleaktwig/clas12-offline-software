@@ -6,6 +6,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
@@ -320,14 +321,14 @@ public class RecoBankReader {
         // get the segments
         for (int i = 1; i < 3; i++) {
             int sID = (int) crBank.getShort("Segment" + i + "_ID", idx);
-            Segment fSegment;
+            Segment fSegment = null;
             for (Segment segment : segments) {
                 if (sID == segment.get_Id()) {
                     fSegment = segment;
                     break;
                 }
             }
-            if (sAddress == null) return null;
+            if (fSegment == null) return null;
 
             if (i == 1)      cross.set_Segment1(fSegment);
             else if (i == 2) cross.set_Segment2(fSegment);
@@ -353,17 +354,90 @@ public class RecoBankReader {
      * @param idx    index of the track to be retrieved
      * @return       the retrieved track
      */
-    public Track getTrack(DataBank trBank, DataBank crBank, DataBank sBank,
-                          DataBank clBank, DataBank hBank,  int idx) {
+    public Track getHBTrack(DataBank trBank, DataBank crBank, DataBank sBank,
+                            DataBank clBank, DataBank hBank,  int idx) {
         // TODO
 
         return null;
     }
 
-    public Track getTrack(DataBank trBank, List<Cross> crosses, int idx) {
-        // TODO
+    /**
+     * Gets a track from a tracks databank given by an index along with its three referenced segments,
+     * obtained from a list of crosses.
+     * @param trBank  tracks bank
+     * @param crosses list of crosses
+     * @param idx     index of the track to be retrieved
+     * @return        the retrieved track
+     */
+    public Track getHBTrack(DataBank trBank, List<Cross> crosses, int idx) {
+        if (trBank.rows() == 0) {
+            System.out.println("[DCKF] ERROR: tracks bank is empty.");
+            return null;
+        }
+        if (idx > trBank.rows()) {
+            System.out.println("[DCKF] ERROR: index given is greater than tracks bank's size.");
+            return null;
+        }
 
-        return null;
+        Track track = new Track();
+        track.set_Id    ((int) trBank.getShort("id",     idx));
+        track.set_Sector((int) trBank.getByte ("sector", idx));
+        track.set_Q     ((int) trBank.getByte ("q",      idx));
+
+        // TODO: The status is changed when being written into the bank, see if this affects anything.
+        track.set_Status((int) trBank.getShort("status", idx));
+
+        if (trBank.getFloat("c1_x") != null) {
+            track.set_PreRegion1CrossPoint(new Point3D((double) trBank.getFloat("c1_x", idx),
+                                                       (double) trBank.getFloat("c1_y", idx),
+                                                       (double) trBank.getFloat("c1_z", idx)));
+            track.set_PreRegion1CrossDir  (new Point3D((double) trBank.getFloat("c1_ux", idx),
+                                                       (double) trBank.getFloat("c1_uy", idx),
+                                                       (double) trBank.getFloat("c1_uz", idx)));
+        }
+        if (trBank.getFloat("c3_x") != null) {
+            track.set_PostRegion3CrossPoint(new Point3D((double) trBank.getFloat("c3_x", idx),
+                                                        (double) trBank.getFloat("c3_y", idx),
+                                                        (double) trBank.getFloat("c3_z", idx)));
+            track.set_PostRegion3CrossDir  (new Point3D((double) trBank.getFloat("c3_ux", idx),
+                                                        (double) trBank.getFloat("c3_uy", idx),
+                                                        (double) trBank.getFloat("c3_uz", idx)));
+        }
+        if (trBank.getFloat("t1_x") != null) {
+            track.set_Region1TrackX(new Point3D((double) trBank.getFloat("t1_x", idx),
+                                                (double) trBank.getFloat("t1_y", idx),
+                                                (double) trBank.getFloat("t1_z", idx)));
+            track.set_Region1TrackP(new Point3D((double) trBank.getFloat("t1_px", idx),
+                                                (double) trBank.getFloat("t1_py", idx),
+                                                (double) trBank.getFloat("t1_pz", idx)));
+        }
+
+        track.set_TotPathLen          ((double) trBank.getFloat("pathlength", idx));
+        track.set_Vtx0(new Point3D    ((double) trBank.getFloat("Vtx0_x", idx),
+                                       (double) trBank.getFloat("Vtx0_y", idx),
+                                       (double) trBank.getFloat("Vtx0_z", idx)));
+        track.set_pAtOrig(new Vector3D((double) trBank.getFloat("p0_x", idx),
+                                       (double) trBank.getFloat("p0_y", idx),
+                                       (double) trBank.getFloat("p0_z", idx)));
+        track.set_FitChi2             ((double) trBank.getFloat("chi2", idx));
+        track.set_FitNDF              ((int)    trBank.getFloat("ndf", idx));
+
+        // Get the segments
+        for (int i = 1; i < 4; i++) {
+            int cID = (int) trBank.getShort("Cross" + i + "_ID", idx);
+            Cross fCross = null;
+            for (Cross cross : crosses) {
+                if (cID == cross.get_Id()) {
+                    fCross = cross;
+                    break;
+                }
+            }
+            if (fCross == null) return null;
+
+            track.add(fCross);
+        }
+
+        return track;
     }
 
     /**

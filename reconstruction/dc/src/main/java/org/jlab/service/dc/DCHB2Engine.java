@@ -71,10 +71,12 @@ public class DCHB2Engine extends DCEngine {
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
+        System.out.println("[DCHB2] 00");
         DataBank headerBank = event.getBank("RUN::config");
 
         int newRun = headerBank.getInt("run", 0);
         if (newRun == 0) return true;
+        System.out.println("[DCHB2] 01");
 
         Swim dcSwim = new Swim();
         RecoBankWriter rbw = new RecoBankWriter();
@@ -85,9 +87,8 @@ public class DCHB2Engine extends DCEngine {
         TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
 
         // === GET OBJECTS =============================================================
-        if (!event.hasBank("HitBasedTrkg::HBCrosses")) {
-            return true;
-        }
+        if (!event.hasBank("HitBasedTrkg::HBCrosses")) return true;
+        System.out.println("[DCHB2] 02");
 
         DataBank hitsBank     = event.getBank("HitBasedTrkg::HBHits");
         DataBank clustersBank = event.getBank("HitBasedTrkg::HBClusters");
@@ -97,8 +98,11 @@ public class DCHB2Engine extends DCEngine {
 
         // Pull the crosses and tracks from the bank.
         if (segmentsBank.rows() == 0) return true;
+        System.out.println("[DCHB2] 03");
         if (crossesBank.rows()  == 0) return true;
+        System.out.println("[DCHB2] 04");
         if (tracksBank.rows()   == 0) return true;
+        System.out.println("[DCHB2] 05");
 
         List<Segment> segments = new ArrayList();
         List<Cross> crosses    = new ArrayList();
@@ -111,9 +115,10 @@ public class DCHB2Engine extends DCEngine {
             crosses.add(rbr.getCross(crossesBank, segments, c));
         }
         for (int t = 0; t < tracksBank.rows(); t++) {
-            trkCands.add(rbr.getTrack(tracksBank, crosses, t));
+            trkCands.add(rbr.getHBTrack(tracksBank, crosses, t));
         }
 
+        System.out.println("[DCHB2] 06");
         // === RUN DCHB2 ===============================================================
         int trkId = 1;
         if (trkCands.size() > 0) {
