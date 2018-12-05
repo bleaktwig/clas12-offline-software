@@ -135,6 +135,7 @@ public class DCHB2Engine extends DCEngine {
                 trkId++;
             }
         }
+        System.out.println("[DCHB2] 07");
 
         List<Segment> crossSegsNotOnTrack = new ArrayList<>();
         List<Segment> psegments           = new ArrayList<>();
@@ -143,6 +144,7 @@ public class DCHB2Engine extends DCEngine {
             if (!c.get_Segment1().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment1());
             if (!c.get_Segment2().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment2());
         }
+        System.out.println("[DCHB2] 08");
 
         RoadFinder rf = new RoadFinder();
         List<Road> allRoads = rf.findRoads(segments, dcDetector);
@@ -177,6 +179,8 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
+        System.out.println("[DCHB2] 09");
+
         segments.addAll(psegments);
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
         CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
@@ -190,6 +194,7 @@ public class DCHB2Engine extends DCEngine {
                 Swimmer.getTorScale(),
                 dcSwim);
 
+        System.out.println("[DCHB2] 10");
         // remove overlaps
         if (mistrkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(mistrkcands);
@@ -205,13 +210,21 @@ public class DCHB2Engine extends DCEngine {
                 trkId++;
             }
         }
+
+        System.out.println("[DCHB2] 11, mistrkcands size: " + mistrkcands.size());
         trkCands.addAll(mistrkcands);
 
         // TODO: Some changes were made to at least the hits, segments and crosses. Remove these
         //       from the banks and write them again.
 
-        if (trkCands.isEmpty()) return true; // No candidates found
+        if (trkCands.isEmpty()) {
+            return true; // No candidates found
+        }
+        // ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBTracks");
+        // ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCovMat");
         rbw.fillHBTracksBanks(event, rbw, trkCands);
+
+        System.out.println("[DCHB2] 12, trkCands size: " + trkCands.size());
 
         return true;
     }

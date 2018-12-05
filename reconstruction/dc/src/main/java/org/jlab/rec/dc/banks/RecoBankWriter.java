@@ -243,7 +243,7 @@ public class RecoBankWriter {
      */
     private DataBank fillSegmentsBank(DataEvent event, List<Segment> seglist, boolean TB) {
 
-        if (TB && event.hasBank("TimeBasedTrjg::TBSegments")) { // For second pass tracking
+        if (TB && event.hasBank("TimeBasedTrkg::TBSegments")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBSegments");
         }
 
@@ -506,8 +506,7 @@ public class RecoBankWriter {
             if (track.trajectory == null) continue;
 
             for (int j = 0; j < track.trajectory.size(); j++) {
-                if (track.trajectory.get(j).getDetName().startsWith("DC") &&
-                        (j - 6) % 6 != 0) {
+                if (track.trajectory.get(j).getDetName().startsWith("DC") && (j - 6) % 6 != 0) {
                     continue; // save the last layer in a superlayer
                 }
 
@@ -584,6 +583,11 @@ public class RecoBankWriter {
     }
 
     public void fillHBTracksBanks(DataEvent event, RecoBankWriter rbw, List<Track> trkcands) {
+        if (event.hasBank("HitBasedTrkg::HBTracks") && event.hasBank("TimeBasedTrkg::TBCovMat")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBTracks");
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCovMat");
+        }
+
         if (trkcands != null) {
             event.appendBanks(rbw.fillTracksBank(event, trkcands, false));
             event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
