@@ -328,7 +328,7 @@ public class RecoBankReader {
      * Warning: The output is usually very extensive.
      * @param cList the list of crosses to be printed
      */
-    public static void printCrossesInfo(List<Cross> cList) {
+    public static void printFullInfo(List<Cross> cList) {
         System.out.println("Crosses info:");
         for (int c = 0; c < cList.size(); c++) {
             System.out.println(cList.get(c).getDetailedInfo());

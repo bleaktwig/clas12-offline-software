@@ -583,15 +583,16 @@ public class RecoBankWriter {
     }
 
     public void fillHBTracksBanks(DataEvent event, RecoBankWriter rbw, List<Track> trkcands) {
-        if (event.hasBank("HitBasedTrkg::HBTracks") && event.hasBank("TimeBasedTrkg::TBCovMat")) {
+        if (event.hasBank("HitBasedTrkg::HBTracks"))
             ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBTracks");
+        if (event.hasBank("TimeBasedTrkg::TBCovMat"))
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCovMat");
-        }
 
         if (trkcands != null) {
             event.appendBanks(rbw.fillTracksBank(event, trkcands, false));
             event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
         }
+
         return;
     }
 

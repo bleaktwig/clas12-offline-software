@@ -15,6 +15,7 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
+import org.jlab.rec.dc.banks.RecoBankReader; // TODO: Delete
 import org.jlab.rec.dc.timetodistance.TableLoader;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.hit.FittedHit;
@@ -150,12 +151,11 @@ public class DCHB1Engine extends DCEngine {
         CrossMaker crossMake = new CrossMaker();
         List<Cross> crosses = crossMake.find_Crosses(segments, dcDetector);
 
-        if (crosses.isEmpty()) {
-            rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, null, null);
-        }
-        else {
-            rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
-        }
+        if (crosses.isEmpty()) crosses = null;
+        rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
+
+        // System.out.println("DCHB1:");
+        // RecoBankReader.printSample(crosses.get(0));
 
         return true;
     }

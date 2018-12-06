@@ -125,7 +125,6 @@ public class DCKFEngine extends ReconstructionEngine {
         int currentEvent = eventCounter;
         eventCounter++;
         if (currentEvent != 42) return true;
-        System.out.println("DCKF RUNNING on run " + currentEvent);
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
@@ -192,6 +191,9 @@ public class DCKFEngine extends ReconstructionEngine {
             System.out.println("trkcands size after running: " + trkcands.size());
             rbw.fillHBTracksBanks(event, rbw, trkcands);
         }
+
+        // System.out.println("DCKF:");
+        // RecoBankReader.printSample(crosses.get(0));
 
         return true;
     }
