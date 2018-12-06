@@ -19,9 +19,9 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
-// import org.jlab.rec.dc.hit.FittedHit;
-// import org.jlab.rec.dc.cluster.FittedCluster;
-// import org.jlab.rec.dc.segment.Segment;
+import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.cluster.FittedCluster;
+import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
@@ -137,23 +137,29 @@ public class DCKFEngine extends ReconstructionEngine {
         RecoBankWriter rbw = new RecoBankWriter();
         RecoBankReader rbr = new RecoBankReader();
 
-        // === GET CROSSES =============================================================
-        if (!event.hasBank("HitBasedTrkg::HBCrosses")) {
-            return true;
-        }
+        // === GET OBJECTS =============================================================
+        if (!event.hasBank("HitBasedTrkg::HBCrosses")) return true;
 
-        DataBank hitsBank     = event.getBank("HitBasedTrkg::HBHits");
-        DataBank clustersBank = event.getBank("HitBasedTrkg::HBClusters");
-        DataBank segmentsBank = event.getBank("HitBasedTrkg::HBSegments");
-        DataBank crossesBank  = event.getBank("HitBasedTrkg::HBCrosses");
+        DataBank hiBank = event.getBank("HitBasedTrkg::HBHits");
+        DataBank clBank = event.getBank("HitBasedTrkg::HBClusters");
+        DataBank seBank = event.getBank("HitBasedTrkg::HBSegments");
+        DataBank crBank = event.getBank("HitBasedTrkg::HBCrosses");
 
-        // Pull the crosses from the bank.
-        if (crossesBank.rows() == 0) return true;
-        List<Cross> crosses = new ArrayList();
+        // Pull the hits, clusters, segments and crosses from the bank.
+        if (hiBank.rows() == 0) return true;
+        if (clBank.rows() == 0) return true;
+        if (seBank.rows() == 0) return true;
+        if (crBank.rows() == 0) return true;
 
-        for (int c = 0; c < crossesBank.rows(); c++) {
-            crosses.add(rbr.getCross(crossesBank, segmentsBank, clustersBank, hitsBank, c));
-        }
+        List<FittedHit>     hits     = new ArrayList();
+        List<FittedCluster> clusters = new ArrayList();
+        List<Segment>       segments = new ArrayList();
+        List<Cross>         crosses  = new ArrayList();
+
+        for (int h = 0; h < hiBank.rows(); ++h) hits.add    (rbr.getHit    (hiBank, h));
+        for (int c = 0; c < clBank.rows(); ++c) clusters.add(rbr.getCluster(clBank, hits, c));
+        for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
+        for (int c = 0; c < crBank.rows(); ++c) crosses.add (rbr.getCross  (crBank, segments, c));
 
         // TODO: after all is up and running I should check what data from the
         //       crosses/segments/clusters/hits I can ignore so that I minimize

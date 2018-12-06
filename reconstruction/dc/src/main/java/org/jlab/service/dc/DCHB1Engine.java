@@ -59,9 +59,7 @@ public class DCHB1Engine extends DCEngine {
         System.out.println("DCHB1 RUNNING on run " + currentEvent);
 
         // setRunConditionsParameters(event);
-        if (!event.hasBank("RUN::config")) {
-            return true;
-        }
+        if (!event.hasBank("RUN::config")) return true;
 
         DataBank bank  = event.getBank("RUN::config");
         long timeStamp = bank.getLong("timestamp", 0);
@@ -75,8 +73,8 @@ public class DCHB1Engine extends DCEngine {
             if (timeStamp == -1) return true;
             IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
             double period     = tabJ.getDoubleValue("period", 0, 0, 0);
-            int phase         = tabJ.getIntValue("phase", 0, 0, 0);
-            int cycles        = tabJ.getIntValue("cycles", 0, 0, 0);
+            int cycles        = tabJ.getIntValue   ("cycles", 0, 0, 0);
+            int phase         = tabJ.getIntValue   ("phase",  0, 0, 0);
 
             if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
 
@@ -93,14 +91,14 @@ public class DCHB1Engine extends DCEngine {
         Swim dcSwim = new Swim();
 
         // Init SNR
-        Clas12NoiseResult results = new Clas12NoiseResult();
-        Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
+        Clas12NoiseResult results           = new Clas12NoiseResult();
+        Clas12NoiseAnalysis noiseAnalysis   = new Clas12NoiseAnalysis();
         NoiseReductionParameters parameters =
                 new NoiseReductionParameters(2, Constants.SNR_LEFTSHIFTS, Constants.SNR_RIGHTSHIFTS);
 
-        ClusterFitter cf = new ClusterFitter();
+        ClusterFitter cf           = new ClusterFitter();
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
-        RecoBankWriter rbw = new RecoBankWriter();
+        RecoBankWriter rbw         = new RecoBankWriter();
 
         // Read the hits
         HitReader hitRead = new HitReader();
