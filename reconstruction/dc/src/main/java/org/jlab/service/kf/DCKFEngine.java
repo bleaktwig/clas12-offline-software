@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-// import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
@@ -163,10 +163,6 @@ public class DCKFEngine extends ReconstructionEngine {
         // TODO: after all is up and running I should check what data from the
         //       crosses/segments/clusters/hits I can ignore so that I minimize
         //       what RecoBankReader has to read and accelerate the whole ordeal
-        // if (currentEvent == 0) {
-        //     System.out.println("\n\n\n\nDCKF DATA\n");
-        //     RecoBankReader.printSample(crosses.get(0));
-        // }
 
         // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
@@ -178,6 +174,17 @@ public class DCKFEngine extends ReconstructionEngine {
                 null,
                 dcSwim);
 
+        // TODO: When candCrossLists runs, the cross' pointErr spikes, being multiplyed by 57.38 for
+        //       some reason. As a patch solution, the code below is applied.
+        //       If I'm going to actually go with this the at least I should change the scaling
+        //       value so as to be more accurate.
+        // TODO: This scaling factor is really inaccurate. I should seriously improve it if I'm
+        //       going to go for this option.
+        for (Cross cross : crosses)
+            cross.set_PointErr(new Point3D(cross.get_PointErr().x() / 57.38,
+                                           cross.get_PointErr().y() / 57.38,
+                                           cross.get_PointErr().z() / 57.38));
+
         // === INSTANCE AND RUN TrackCandListFinder ====================================
         TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
@@ -185,15 +192,16 @@ public class DCKFEngine extends ReconstructionEngine {
                                                            Swimmer.getTorScale(),
                                                            dcSwim);
 
-        System.out.println("trkcands size before running: " + trkcands.size());
+        System.out.println("[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(trkcands);
-            System.out.println("trkcands size after running: " + trkcands.size());
             rbw.fillHBTracksBanks(event, rbw, trkcands);
         }
+        System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
-        // System.out.println("DCKF:");
-        // RecoBankReader.printSample(crosses.get(0));
+        System.out.println("DCKF:");
+        RecoBankReader.printSample(crosses.get(1));
+        RecoBankReader.printSample(crosses.get(3));
 
         return true;
     }

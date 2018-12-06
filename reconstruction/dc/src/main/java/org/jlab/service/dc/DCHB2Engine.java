@@ -198,7 +198,7 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
-        System.out.println("[DCHB2] mistrkcands size: " + mistrkcands.size());
+        System.out.println("[DCHB2] # of mistrkcands: " + mistrkcands.size());
         trkCands.addAll(mistrkcands);
 
         // TODO: Some changes were made to at least the hits, segments and crosses. Remove these
@@ -209,10 +209,10 @@ public class DCHB2Engine extends DCEngine {
         }
         rbw.fillHBTracksBanks(event, rbw, trkCands);
 
-        System.out.println("[DCHB2] trkCands size: " + trkCands.size());
+        System.out.println("[DCHB2] final # of tracks: " + trkCands.size());
 
-        // System.out.println("DCHB2:");
-        // RecoBankReader.printSample(crosses.get(0));
+        System.out.println("DCHB2:");
+        RecoBankReader.printSample(crosses.get(0));
 
         return true;
     }
