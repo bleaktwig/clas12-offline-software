@@ -210,18 +210,20 @@ public class RecoBankWriter {
             bank.setFloat("fitInterc",    i, (float) fitInterc);
             bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
 
+            // TODO: See further into these lines
             for (int j = 0; j < cluslist.get(i).size(); j++) {
                 if (j < hitIdxArray.length) {
                     hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
                 }
 
                 // Math.sqrt(12.) = 3.4641016151377544
-                double residual = cluslist.get(i).get(j).get_ClusFitDoca() /
-                                  (cluslist.get(i).get(j).get_CellSize() / 3.4641016151377544);
-                chi2 += residual * residual;
+                // double residual = cluslist.get(i).get(j).get_ClusFitDoca() /
+                //                   (cluslist.get(i).get(j).get_CellSize() / 3.4641016151377544);
+                // chi2 += residual * residual;
             }
-            bank.setFloat("fitChisqProb", i,
-                          (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
+            // bank.setFloat("fitChisqProb", i,
+            //               (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
+            bank.setFloat("fitChisqProb", i, (float) cluslist.get(i).get_fitProb());
 
             for (int j = 0; j < hitIdxArray.length; j++) {
                 String hitStrg = "Hit";

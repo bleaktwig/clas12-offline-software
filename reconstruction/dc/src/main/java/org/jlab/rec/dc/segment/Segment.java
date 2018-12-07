@@ -282,16 +282,28 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      * @return segment's data encoded in a string
      */
     public String getDetailedInfo() {
-        return "DC Segment " + this.get_Id() + ":" +
-               "\n  Sector             : " + this.get_Sector() +
-               "\n  Superlayer         : " + this.get_Superlayer() +
-               "\n  Region             : " + this.get_Region() +
-               "\n  Residual Sum       : " + this.get_ResiSum() +
-               "\n  Time Sum           : " + this.get_TimeSum() +
-               "\n  Fit Plane:\n   "       + this.get_fitPlane() +
-               "\n  Trajectory         : " + this.get_Trajectory() +
-               "\n  Segment End Points : " + this.get_SegmentEndPoints() +
-               "\n  Status             : " + this.Status() +
-               "\n--------------------------------------------\n";
+        String stuff;
+        stuff = "DC Segment " + this.get_Id() + ":" +
+                "\n  Sector             : " + this.get_Sector() +
+                "\n  Superlayer         : " + this.get_Superlayer() +
+                "\n  Region             : " + this.get_Region() +
+                "\n  Residual Sum       : " + this.get_ResiSum() +
+                "\n  Time Sum           : " + this.get_TimeSum();
+
+        if (this.get_fitPlane() != null) {
+            stuff += "\n  Fit Plane:"            +
+                     "\n    * point          : " + this.get_fitPlane().point() +
+                     "\n    * normal         : " + this.get_fitPlane().normal();
+        }
+        else stuff += "\n  Fit Plane        : null";
+        stuff += "\n  Trajectory         : " + this.get_Trajectory() +
+                 "\n  Segment End Points :";
+
+        for (double endPoint : this.get_SegmentEndPoints()) stuff += "\n    * " + endPoint;
+
+        stuff += "\n  Status             : " + this.Status() +
+                 "\n--------------------------------------------\n";
+
+        return stuff;
     }
 }

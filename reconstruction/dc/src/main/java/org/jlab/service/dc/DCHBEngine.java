@@ -342,9 +342,9 @@ public class DCHBEngine extends DCEngine {
                 trkId++;
             }
         }
-        System.out.println("[DCHB2] 11, mistrkcands size: " + mistrkcands.size());
+        System.out.println("[DCHB] mistrkcands size: " + mistrkcands.size());
         trkcands.addAll(mistrkcands);
-        System.out.println("[DCHB2] 12, trkCands size: " + trkcands.size());
+        System.out.println("[DCHB] trkCands size: " + trkcands.size());
 
         // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses
@@ -367,7 +367,7 @@ public class DCHBEngine extends DCEngine {
                 trkcands);
 
         // System.out.println("DCHB:");
-        // RecoBankReader.printSample(crosses.get(0));
+        // RecoBankReader.printSample(crosses.get(1));
 
         return true;
     }

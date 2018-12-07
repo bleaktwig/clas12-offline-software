@@ -58,14 +58,12 @@ public class CrossListFinder  {
         }
 
         // need 3 crosses
-        if (!dccrosslistRg1.isEmpty() &&
-            !dccrosslistRg2.isEmpty() &&
-            !dccrosslistRg3.isEmpty()) {
+        if (!dccrosslistRg1.isEmpty() && !dccrosslistRg2.isEmpty() && !dccrosslistRg3.isEmpty()) {
             for (Cross c1 : dccrosslistRg1) {
                 for (Cross c2 : dccrosslistRg2) {
                     for (Cross c3 : dccrosslistRg3) {
-                        if (c1.get_Sector() != c2.get_Sector() ||
-                            c1.get_Sector() != c3.get_Sector()) {
+                        if (c1.get_Sector() != c2.get_Sector()
+                                || c1.get_Sector() != c3.get_Sector()) {
                             continue;
                         }
 
@@ -91,8 +89,7 @@ public class CrossListFinder  {
                         errX[2] = c3.get_PointErr().x();
                         errY[2] = c3.get_PointErr().y();
 
-                        // ignore point errors and assume the track vertex is
-                        //     close to the origin
+                        // ignore point errors and assume the track vertex is close to the origin
                         TrajectoryParametriz qf1 = new TrajectoryParametriz();
                         qf1.evaluate(Z, X, errX, Y, errY);
 

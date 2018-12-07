@@ -211,8 +211,8 @@ public class DCHB2Engine extends DCEngine {
 
         System.out.println("[DCHB2] final # of tracks: " + trkCands.size());
 
-        System.out.println("DCHB2:");
-        RecoBankReader.printSample(crosses.get(0));
+        // System.out.println("DCHB2:");
+        // RecoBankReader.printSample(crosses.get(1));
 
         return true;
     }

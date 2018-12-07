@@ -160,6 +160,9 @@ public class DCKFEngine extends ReconstructionEngine {
         for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
         for (int c = 0; c < crBank.rows(); ++c) crosses.add (rbr.getCross  (crBank, segments, c));
 
+        System.out.println("DCKF1:");
+        RecoBankReader.printSample(crosses.get(1));
+
         // TODO: after all is up and running I should check what data from the
         //       crosses/segments/clusters/hits I can ignore so that I minimize
         //       what RecoBankReader has to read and accelerate the whole ordeal
@@ -180,10 +183,10 @@ public class DCKFEngine extends ReconstructionEngine {
         //       value so as to be more accurate.
         // TODO: This scaling factor is really inaccurate. I should seriously improve it if I'm
         //       going to go for this option.
-        for (Cross cross : crosses)
-            cross.set_PointErr(new Point3D(cross.get_PointErr().x() / 57.38,
-                                           cross.get_PointErr().y() / 57.38,
-                                           cross.get_PointErr().z() / 57.38));
+        // for (Cross cross : crosses)
+        //     cross.set_PointErr(new Point3D(cross.get_PointErr().x() / 57.38,
+        //                                    cross.get_PointErr().y() / 57.38,
+        //                                    cross.get_PointErr().z() / 57.38));
 
         // === INSTANCE AND RUN TrackCandListFinder ====================================
         TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
@@ -199,9 +202,8 @@ public class DCKFEngine extends ReconstructionEngine {
         }
         System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
-        System.out.println("DCKF:");
-        RecoBankReader.printSample(crosses.get(1));
-        RecoBankReader.printSample(crosses.get(3));
+        // System.out.println("DCKF2:");
+        // RecoBankReader.printSample(crosses.get(1));
 
         return true;
     }
