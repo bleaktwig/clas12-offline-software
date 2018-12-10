@@ -28,55 +28,6 @@ import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 
-/*
-    Data in Hit:
-    * _Sector                    * _Superlayer                * _Layer
-    * _Wire                      * _TDC                       * _Id
-    * _CellSize                  * _DocaErr
-
-    Data in Fitted Hit:
-    * B                          * _Id                        * _Doca
-    * _lX                        * _lY                        * _TimeResidual
-    * _Residual                  * _QualityFac                * _TrkgStatus
-    * _TimeToDistance            * AssociatedStateVec         * _ClusFitDoca
-    * _TrkFitDoca                * _X                         * _XMP
-    * _Z                         * _WireLength                * _WireMaxSag
-    * _TrkResid
-    * _AssociatedClusterID       * _AssociatedHBTrackID       * _AssociatedTBTrackID
-    * CrossDirIntersWire         * _Beta                      * _SignalPropagAlongWire
-    * SignalPropagTimeAlongWire  * SignalTimeOfFlight         * TStart
-    * T0                         * TFlight                    * TProp
-    * _Time                      * _OutOfTimeFlag             * _DeltaTimeBeta
-    * _PosErr
-
-    Data in Cluster:
-    * _Id                        * _Status
-    * _fitProb                   * _Chisq
-    * _clusLine                  * _clusLineErr
-    ! _clusterLineFitSlope       * _clusterLineFitSlopeErr
-    * _clusterLineFitIntercept   * _clusterLineFitInterceptErr
-    * _clusterLineFitSlopeMP     * _clusterLineFitSlopeErrMP
-    * _clusterLineFItInterceptMP * _clusterLineFitInterceptErrMP
-    * _clusterLineFitSlIntCov
-    * _TrkgStatus
-    * List<fittedHit>
-
-    Data in Segment:
-    ! _Id                        * _Sector                    * _Superlayer
-    * _Region                    * _ResiSum                   * _TimeSum
-    * _fitPlane                  * _Trajectory                * _SegmentEndPoints
-    * Status()
-    ! _fittedCluster
-
-    Data in Cross:
-    * _Id                        ! _Sector                    ! _Region
-    ! _Point                     ! _PointErr
-    ! _Dir                       ! _DirErr
-    ! _Segment1                  ! _Segment2
-
-    Data in Track: (TODO)
-*/
-
 /**
  * An engine to run the Kalman filtering process for the DC software.
  * @author benkel
@@ -125,6 +76,7 @@ public class DCKFEngine extends ReconstructionEngine {
         int currentEvent = eventCounter;
         eventCounter++;
         if (currentEvent != 42) return true;
+
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
@@ -133,8 +85,8 @@ public class DCKFEngine extends ReconstructionEngine {
         if (newRun == 0) return true;
 
         Swim dcSwim = new Swim();
-        RecoBankWriter rbw = new RecoBankWriter();
         RecoBankReader rbr = new RecoBankReader();
+        RecoBankWriter rbw = new RecoBankWriter();
 
         // === GET OBJECTS =============================================================
         if (!event.hasBank("HitBasedTrkg::HBCrosses")) return true;
@@ -170,6 +122,7 @@ public class DCKFEngine extends ReconstructionEngine {
         // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
 
+        // TODO: v Only one issue, with Cluster Line Fit Slope Int Cov v
         CrossList crosslist = crossLister.candCrossLists(crosses,
                 false,
                 this.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
@@ -195,6 +148,7 @@ public class DCKFEngine extends ReconstructionEngine {
                                                            Swimmer.getTorScale(),
                                                            dcSwim);
 
+        // === WRITE TO THE BANKS ======================================================
         System.out.println("[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(trkcands);
@@ -202,8 +156,8 @@ public class DCKFEngine extends ReconstructionEngine {
         }
         System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
-        // System.out.println("DCKF2:");
-        // RecoBankReader.printSample(crosses.get(1));
+        System.out.println("DCKF2:");
+        RecoBankReader.printSample(crosses.get(1));
 
         return true;
     }

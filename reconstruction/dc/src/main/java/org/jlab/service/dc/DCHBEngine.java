@@ -82,7 +82,7 @@ public class DCHBEngine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        // if (currentEvent != 42) return true; // TODO: DELETE
+        // if (currentEvent != 42) return true;
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;

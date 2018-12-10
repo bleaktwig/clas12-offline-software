@@ -153,8 +153,8 @@ public class DCHB1Engine extends DCEngine {
         if (crosses.isEmpty()) crosses = null;
         rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
 
-        // System.out.println("DCHB1:");
-        // RecoBankReader.printSample(crosses.get(1));
+        System.out.println("DCHB1:");
+        RecoBankReader.printSample(crosses.get(1));
 
         return true;
     }

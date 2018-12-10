@@ -128,8 +128,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         double ux = uz * tanThX;
         double uy = uz * tanThY;
 
-        Point3D dirVec = new Point3D(ux, uy, uz);
-        this.set_Dir(dirVec);
+        this.set_Dir(new Point3D(ux, uy, uz));
 
         if (this.get_Dir().z() == 0) return;
 
@@ -138,17 +137,21 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         double err_sl2  = this._seg2.get_fittedCluster().get_clusterLineFitSlopeErr();
         double err_it1  = this._seg1.get_fittedCluster().get_clusterLineFitInterceptErr();
         double err_it2  = this._seg2.get_fittedCluster().get_clusterLineFitInterceptErr();
+        // TODO: v There two variables are unavailable, causing the propagated error to fail v
         double err_cov1 = this._seg1.get_fittedCluster().get_clusterLineFitSlIntCov();
         double err_cov2 = this._seg2.get_fittedCluster().get_clusterLineFitSlIntCov();
 
         double err_x_fix = 0.5 * Math.sqrt(err_it1 * err_it1 + err_it2 * err_it2
                                            + z * z * (err_sl1 * err_sl1 + err_sl2 * err_sl2)
                                            + 2 * z * err_cov1 + 2 * z * err_cov2);
+                                           // + 2 * z * err_cov1 + 2 * z * err_cov2);
         double err_y_fix = 0.5 * wy_over_wx * Math.sqrt(err_it1 * err_it1 + err_it2 * err_it2
                                            + z * z * (err_sl1 * err_sl1 + err_sl2 * err_sl2)
                                            + 2 * z * err_cov1 + 2 * z * err_cov2);
+                                           // + 2 * z * err_cov1 + 2 * z * err_cov2);
 
-        this.set_PointErr(new Point3D(err_x_fix, err_y_fix, 0));
+        this.set_PointErr(new Point3D(err_x_fix, err_y_fix, 0)); // TODO: Here's where the error's
+                                                                 //       being scaled way up.
 
         double inv_N_sq = 1. / (0.25 * val_sl1 * val_sl1 * (1 + wy_over_wx * wy_over_wx)
                         + 0.25 * val_sl2 * val_sl2 * (1 + wy_over_wx * wy_over_wx)
