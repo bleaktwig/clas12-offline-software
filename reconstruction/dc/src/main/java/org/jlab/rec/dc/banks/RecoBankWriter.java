@@ -111,6 +111,8 @@ public class RecoBankWriter {
             bank.setFloat("TProp",        i, (float) hitlist.get(i).getTProp());
             bank.setFloat("TFlight",      i, (float) hitlist.get(i).getTFlight());
 
+            // bank.setFloat("time",         i, (float) hitlist.get(i).get_Time());
+
             if (!TB) {
                 bank.setShort("status", i, (short) 0);
                 bank.setFloat("LocX",   i, (float) hitlist.get(i).get_lX());
@@ -181,13 +183,9 @@ public class RecoBankWriter {
         if (!TB) bank = event.createBank("HitBasedTrkg::HBClusters",  cluslist.size());
         else     bank = event.createBank("TimeBasedTrkg::TBClusters", cluslist.size());
 
-        int[] hitIdxArray = new int[12];
-
         for (int i = 0; i < cluslist.size(); i++) {
             if (cluslist.get(i).get_Id() == -1) continue;
-            for (int j = 0; j < hitIdxArray.length; j++) {
-                hitIdxArray[j] = -1;
-            }
+            List<Integer> hitIdxArray = new ArrayList<Integer>();
 
             double chi2 = 0;
 
@@ -210,12 +208,10 @@ public class RecoBankWriter {
             bank.setFloat("fitInterc",    i, (float) fitInterc);
             bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
 
-            // TODO: See further into these lines
-            for (int j = 0; j < cluslist.get(i).size(); j++) {
-                if (j < hitIdxArray.length) {
-                    hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
-                }
+            for (int j = 0; j < cluslist.get(i).size() && j < 12; j++) {
+                hitIdxArray.add(cluslist.get(i).get(j).get_Id());
 
+                // TODO: See further into these lines
                 // Math.sqrt(12.) = 3.4641016151377544
                 // double residual = cluslist.get(i).get(j).get_ClusFitDoca() /
                 //                   (cluslist.get(i).get(j).get_CellSize() / 3.4641016151377544);
@@ -225,11 +221,8 @@ public class RecoBankWriter {
             //               (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
             bank.setFloat("fitChisqProb", i, (float) cluslist.get(i).get_fitProb());
 
-            for (int j = 0; j < hitIdxArray.length; j++) {
-                String hitStrg = "Hit";
-                hitStrg += (j + 1);
-                hitStrg += "_ID";
-                bank.setShort(hitStrg, i, (short) hitIdxArray[j]);
+            for (int j = 1; j < hitIdxArray.size() + 1; j++) {
+                bank.setShort("Hit" + j + "_ID", i, (short) hitIdxArray.get(j - 1).intValue());
             }
         }
 

@@ -308,6 +308,10 @@ public class DCHBEngine extends DCEngine {
             }
         }
         segments.addAll(psegments);
+
+
+        // TODO: This is where DCKF normally runs
+        // System.out.println("[DCHB] TIME2DIST: " + Constants.TIME2DIST);
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
         CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
                 false,
@@ -319,6 +323,8 @@ public class DCHBEngine extends DCEngine {
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
+
+        // TODO: up to here
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
@@ -342,9 +348,9 @@ public class DCHBEngine extends DCEngine {
                 trkId++;
             }
         }
-        System.out.println("[DCHB] mistrkcands size: " + mistrkcands.size());
+        // System.out.println("[DCHB] mistrkcands size: " + mistrkcands.size());
         trkcands.addAll(mistrkcands);
-        System.out.println("[DCHB] trkCands size: " + trkcands.size());
+        // System.out.println("[DCHB] trkCands size: " + trkcands.size());
 
         // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses

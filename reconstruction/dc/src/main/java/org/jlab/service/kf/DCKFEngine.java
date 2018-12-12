@@ -75,7 +75,7 @@ public class DCKFEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 42) return true;
+        if (currentEvent != 14) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -112,8 +112,8 @@ public class DCKFEngine extends ReconstructionEngine {
         for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
         for (int c = 0; c < crBank.rows(); ++c) crosses.add (rbr.getCross  (crBank, segments, c));
 
-        System.out.println("DCKF1:");
-        RecoBankReader.printSample(crosses.get(1));
+        // System.out.println("DCKF1:");
+        // RecoBankReader.printSample(crosses.get(1));
 
         // TODO: after all is up and running I should check what data from the
         //       crosses/segments/clusters/hits I can ignore so that I minimize
@@ -122,6 +122,7 @@ public class DCKFEngine extends ReconstructionEngine {
         // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
 
+        // System.out.println("[DCKF] TIME2DIST: " + Constants.TIME2DIST);
         // TODO: v Only one issue, with Cluster Line Fit Slope Int Cov v
         CrossList crosslist = crossLister.candCrossLists(crosses,
                 false,
@@ -156,8 +157,8 @@ public class DCKFEngine extends ReconstructionEngine {
         }
         System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
-        System.out.println("DCKF2:");
-        RecoBankReader.printSample(crosses.get(1));
+        // System.out.println("DCKF2:");
+        // RecoBankReader.printSample(crosses.get(1));
 
         return true;
     }

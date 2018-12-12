@@ -108,6 +108,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
      */
     public void set_CrossParams(DCGeant4Factory DcDetector) {
 
+        // System.out.println("[set_CrossParams] 00: init");
         double z = DcDetector.getRegionMidpoint(this.get_Region() - 1).z;
 
         // Math.cos(Math.toRadians(6.)) / Math.sin(Math.toRadians(6.)) = 9.514364454222585
@@ -130,14 +131,16 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
 
         this.set_Dir(new Point3D(ux, uy, uz));
 
-        if (this.get_Dir().z() == 0) return;
-
+        if (this.get_Dir().z() == 0) {
+            // System.out.println("[set_CrossParams] 01A: cross' dir.z = 0.");
+            return;
+        }
         // Error ...  propagated from errors on slopes and intercepts
         double err_sl1  = this._seg1.get_fittedCluster().get_clusterLineFitSlopeErr();
         double err_sl2  = this._seg2.get_fittedCluster().get_clusterLineFitSlopeErr();
         double err_it1  = this._seg1.get_fittedCluster().get_clusterLineFitInterceptErr();
         double err_it2  = this._seg2.get_fittedCluster().get_clusterLineFitInterceptErr();
-        // TODO: v There two variables are unavailable, causing the propagated error to fail v
+        // TODO: v These two variables are unavailable, causing the propagated error to fail v
         double err_cov1 = this._seg1.get_fittedCluster().get_clusterLineFitSlIntCov();
         double err_cov2 = this._seg2.get_fittedCluster().get_clusterLineFitSlIntCov();
 
@@ -194,6 +197,8 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         this.set_DirErr(estimDirErr);
 
         if (this._seg1.get_Id() == -1 || this._seg2.get_Id() == -1) this.isPseudoCross = true;
+
+        // System.out.println("[set_CrossParams] 01B cross parameters recalculated successfully.");
     }
 
     /**
