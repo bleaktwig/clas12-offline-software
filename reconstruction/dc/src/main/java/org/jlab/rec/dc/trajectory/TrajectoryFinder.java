@@ -43,9 +43,13 @@ public class TrajectoryFinder {
 									 DCGeant4Factory DcDetector,
 									 Swim dcSwim) {
 
+        // System.out.println("[TrajectoryFinder.findTrajectory] 00 initializing");
 
 		Trajectory traj = new Trajectory();
-        if (candCrossList.isEmpty()) return traj;
+        if (candCrossList.isEmpty()) {
+            // System.out.println("[TrajectoryFinder.findTrajectory] 01 Exiting, candCrossList is empty.");
+            return traj;
+        }
 
         traj.addAll(candCrossList);
         traj.set_Sector(candCrossList.get(0).get_Sector());
@@ -53,6 +57,7 @@ public class TrajectoryFinder {
 		fitTrajectory(traj);
 
         if (this.TrajChisqProbFitXZ < Constants.TCHISQPROBFITXZ) {
+            // System.out.println("[TrajectoryFinder.findTrajectory] 01 Exiting, ChisqProb too low");
 			return null;
 		}
 
@@ -60,6 +65,7 @@ public class TrajectoryFinder {
         traj.set_IntegralBdl(integralBdl(candCrossList.get(0).get_Sector(), DcDetector, dcSwim));
         traj.set_PathLength(PathLength);
 
+        // System.out.println("[TrajectoryFinder.findTrajectory] 01 All good, returning trajectory");
         return traj;
     }
 
@@ -137,6 +143,7 @@ public class TrajectoryFinder {
      */
     public void fitTrajectory(List<Cross> candCrossList) {
 
+        // System.out.println("[TrajectoryFinder.fitTrajectory] 00 initializing");
 
 		tanTheta_x_fitCoeff = new double[2];
         tanTheta_y_fitCoeff = new double[2];
@@ -155,8 +162,11 @@ public class TrajectoryFinder {
         double[] z     = new double[3];
 
         for (int i = 0; i < 3; i++) {
+            // System.out.println("[TrajectoryFinder.fitTrajectory] 01." + i + " Running for cross" + i);
             // Make sure that the track direction makes sense
             if (candCrossList.get(i).get_Dir().z() == 0) {
+                // System.out.println("[TrajectoryFinder.fitTrajectory] 02." + i + " exiting, "
+                                   // + "track direction doesn't make sense");
 				return;
 			}
 
@@ -183,6 +193,7 @@ public class TrajectoryFinder {
         boolean linefitstatusOK = lineFit.fitStatus(z, theta_x, new double[3], theta_x_err, 3);
 
         if (linefitstatusOK) {
+            // System.out.println("[TrajectoryFinder.fitTrajectory] 02 lineFitStatus is OK");
             double alpha = lineFit.getFit().slope();
             double beta  = lineFit.getFit().intercept();
 
@@ -198,6 +209,7 @@ public class TrajectoryFinder {
                 sum_X_ov_errX += x[i] / x_err[i];
             }
             if (sum_inv_xerr == 0) {
+                // System.out.println("[TrajectoryFinder.fitTrajectory] 03 Exiting, sum inv xerr == 0");
 				return;
 			}
 
@@ -219,6 +231,7 @@ public class TrajectoryFinder {
         // tan_thetay = alpha*z + beta;
         // y = a*z^2 +b*z + c
         if (linefitstatusOK) {
+
             double alpha = lineFit.getFit().slope();
             double beta  = lineFit.getFit().intercept();
 
@@ -234,6 +247,7 @@ public class TrajectoryFinder {
             }
 
 			if (sum_inv_yerr == 0) {
+                // System.out.println("[TrajectoryFinder.fitTrajectory] 03 Exiting, sum_inv_yerr == 0");
 				return;
 			}
             double c = sum_Y_ov_errY/sum_inv_yerr;
@@ -247,6 +261,7 @@ public class TrajectoryFinder {
         }
 
         TrajChisqProbFitYZ = lineFit.getFit().getProb();
+        // System.out.println("[TrajectoryFinder.fitTrajectory] 03. All good, exiting");
 		return;
     }
 

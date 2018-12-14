@@ -425,7 +425,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
                                           DCGeant4Factory DcDetector,
                                           TimeToDistanceEstimator tde) {
 
-        System.out.println("[DCKF] TIME: " + this.get_Time());
+        // System.out.println("[DCKF] TIME: " + this.get_Time());
         if (this.get_Time() > 0) this.set_TimeToDistance(cosTrkAngle, B, tab, tde);
 
         double z = DcDetector.getWireMidpoint(this.get_Sector() - 1,

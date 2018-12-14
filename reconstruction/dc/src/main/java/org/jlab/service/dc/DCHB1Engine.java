@@ -56,7 +56,7 @@ public class DCHB1Engine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 14) return true;
+        if (currentEvent != 2) return true;
 
         // setRunConditionsParameters(event);
         if (!event.hasBank("RUN::config")) return true;

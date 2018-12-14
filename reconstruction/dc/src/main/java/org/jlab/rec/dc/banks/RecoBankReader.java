@@ -2,6 +2,7 @@ package org.jlab.rec.dc.banks;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.geom.prim.Line3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
@@ -19,12 +20,56 @@ import org.jlab.rec.dc.track.Track;
  */
 public class RecoBankReader {
 
-    // TODO: Write variation methods to be called by the DCKF engine that only
-    //       return the required data to run the CrossListFinder and the
-    //       TrackCandListFinder methods to avoid pulling more data than what's
-    //       explicitly required.
+    // TODO: Write variation methods to be called by the DCKF engine that only return the required
+    //       data to run the CrossListFinder and the TrackCandListFinder methods to avoid pulling
+    //       more data than what's explicitly required.
 
-    boolean debug = false;
+    boolean debug = true;
+
+    /**
+     * Asserts that a bank and an index accessed from it are valid.
+     * @param bank       bank to be validated
+     * @param idx        index of the bank trying to be accessed
+     * @param callerName name of the type of bank being asserted (HBhits, HBclusters, etc)
+     * @return           false if the bank and the access is valid, true otherwise
+     */
+    public boolean validateBank(DataBank bank, int idx, String callerName) {
+        if (bank == null) {
+            if (debug) System.out.println("[RBR] ERROR: " + callerName + " bank is null.");
+            return true;
+        }
+        if (bank.rows() == 0) {
+            if (debug) System.out.println("[RBR] ERROR: " + callerName + " bank is empty.");
+            return true;
+        }
+        if (idx >= bank.rows()) {
+            if (debug) System.out.println("[RBR] ERROR: index given (" + idx + ") is larger than "
+                                        + callerName + " bank's size (" + bank.rows() + ").");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Asserts that a list is valid.
+     * @param list       list to be validated
+     * @param listName   name of the list being asserted (hits, clusters, etc), used for reporting
+     *                   errors.
+     * @param callerName name of the type of bank being asserted (HBsegments, HBcrosses, etc), used
+     *                   for reporting errors
+     * @return           false if the list is valid, true otherwise
+     */
+    public boolean validateList(List<?> list, String listName, String callerName) {
+        if (list == null) {
+            if (debug) System.out.println("[RBR] ERROR: " + listName + " is null.");
+            return true;
+        }
+        if (list.size() == 0) {
+            if (debug) System.out.println("[RBR] ERROR: " + listName + " is empty.");
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Gets one fitted hit from a hits databank given by an index.
@@ -33,20 +78,7 @@ public class RecoBankReader {
      * @return      the fitted hit retrieved from the bank
      */
     public FittedHit getHit(DataBank bank, int idx) {
-        if (bank == null) {
-            if (debug) System.out.println("[RecoBankReader.getHit] ERROR: Hits bank is null.");
-            return null;
-        }
-        if (bank.rows() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getHit] ERROR: Hits bank is empty.");
-            return null;
-        }
-        if (idx >= bank.rows()) {
-            if (debug) System.out.println("[RecoBankReader.getHit] ERROR: ID given (" + idx
-                                          + ") is greater than hits bank's size (" + bank.rows()
-                                          + ").");
-            return null;
-        }
+        if (validateBank(bank, idx, "HBhits")) return null;
 
         // Read the hit
         FittedHit hit = new FittedHit((int) bank.getByte ("sector",     idx),
@@ -71,50 +103,54 @@ public class RecoBankReader {
         hit.setTProp               ((double) bank.getFloat("TProp",     idx));
         hit.setTFlight             ((double) bank.getFloat("TFlight",   idx));
 
+        // TODO: v CHECK NEW STUFF v
+        hit.set_CellSize              ((double) bank.getFloat("cellSize", idx));
+        hit.set_XMP                   ((double) bank.getFloat("XMP", idx));
+        hit.set_Residual              ((double) bank.getFloat("residual", idx));
+        hit.set_TimeResidual          ((double) bank.getFloat("timeResidual", idx));
+        hit.set_QualityFac            ((double) bank.getFloat("qualityFac", idx));
+        hit.set_TrkgStatus            ((int)    bank.getByte ("trkStatus", idx));
+        hit.set_ClusFitDoca           ((double) bank.getFloat("clusFitDoca", idx));
+        hit.set_TrkFitDoca            ((double) bank.getFloat("trkFitDoca", idx));
+        // hit.set_TimeToDistance        ((double) bank.getFloat("timeToDistance", idx));
+        hit.set_Beta                  ((double) bank.getFloat("beta", idx));
+        hit.set_Doca                  ((double) bank.getFloat("doca", idx));
+        hit._lr =                      (int)    bank.getByte("lr", idx);
+        // hit.setCrossDirIntersWire(new Point3D((double) bank.getFloat("crossDirIntersWireX", idx),
+        //                                            (double) bank.getFloat("crossDirIntersWireY", idx),
+        //                                            (double) bank.getFloat("crossDirIntersWireZ", idx)));
+        // hit.setSignalPropagAlongWire  ((double) bank.getFloat("signalPropagAlongWire", idx));
+        hit.setSignalTimeOfFlight     ();
+        hit.setT0                     ((double) bank.getFloat("t0", idx));
+        hit.setTStart                 ((double) bank.getFloat("tStart", idx));
+        hit.set_Time                  ((double) bank.getFloat("time", idx));
+        hit.set_OutOfTimeFlag         (bank.getByte ("outOfTimeFlag", idx) == 1 ? true : false);
+        hit.set_WireLength            ((double) bank.getFloat("wireLength", idx));
+        hit.set_WireMaxSag            ((double) bank.getFloat("wireMaxSag", idx));
+        hit.set_TrkResid              ((double) bank.getFloat("trkResid", idx));
+        hit.set_DeltaTimeBeta         ((double) bank.getFloat("deltaTimeBeta", idx));
+        // TODO: new stuff is read up to here.
+
         return hit;
     }
 
     /**
      * Gets a fitted cluster from a clusters databank given by an index, along with its referenced
      * list of fitted hits.
-     * @param clBank clusters bank
+     * @param bank   clusters bank
      * @param hits   list of fitted hits
      * @param idx    address of the cluster
      * @return       the cluster retrieved from the bank
      */
-    public FittedCluster getCluster(DataBank clBank, List<FittedHit> hits, int idx) {
-        if (clBank == null) {
-            if (debug) System.out.println("[RecoBankReader.getCluster] ERROR: Clusters bank is "
-                                          + "null.");
-            return null;
-        }
-        if (clBank.rows() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getCluster] ERROR: Clusters bank is "
-                                          + "empty.");
-            return null;
-        }
-        if (idx >= clBank.rows()) {
-            if (debug) System.out.println("[RecoBankReader.getCluster] ERROR: Index ("
-                                          + idx + ") is greater than clusters bank's size ("
-                                          + clBank.rows() + ").");
-            return null;
-        }
-        if (hits == null) {
-            if (debug) System.out.println("[RecoBankReader.getCluster] ERROR: Hits list is "
-                                          + "null.");
-            return null;
-        }
-        if (hits.size() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getCluster] ERROR: Hits list is "
-                                          + "empty.");
-            return null;
-        }
+    public FittedCluster getCluster(DataBank bank, List<FittedHit> hits, int idx) {
+        if (validateBank(bank, idx, "HBclusters"))    return null;
+        if (validateList(hits, "hits", "HBclusters")) return null;
 
         ArrayList<Integer> hIDs    = new ArrayList<Integer>();
         ArrayList<FittedHit> fHits = new ArrayList<FittedHit>();
 
-        for (int i = 1; i < clBank.getByte("size", idx) + 1 && i < 13; i++) {
-            hIDs.add((int) clBank.getShort("Hit" + i + "_ID", idx));
+        for (int i = 1; i < bank.getByte("size", idx) + 1 && i < 13; i++) {
+            hIDs.add((int) bank.getShort("Hit" + i + "_ID", idx));
         }
 
         // Find the list of hits from which the cluster is formed
@@ -134,17 +170,37 @@ public class RecoBankReader {
             fHits.add(fHit);
         }
 
-        FittedCluster cluster = new FittedCluster((int) clBank.getByte ("sector",       idx),
-                                                  (int) clBank.getByte ("superlayer",   idx),
-                                                  (int) clBank.getShort("id",           idx),
+        FittedCluster cluster = new FittedCluster((int) bank.getByte ("sector",       idx),
+                                                  (int) bank.getByte ("superlayer",   idx),
+                                                  (int) bank.getShort("id",           idx),
                                                   fHits);
 
-        cluster.set_clusterLineFitSlope       ((double) clBank.getFloat("fitSlope",     idx));
-        cluster.set_clusterLineFitSlopeErr    ((double) clBank.getFloat("fitSlopeErr",  idx));
-        cluster.set_clusterLineFitIntercept   ((double) clBank.getFloat("fitInterc",    idx));
-        cluster.set_clusterLineFitInterceptErr((double) clBank.getFloat("fitIntercErr", idx));
-        cluster.set_fitProb                   ((double) clBank.getFloat("fitChisqProb", idx));
-        // cluster.set_Chisq                     ((double) clBank.getFloat("fitChisqProb", idx));
+        cluster.set_clusterLineFitSlope       ((double) bank.getFloat("fitSlope",     idx));
+        cluster.set_clusterLineFitSlopeErr    ((double) bank.getFloat("fitSlopeErr",  idx));
+        cluster.set_clusterLineFitIntercept   ((double) bank.getFloat("fitInterc",    idx));
+        cluster.set_clusterLineFitInterceptErr((double) bank.getFloat("fitIntercErr", idx));
+        cluster.set_clusterLineFitSlIntCov    ((double) bank.getFloat("fitSlIntCov",  idx));
+        cluster.set_fitProb                   ((double) bank.getFloat("fitChisqProb", idx));
+        cluster.set_Chisq                     ((double) bank.getFloat("chisqProb",    idx));
+
+        // v TODO: NEW CODE, PROBABLY NOT AFFECTING ANYTHING. TRY COMMENTING IT ALL.
+        cluster.set_clusLine(new Line3D((double) bank.getFloat("clusLine1X", idx),
+                                        (double) bank.getFloat("clusLine1Y", idx),
+                                        (double) bank.getFloat("clusLine1Z", idx),
+                                        (double) bank.getFloat("clusLine2X", idx),
+                                        (double) bank.getFloat("clusLine2Y", idx),
+                                        (double) bank.getFloat("clusLine2Z", idx)));
+        cluster.set_clusLineErr(new Line3D((double) bank.getFloat("clusLineErr1X", idx),
+                                           (double) bank.getFloat("clusLineErr1Y", idx),
+                                           (double) bank.getFloat("clusLineErr1Z", idx),
+                                           (double) bank.getFloat("clusLineErr2X", idx),
+                                           (double) bank.getFloat("clusLineErr2Y", idx),
+                                           (double) bank.getFloat("clusLineErr2Z", idx)));
+        cluster.set_clusterLineFitSlopeMP((double) bank.getFloat("clusterLineFitSlopeMP", idx));
+        cluster.set_clusterLineFitSlopeErrMP((double) bank.getFloat("clusterLineFitSlopeErrMP", idx));
+        cluster.set_clusterLineFitInterceptMP((double) bank.getFloat("clusterLineFitInterceptMP", idx));
+        cluster.set_clusterLineFitInterceptErrMP((double) bank.getFloat("clusterLineFitInterceptErrMP", idx));
+        // TODO: UP TO HERE
 
         /* WARNING:
         CLUSTER DATA IN BANK CURRENTLY UNUSED:
@@ -157,41 +213,17 @@ public class RecoBankReader {
 
     /**
      * Gets a segment from a segments databank given by an index along with its referenced cluster.
-     * @param sBank    segments bank
+     * @param bank     segments bank
      * @param clusters list of clusters
      * @param idx      address of the segment
      * @return         the segment retrieved from the bank
      */
-    public Segment getSegment(DataBank sBank, List<FittedCluster> clusters, int idx) {
-        if (sBank == null) {
-            if (debug) System.out.println("[RecoBankReader.getSegment] ERROR: Segments bank is "
-                                          + "null.");
-            return null;
-        }
-        if (sBank.rows() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getSegment] ERROR: Segments bank is "
-                                          + "empty.");
-            return null;
-        }
-        if (idx >= sBank.rows()) {
-            if (debug) System.out.println("[RecoBankReader.getSegment] ERROR: Index ("
-                                          + idx + ") is greater than segments bank's size ("
-                                          + sBank.rows() + ").");
-            return null;
-        }
-        if (clusters == null) {
-            if (debug) System.out.println("[RecoBankReader.getSegment] ERROR: Cluster list "
-                                          + "is null.");
-            return null;
-        }
-        if (clusters.size() == 0 || clusters == null) {
-            if (debug) System.out.println("[RecoBankReader.getSegment] ERROR: Cluster list is"
-                                          + " empty.");
-            return null;
-        }
+    public Segment getSegment(DataBank bank, List<FittedCluster> clusters, int idx) {
+        if (validateBank(bank, idx, "HBsegments"))            return null;
+        if (validateList(clusters, "clusters", "HBsegments")) return null;
 
         // Find the cluster from which this segment is formed
-        int clID = (int) sBank.getShort("Cluster_ID", idx);
+        int clID = (int) bank.getShort("Cluster_ID", idx);
         FittedCluster fCluster = null;
 
         for (FittedCluster cluster : clusters) {
@@ -206,80 +238,66 @@ public class RecoBankReader {
             return null;
         }
 
-        Segment segment = new Segment(fCluster);
+        Segment segment = new Segment(fCluster); // TODO: Check what is given to the segment in this line!!
 
-        double[] endPoints = {(double) sBank.getFloat("SegEndPoint1X", idx),
-                              (double) sBank.getFloat("SegEndPoint1Z", idx),
-                              (double) sBank.getFloat("SegEndPoint2X", idx),
-                              (double) sBank.getFloat("SegEndPoint2Z", idx)};
+        double[] endPoints = {(double) bank.getFloat("SegEndPoint1X", idx),
+                              (double) bank.getFloat("SegEndPoint1Z", idx),
+                              (double) bank.getFloat("SegEndPoint2X", idx),
+                              (double) bank.getFloat("SegEndPoint2Z", idx)};
 
         segment.set_SegmentEndPoints(endPoints);
 
-        segment.get_fittedCluster()
-               .set_clusterLineFitSlope((double) sBank.getFloat("fitSlope", idx));
-        segment.get_fittedCluster()
-               .set_clusterLineFitSlopeErr((double) sBank.getFloat("fitSlopeErr", idx));
-        segment.get_fittedCluster()
-               .set_clusterLineFitInterceptErr((double) sBank.getFloat("fitInterc", idx));
-        segment.get_fittedCluster()
-               .set_clusterLineFitInterceptErr((double) sBank.getFloat("fitIntercErr", idx));
+        // v TODO: NEW CODE, TEST THOROUGHLY
+        segment.isOnTrack = bank.getByte("isOnTrack", idx) == 1 ? true : false;
+        segment.set_ResiSum((double) bank.getFloat("resiSum", idx));
+        segment.set_TimeSum((double) bank.getFloat("timeSum", idx));
+        segment.set_Status((int) bank.getByte("status", idx));
+        segment.associatedCrossId = (int) bank.getShort("associatedCrossId", idx);
+        // TODO: UP TO HERE
+
+        // segment.get_fittedCluster()
+        //        .set_clusterLineFitSlope((double) bank.getFloat("fitSlope", idx));
+        // segment.get_fittedCluster()
+        //        .set_clusterLineFitSlopeErr((double) bank.getFloat("fitSlopeErr", idx));
+        // segment.get_fittedCluster()
+        //        .set_clusterLineFitInterceptErr((double) bank.getFloat("fitInterc", idx));
+        // segment.get_fittedCluster()
+        //        .set_clusterLineFitInterceptErr((double) bank.getFloat("fitIntercErr", idx));
 
         return segment;
     }
 
     /**
      * Gets a cross from a crosses databank given by an index along with its two referenced segments.
-     * @param crBank   crosses bank
+     * @param bank     crosses bank
      * @param segments list of segments
      * @param idx      index of the cross to be retrieved
      * @return         the retrieved cross
      */
-    public Cross getCross(DataBank crBank, List<Segment> segments, int idx) {
-        if (crBank == null) {
-            if (debug) System.out.println("[RecoBankReader.getCross] ERROR: Crosses bank is null.");
-            return null;
-        }
-        if (crBank.rows() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getCross] ERROR: Crosses bank is empty.");
-            return null;
-        }
-        if (idx >= crBank.rows()) {
-            if (debug) System.out.println("[RecoBankReader.getCross] ERROR: Index given ("
-                                          + idx + ") is greater than crosses bank's size ("
-                                          + crBank.rows() + ").");
-            return null;
-        }
-        if (segments == null) {
-            if (debug) System.out.println("[RecoBankReader.getCross] ERROR: Segment list is "
-                                          + "null.");
-            return null;
-        }
-        if (segments.size() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getCross] ERROR: Segment list is"
-                                          + " empty.");
-            return null;
-        }
+    public Cross getCross(DataBank bank, List<Segment> segments, int idx) {
+        if (validateBank(bank, idx, "HBcrosses"))            return null;
+        if (validateList(segments, "segments", "HBcrosses")) return null;
 
-        Cross cross = new Cross((int)  crBank.getByte ("sector", idx),
-                                (int)  crBank.getByte ("region", idx),
-                                (int)  crBank.getShort("id",     idx));
+        Cross cross = new Cross((int)  bank.getByte ("sector", idx),
+                                (int)  bank.getByte ("region", idx),
+                                (int)  bank.getShort("id",     idx));
 
-        cross.set_Point   (new Point3D(crBank.getFloat("x",      idx),
-                                       crBank.getFloat("y",      idx),
-                                       crBank.getFloat("z",      idx)));
-        cross.set_PointErr(new Point3D(crBank.getFloat("err_x",  idx),
-                                       crBank.getFloat("err_y",  idx),
-                                       crBank.getFloat("err_z",  idx)));
-        cross.set_Dir     (new Point3D(crBank.getFloat("ux",     idx),
-                                       crBank.getFloat("uy",     idx),
-                                       crBank.getFloat("uz",     idx)));
-        cross.set_DirErr  (new Point3D(crBank.getFloat("err_ux", idx),
-                                       crBank.getFloat("err_uy", idx),
-                                       crBank.getFloat("err_uz", idx)));
+        cross.set_Point   (new Point3D(bank.getFloat("x",      idx),
+                                       bank.getFloat("y",      idx),
+                                       bank.getFloat("z",      idx)));
+        cross.set_PointErr(new Point3D(bank.getFloat("err_x",  idx),
+                                       bank.getFloat("err_y",  idx),
+                                       bank.getFloat("err_z",  idx)));
+        cross.set_Dir     (new Point3D(bank.getFloat("ux",     idx),
+                                       bank.getFloat("uy",     idx),
+                                       bank.getFloat("uz",     idx)));
+        cross.set_DirErr  (new Point3D(bank.getFloat("err_ux", idx),
+                                       bank.getFloat("err_uy", idx),
+                                       bank.getFloat("err_uz", idx)));
 
         // get the segments
         for (int i = 1; i < 3; i++) {
-            int sID = (int) crBank.getShort("Segment" + i + "_ID", idx);
+            int sID = (int) bank.getShort("Segment" + i + "_ID", idx);
             Segment fSegment = null;
             for (Segment segment : segments) {
                 if (sID == segment.get_Id()) {
@@ -308,49 +326,25 @@ public class RecoBankReader {
 
     /**
      * Gets a track from a databank, given by an index, along with its three referenced segments.
-     * @param trBank  tracks bank
+     * @param bank    tracks bank
      * @param crosses list of crosses
      * @param idx     index of the track
      * @return        the retrieved track
      */
-    public Track getHBTrack(DataBank trBank, List<Cross> crosses, int idx) {
-        if (trBank == null) {
-            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: Tracks bank is "
-                                          + "null.");
-            return null;
-        }
-        if (trBank.rows() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: Tracks bank is "
-                                          + "empty.");
-            return null;
-        }
-        if (idx > trBank.rows()) {
-            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: Index given (" +
-                                          + idx + ") is greater than tracks bank's size (" +
-                                          trBank.rows() + ").");
-            return null;
-        }
-        if (crosses == null) {
-            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: Cross list given is "
-                                          + "null.");
-            return null;
-        }
-        if (crosses.size() == 0) {
-            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: Cross list given is "
-                                          + "empty.");
-            return null;
-        }
+    public Track getHBTrack(DataBank bank, List<Cross> crosses, int idx) {
+        if (validateBank(bank, idx, "HBtracks"))            return null;
+        if (validateList(crosses, "crosses", "HBsegments")) return null;
 
         Track track = new Track();
-        track.set_Id    ((int) trBank.getShort("id",     idx));
-        track.set_Sector((int) trBank.getByte ("sector", idx));
-        track.set_Q     ((int) trBank.getByte ("q",      idx));
+        track.set_Id    ((int) bank.getShort("id",     idx));
+        track.set_Sector((int) bank.getByte ("sector", idx));
+        track.set_Q     ((int) bank.getByte ("q",      idx));
 
         // TODO: The status is changed when being written into the bank, see if this affects anything.
-        track.set_Status((int) trBank.getShort("status", idx));
+        track.set_Status((int) bank.getShort("status", idx));
 
         for (int i = 1; i < 4; i++) {
-            int cID = (int) trBank.getShort("Cross" + i + "_ID", idx);
+            int cID = (int) bank.getShort("Cross" + i + "_ID", idx);
             Cross fCross = null;
             for (Cross cross : crosses) {
                 if (cID == cross.get_Id()) {
@@ -367,40 +361,40 @@ public class RecoBankReader {
             track.add(fCross);
         }
 
-        if (trBank.getFloat("c1_x") != null) {
-            track.set_PreRegion1CrossPoint(new Point3D((double) trBank.getFloat("c1_x", idx),
-                                                       (double) trBank.getFloat("c1_y", idx),
-                                                       (double) trBank.getFloat("c1_z", idx)));
-            track.set_PreRegion1CrossDir  (new Point3D((double) trBank.getFloat("c1_ux", idx),
-                                                       (double) trBank.getFloat("c1_uy", idx),
-                                                       (double) trBank.getFloat("c1_uz", idx)));
+        if (bank.getFloat("c1_x") != null) {
+            track.set_PreRegion1CrossPoint(new Point3D((double) bank.getFloat("c1_x", idx),
+                                                       (double) bank.getFloat("c1_y", idx),
+                                                       (double) bank.getFloat("c1_z", idx)));
+            track.set_PreRegion1CrossDir  (new Point3D((double) bank.getFloat("c1_ux", idx),
+                                                       (double) bank.getFloat("c1_uy", idx),
+                                                       (double) bank.getFloat("c1_uz", idx)));
         }
-        if (trBank.getFloat("c3_x") != null) {
-            track.set_PostRegion3CrossPoint(new Point3D((double) trBank.getFloat("c3_x", idx),
-                                                        (double) trBank.getFloat("c3_y", idx),
-                                                        (double) trBank.getFloat("c3_z", idx)));
-            track.set_PostRegion3CrossDir  (new Point3D((double) trBank.getFloat("c3_ux", idx),
-                                                        (double) trBank.getFloat("c3_uy", idx),
-                                                        (double) trBank.getFloat("c3_uz", idx)));
+        if (bank.getFloat("c3_x") != null) {
+            track.set_PostRegion3CrossPoint(new Point3D((double) bank.getFloat("c3_x", idx),
+                                                        (double) bank.getFloat("c3_y", idx),
+                                                        (double) bank.getFloat("c3_z", idx)));
+            track.set_PostRegion3CrossDir  (new Point3D((double) bank.getFloat("c3_ux", idx),
+                                                        (double) bank.getFloat("c3_uy", idx),
+                                                        (double) bank.getFloat("c3_uz", idx)));
         }
-        if (trBank.getFloat("t1_x") != null) {
-            track.set_Region1TrackX(new Point3D((double) trBank.getFloat("t1_x", idx),
-                                                (double) trBank.getFloat("t1_y", idx),
-                                                (double) trBank.getFloat("t1_z", idx)));
-            track.set_Region1TrackP(new Point3D((double) trBank.getFloat("t1_px", idx),
-                                                (double) trBank.getFloat("t1_py", idx),
-                                                (double) trBank.getFloat("t1_pz", idx)));
+        if (bank.getFloat("t1_x") != null) {
+            track.set_Region1TrackX(new Point3D((double) bank.getFloat("t1_x", idx),
+                                                (double) bank.getFloat("t1_y", idx),
+                                                (double) bank.getFloat("t1_z", idx)));
+            track.set_Region1TrackP(new Point3D((double) bank.getFloat("t1_px", idx),
+                                                (double) bank.getFloat("t1_py", idx),
+                                                (double) bank.getFloat("t1_pz", idx)));
         }
 
-        track.set_TotPathLen          ((double) trBank.getFloat("pathlength", idx));
-        track.set_Vtx0(new Point3D    ((double) trBank.getFloat("Vtx0_x", idx),
-                                       (double) trBank.getFloat("Vtx0_y", idx),
-                                       (double) trBank.getFloat("Vtx0_z", idx)));
-        track.set_pAtOrig(new Vector3D((double) trBank.getFloat("p0_x", idx),
-                                       (double) trBank.getFloat("p0_y", idx),
-                                       (double) trBank.getFloat("p0_z", idx)));
-        track.set_FitChi2             ((double) trBank.getFloat("chi2", idx));
-        track.set_FitNDF              ((int)    trBank.getShort("ndf", idx));
+        track.set_TotPathLen          ((double) bank.getFloat("pathlength", idx));
+        track.set_Vtx0(new Point3D    ((double) bank.getFloat("Vtx0_x", idx),
+                                       (double) bank.getFloat("Vtx0_y", idx),
+                                       (double) bank.getFloat("Vtx0_z", idx)));
+        track.set_pAtOrig(new Vector3D((double) bank.getFloat("p0_x", idx),
+                                       (double) bank.getFloat("p0_y", idx),
+                                       (double) bank.getFloat("p0_z", idx)));
+        track.set_FitChi2             ((double) bank.getFloat("chi2", idx));
+        track.set_FitNDF              ((int)    bank.getShort("ndf", idx));
 
         return track;
     }

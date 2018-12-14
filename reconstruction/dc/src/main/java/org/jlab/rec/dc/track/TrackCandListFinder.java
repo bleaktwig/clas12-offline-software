@@ -197,28 +197,43 @@ public class TrackCandListFinder {
                                      double TORSCALE,
                                      Swim dcSwim) {
 
+        // System.out.println("[TrackCandListFinder.getTrackCands] 00");
         List<Track> cands = new ArrayList<>();
-        if (crossList.size() == 0) return cands;
+        if (crossList.size() == 0) {
+            // System.out.println("[TrackCandListFinder.getTrackCands] 01: Exited, crossList.size() == 0");
+            return cands;
+        }
 
+        int count = -1;
         for (List<Cross> aCrossList : crossList) {
+            count++;
+            // System.out.println("[TrackCandListFinder.getTrackCands] 02." + count);
             TrajectoryFinder trjFind = new TrajectoryFinder();
-            Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim); //OK
-            if (traj == null) continue;
+            Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
+            if (traj == null) {
+                // System.out.println("[TrackCandListFinder.getTrackCands] 03." + count
+                                   // + ": Exited, traj == null");
+                continue;
+            }
 
-            // TODO: v This is the variable that is causing the error. v
-            //       Specifically, cand.get(0).size() = 0, when it should be higher.
             // Initialize
             Track cand = new Track(); // Track candidate is created
 
             // Look for straight tracks
-            if (aCrossList.size() == 3 && Math.abs(TORSCALE) < 0.001) { // TODO: CHECK THIS PART LATER
+            if (aCrossList.size() == 3 && Math.abs(TORSCALE) < 0.001) {
+                // System.out.println("[TrackCandListFinder.getTrackCands] 04." + count
+                                   // + "A: looking for straight tracks");
                 cand.addAll(aCrossList);
                 cand.set_Sector(aCrossList.get(0).get_Sector());
 
                 // No field --> fit straight track
                 this.getStraightTrack(cand);
 
-                if (cand.get_pAtOrig() == null) continue;
+                if (cand.get_pAtOrig() == null) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 05." + count
+                                       // + "A: Exiting, cand get_pAtOrig() == null");
+                    continue;
+                }
 
                 cand.set_Id(cands.size() + 1);
                 // The state vector at the region 1 cross
@@ -230,13 +245,18 @@ public class TrackCandListFinder {
                 cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
                 // Initialize the fitter with the candidate track
-                // TODO: v Crashing here. v
+                // System.out.println("[TrackCandListFinder.getTrackCands] 06." + count
+                                   // + "A: Initializing the Kalman filter");
                 KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
                 kFit.totNumIter = 1;
 
+                // System.out.println("[TrackCandListFinder.getTrackCands] 07." + count
+                                   // + "A: Running the Kalman filter");
                 kFit.runFitter(cand.get(0).get_Sector());
 
                 if (kFit.finalStateVec == null) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 08." + count
+                                       // + "A: Exited, finalStateVec == null");
                     continue;
                 }
 
@@ -266,28 +286,37 @@ public class TrackCandListFinder {
                     cands.add(cand);
                 }
 
+                // System.out.println("[TrackCandListFinder.getTrackCands] 09." + count
+                                   // + "A: Candidates added to the list of tracks.");
                 cands.add(cand);
             }
             else {
+                // System.out.println("[TrackCandListFinder.getTrackCands] 04." + count
+                                   // + "B: Looking for curved tracks.");
 
                 if (aCrossList.size() != 3 || !this.PassNSuperlayerTracking(aCrossList, cand)) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 05." + count
+                                       // + "B: Exited at line 296.");
                     continue;
                 }
 
                 cand.addAll(aCrossList); // the 3 crosses from aCrossList are added to the track
                                          // candidate.
-                // TODO: This is the problem! The crosses apparently are not containing segments?
                 cand.set_Sector(aCrossList.get(0).get_Sector());
 
                 // Set the candidate trajectory using the parametrization of the track trajectory
                 // and estimate integral Bdl along that path.
+                // TODO: I'M HERE!
                 cand.set_Trajectory(traj.get_Trajectory());
                 cand.set_IntegralBdl(traj.get_IntegralBdl());
 
 
                 // Require 3 crosses to make a track (allows for 1 pseudo-cross)
-                if (cand.size() != 3) continue;
-
+                if (cand.size() != 3) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 06." + count
+                                       // + "B: cand.size() != 3");
+                    continue;
+                }
 
                 double x1 = aCrossList.get(0).get_Point().x();
                 double y1 = aCrossList.get(0).get_Point().y();
@@ -304,7 +333,6 @@ public class TrackCandListFinder {
                 double thX = ux / uz;
                 double thY = uy / uz;
 
-                // TODO: All of these should be ok.
                 double theta3s2 = Math.atan(cand.get(2).get_Segment2().get_fittedCluster()
                                                 .get_clusterLineFitSlope());
 
@@ -325,11 +353,9 @@ public class TrackCandListFinder {
                 double theta3 = 0;
                 double theta1 = 0;
 
-                // TODO: Error should be happening from this part.
-                // -------------------------------------------------------------- //
                 double chisq = Double.POSITIVE_INFINITY;
                 double chi2;
-                double iBdl = traj.get_IntegralBdl(); // TODO: Find out what IntegralBdl is.
+                double iBdl = traj.get_IntegralBdl();
                 double[] pars;
 
                 pars = getTrackInitFit(cand.get(0).get_Sector(),
@@ -383,10 +409,16 @@ public class TrackCandListFinder {
                 }
 
                 if (chi2 > 2500) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 07." + count
+                                       // + "B: Exiting, chi2 is too high");
                     continue;
                 }
 
-                if (iBdl == 0) continue;
+                if (iBdl == 0) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 08." + count
+                                       // + "B: Exiting, iBdl == 0");
+                    continue;
+                }
 
                 // Momentum estimate if Bdl is non zero and the track has curvature
                 double p = calcInitTrkP(ux, uy, uz, thX, thY, theta1, theta3, iBdl, TORSCALE);
@@ -405,11 +437,10 @@ public class TrackCandListFinder {
                                      cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                 cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
-
-                // TODO: Error is happening up to this point.
-                // -------------------------------------------------------------- //
                 // Initialize the fitter with the candidate track
                 KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+
+                // TODO: THE ERROR SHOULD BE HAPPENING BEFORE THIS POINT!
 
                 // Initialize the state vector corresponding to the last measurement site
                 StateVec fn = new StateVec();
@@ -417,6 +448,8 @@ public class TrackCandListFinder {
                 kFit.runFitter(cand.get(0).get_Sector());
 
                 if (kFit.finalStateVec == null) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 09." + count
+                                       // + "B: finalStateVec == null");
                     continue;
                 }
 
@@ -438,7 +471,11 @@ public class TrackCandListFinder {
                     }
                 }
 
-                if (kFit.setFitFailed || kFit.finalStateVec == null) continue;
+                if (kFit.setFitFailed || kFit.finalStateVec == null) {
+                    // System.out.println("[TrackCandListFinder.getTrackCands] 10." + count
+                                       // + "B: Fit failed");
+                    continue;
+                }
 
                 // Set the state vector at the last measurement site
                 fn.set(kFit.finalStateVec.x,  kFit.finalStateVec.y,
@@ -459,9 +496,13 @@ public class TrackCandListFinder {
                 cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
 
                 // Add candidate to list of tracks
+                // System.out.println("[TrackCandListFinder.getTrackCands] 11." + count
+                                   // + "B: Track candidate added.");
                 cands.add(cand);
             }
         }
+        // System.out.println("[TrackCandListFinder.getTrackCands] 12." + count
+                           // + ": DONE.");
         return cands;
     }
 

@@ -82,7 +82,7 @@ public class DCHBEngine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        // if (currentEvent != 42) return true;
+        if (currentEvent != 2) return true;
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
@@ -240,9 +240,11 @@ public class DCHBEngine extends DCEngine {
 
         // track found
         int trkId = 1;
+        System.out.println("\n[DCHB] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
+            System.out.println("[DCHB] # of tracks after removing overlapping tracks: " + trkcands.size());
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);
@@ -348,9 +350,9 @@ public class DCHBEngine extends DCEngine {
                 trkId++;
             }
         }
-        // System.out.println("[DCHB] mistrkcands size: " + mistrkcands.size());
+        System.out.println("[DCHB] mistrkcands size: " + mistrkcands.size());
         trkcands.addAll(mistrkcands);
-        // System.out.println("[DCHB] trkCands size: " + trkcands.size());
+        System.out.println("[DCHB] trkCands size: " + trkcands.size() + "\n");
 
         // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses

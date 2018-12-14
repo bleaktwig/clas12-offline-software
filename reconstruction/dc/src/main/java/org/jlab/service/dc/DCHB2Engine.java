@@ -66,7 +66,7 @@ public class DCHB2Engine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        // if (currentEvent != 42) return true;
+        if (currentEvent != 2) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -210,7 +210,7 @@ public class DCHB2Engine extends DCEngine {
         }
         rbw.fillHBTracksBanks(event, rbw, trkCands);
 
-        System.out.println("[DCHB2] final # of tracks: " + trkCands.size());
+        System.out.println("[DCHB2] final # of tracks: " + trkCands.size() + "\n");
 
         // System.out.println("DCHB2:");
         // RecoBankReader.printSample(crosses.get(1));

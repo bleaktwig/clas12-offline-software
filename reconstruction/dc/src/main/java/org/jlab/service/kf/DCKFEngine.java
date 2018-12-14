@@ -36,7 +36,7 @@ public class DCKFEngine extends ReconstructionEngine {
 
     DCGeant4Factory dcDetector;
     private int eventCounter = 0;
-    private int debug = 1;
+    private boolean debug = true;
 
     public DCKFEngine() {
         super("DCKF", "benkel", "0.11");
@@ -75,7 +75,7 @@ public class DCKFEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 14) return true;
+        if (currentEvent != 2) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -122,7 +122,6 @@ public class DCKFEngine extends ReconstructionEngine {
         // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
 
-        // System.out.println("[DCKF] TIME2DIST: " + Constants.TIME2DIST);
         // TODO: v Only one issue, with Cluster Line Fit Slope Int Cov v
         CrossList crosslist = crossLister.candCrossLists(crosses,
                 false,
@@ -150,8 +149,11 @@ public class DCKFEngine extends ReconstructionEngine {
                                                            dcSwim);
 
         // === WRITE TO THE BANKS ======================================================
-        System.out.println("[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
+        System.out.println("\n[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
+            // TODO: Depending on how much this method takes in relation to how much writing the
+            //       tracks to the bank takes, it might be more efficient to just write everything
+            //       and to remove overlapping tracks in DCHB2.
             trkCandFinder.removeOverlappingTracks(trkcands);
             rbw.fillHBTracksBanks(event, rbw, trkcands);
         }
