@@ -4,39 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// import cnuphys.snr.NoiseReductionParameters;
-// import cnuphys.snr.clas12.Clas12NoiseAnalysis;
-// import cnuphys.snr.clas12.Clas12NoiseResult;
-// import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-// import org.jlab.io.hipo.HipoDataSource;
-// import org.jlab.io.hipo.HipoDataSync;
-// import org.jlab.utils.groups.IndexedTable;
 
 import org.jlab.rec.dc.Constants;
-// import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
-// import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
-// import org.jlab.rec.dc.cluster.ClusterFinder;
-// import org.jlab.rec.dc.cluster.ClusterFitter;
+import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
+import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.cross.CrossMaker;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
-import org.jlab.rec.dc.cross.CrossMaker;
-import org.jlab.rec.dc.hit.FittedHit;
-// import org.jlab.rec.dc.hit.Hit;
-import org.jlab.rec.dc.segment.Segment;
-// import org.jlab.rec.dc.segment.SegmentFinder;
-import org.jlab.rec.dc.timetodistance.TableLoader;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.trajectory.RoadFinder;
 import org.jlab.rec.dc.trajectory.Road;
+import org.jlab.rec.dc.timetodistance.TableLoader;
 
 /**
  * @author ziegler
@@ -109,19 +96,16 @@ public class DCHB2Engine extends DCEngine {
 
         // Pull the tracks from the banks if available
         List<Track> trkCands = new ArrayList();
-        DataBank trBank = event.getBank("HitBasedTrkg::HBTracks");
-        if (trBank.rows() > 0) {
+        if (event.hasBank("HitBasedTrkg::HBTracks")) {
+            DataBank trBank = event.getBank("HitBasedTrkg::HBTracks");
             for (int t = 0; t < trBank.rows(); ++t) trkCands.add(rbr.getHBTrack(trBank, crosses, t));
         }
-        else System.out.println("YES!");
 
         // === RUN DCHB2 ===============================================================
-        // System.out.println("[DCHB2] 00 track candidates size: " + trkCands.size());
         int trkId = 1;
         if (trkCands.size() > 0) {
             for (Track trk : trkCands) {
                 trk.set_Id(trkId); // Reset the id
-                // System.out.println("[DCHB2] 01 matching hits");
                 trkCandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
                     c.get_Segment1().isOnTrack = true;
@@ -140,16 +124,13 @@ public class DCHB2Engine extends DCEngine {
         for (Cross c : crosses) {
             if (!c.get_Segment1().isOnTrack) {
                 crossSegsNotOnTrack.add(c.get_Segment1());
-                // System.out.println("[DCHB2] 01A Segment1 not on track!");
             }
             if (!c.get_Segment2().isOnTrack) {
                 crossSegsNotOnTrack.add(c.get_Segment2());
-                // System.out.println("[DCHB2] 01B Segment2 not on track!");
             }
         }
 
         RoadFinder rf = new RoadFinder();
-        // System.out.println("[DCHB2] 02 Finding roads");
         List<Road> allRoads = rf.findRoads(segments, dcDetector);
         List<Segment> Segs2Road = new ArrayList<>();
         for (Road r : allRoads) {
@@ -182,31 +163,20 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
-        // System.out.println("[DCHB2] 03 Roads found, making segments");
         segments.addAll(psegments);
-        // System.out.println("[DCHB2] 03A psegments size: " + psegments.size());
-        // System.out.println("[DCHB2] 03B segments size:  " + segments.size());
-        // RecoBankReader.printSampleSegment(segments.get(0));
-        // System.out.println("[DCHB2] 04 Making crosses");
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
 
-        // System.out.println("[DCHB2] 04A prcrosses size: " + pcrosses.size());
-        // RecoBankReader.printSample(pcrosses.get(0));
-        // System.out.println("[DCHB2] 05 Making crosslists");
         CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
                 false,
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector,
                 null,
                 dcSwim);
-        // System.out.println("[DCHB2] 06 Finding mistrkcands");
         List<Track> mistrkcands = trkCandFinder.getTrackCands(pcrosslist,
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
 
-        // System.out.println("[DCHB2] 07 # of mistrkcands before removing overlapping tracks: "
-                           // + mistrkcands.size());
         // remove overlaps
         if (mistrkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(mistrkcands);
