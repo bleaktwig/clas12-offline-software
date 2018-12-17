@@ -116,9 +116,14 @@
         {"name":"isOnTrack", "id":28, "type":"int8", "info":"idk"},
         {"name":"resiSum", "id":29, "type":"float", "info":"idk"},
         {"name":"timeSum", "id":30, "type":"float", "info":"idk"},
-        {"name":"fitPlane", "id":31, "type":"float", "info":"idk"},
-        {"name":"status", "id":32, "type":"int8", "info":"idk"},
-        {"name":"associatedCrossId", "id":33, "type":"int16", "info":"idk"}
+        {"name":"fitPlane_px", "id":31, "type":"float", "info":"idk"},
+        {"name":"fitPlane_py", "id":32, "type":"float", "info":"idk"},
+        {"name":"fitPlane_pz", "id":33, "type":"float", "info":"idk"},
+        {"name":"fitPlane_nx", "id":34, "type":"float", "info":"idk"},
+        {"name":"fitPlane_ny", "id":35, "type":"float", "info":"idk"},
+        {"name":"fitPlane_nz", "id":36, "type":"float", "info":"idk"},
+        {"name":"status", "id":37, "type":"int8", "info":"idk"},
+        {"name":"associatedCrossId", "id":38, "type":"int16", "info":"idk"}
     ]
   },
   {
@@ -198,7 +203,22 @@
         {"name":"q",        	 "id":31, "type":"int8",   "info":"charge of the track"},
         {"name":"pathlength",    "id":32, "type":"float",  "info":"pathlength of the track"},
         {"name":"chi2",          "id":33, "type":"float",  "info":"fit chi2 of the track"},
-        {"name":"ndf",           "id":34, "type":"int16",  "info":"fit ndf of the track"}
+        {"name":"ndf",           "id":34, "type":"int16",  "info":"fit ndf of the track"},
+        {"name":"_IntegralBdl", "id":35, "type":"float", "info":"idk"},
+        {"name":"_pathLength", "id":36, "type":"float", "info":"idk"},
+        {"name":"_P", "id":37, "type":"float", "info":"idk"},
+        {"name":"_Vtx0_x", "id":38, "type":"float", "info":"idk"},
+        {"name":"_Vtx0_y", "id":39, "type":"float", "info":"idk"},
+        {"name":"_Vtx0_z", "id":40, "type":"float", "info":"idk"},
+        {"name":"_pAtOrig_TiltedCS_x", "id":41, "type":"float", "info":"idk"},
+        {"name":"_pAtOrig_TiltedCS_y", "id":42, "type":"float", "info":"idk"},
+        {"name":"_pAtOrig_TiltedCS_z", "id":43, "type":"float", "info":"idk"},
+        {"name":"fit_Successful", "id":44, "type":"int8", "info":"idk"},
+        {"name":"_missingSuperlayer", "id":45, "type":"int16", "info":"idk"},
+        {"name":"_fitConvergenceStatus", "id":46, "type":"int16", "info":"idk"},
+        {"name":"b_0", "id":47, "type":"float", "info":"idk"},
+        {"name":"b_1", "id":48, "type":"float", "info":"idk"},
+        {"name":"b_2", "id":49, "type":"float", "info":"idk"}
     ]
   },
   {

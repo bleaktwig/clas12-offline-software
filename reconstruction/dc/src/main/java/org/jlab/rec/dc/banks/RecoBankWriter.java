@@ -72,120 +72,122 @@ public class RecoBankWriter {
     /**
      * Writes a list of hits into the EvioEvent's HB bank.
      * @param event   the EvioEvent
-     * @param hitlist the list of hits
+     * @param hitList the list of hits
      * @param TB      boolean set to 1 if time-based and 0 otherwise.
      * @return        hits bank
      */
-    private DataBank fillHitsBank(DataEvent event, List<FittedHit> hitlist, boolean TB) {
-
+    private DataBank fillHitsBank(DataEvent event, List<FittedHit> hitList, boolean TB) {
         if (TB && event.hasBank("TimeBasedTrkg::TBHits")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBHits");
         }
+        if (!TB && event.hasBank("HitBasedTrkg::HBHits")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBHits");
+        }
 
         DataBank bank;
-        if (!TB) bank = event.createBank("HitBasedTrkg::HBHits",  hitlist.size());
-        else     bank = event.createBank("TimeBasedTrkg::TBHits", hitlist.size());
+        if (!TB) bank = event.createBank("HitBasedTrkg::HBHits",  hitList.size());
+        else     bank = event.createBank("TimeBasedTrkg::TBHits", hitList.size());
 
-        for (int i = 0; i < hitlist.size(); i++) {
-            if (hitlist.get(i).get_Id() == -1) continue;
-            if (TB && hitlist.get(i).get_TrkResid() == 999) {
-                hitlist.get(i).set_AssociatedTBTrackID(-1);
+        for (int i = 0; i < hitList.size(); i++) {
+            if (hitList.get(i).get_Id() == -1) continue;
+            if (TB && hitList.get(i).get_TrkResid() == 999) {
+                hitList.get(i).set_AssociatedTBTrackID(-1);
             }
 
-            bank.setShort("id",         i, (short) hitlist.get(i).get_Id());
-            bank.setByte ("superlayer", i, (byte)  hitlist.get(i).get_Superlayer());
-            bank.setByte ("layer",      i, (byte)  hitlist.get(i).get_Layer());
-            bank.setByte ("sector",     i, (byte)  hitlist.get(i).get_Sector());
-            bank.setShort("wire",       i, (short) hitlist.get(i).get_Wire());
-            bank.setFloat("X",          i, (float) hitlist.get(i).get_X());
-            bank.setFloat("Z",          i, (float) hitlist.get(i).get_Z());
-            bank.setByte ("LR",         i, (byte)  hitlist.get(i).get_LeftRightAmb());
+            bank.setShort("id",         i, (short) hitList.get(i).get_Id());
+            bank.setByte ("superlayer", i, (byte)  hitList.get(i).get_Superlayer());
+            bank.setByte ("layer",      i, (byte)  hitList.get(i).get_Layer());
+            bank.setByte ("sector",     i, (byte)  hitList.get(i).get_Sector());
+            bank.setShort("wire",       i, (short) hitList.get(i).get_Wire());
+            bank.setFloat("X",          i, (float) hitList.get(i).get_X());
+            bank.setFloat("Z",          i, (float) hitList.get(i).get_Z());
+            bank.setByte ("LR",         i, (byte)  hitList.get(i).get_LeftRightAmb());
 
-            bank.setFloat("docaError",  i, (float) hitlist.get(i).get_DocaErr());
-            bank.setFloat("trkDoca",    i, (float) hitlist.get(i).get_ClusFitDoca());
-            bank.setShort("clusterID",  i, (short) hitlist.get(i).get_AssociatedClusterID());
-            bank.setByte ("trkID",      i, (byte)  hitlist.get(i).get_AssociatedHBTrackID());
+            bank.setFloat("docaError",  i, (float) hitList.get(i).get_DocaErr());
+            bank.setFloat("trkDoca",    i, (float) hitList.get(i).get_ClusFitDoca());
+            bank.setShort("clusterID",  i, (short) hitList.get(i).get_AssociatedClusterID());
+            bank.setByte ("trkID",      i, (byte)  hitList.get(i).get_AssociatedHBTrackID());
 
-            bank.setInt  ("TDC",          i,         hitlist.get(i).get_TDC());
-            bank.setFloat("B",            i, (float) hitlist.get(i).getB());
-            bank.setFloat("TProp",        i, (float) hitlist.get(i).getTProp());
-            bank.setFloat("TFlight",      i, (float) hitlist.get(i).getTFlight());
+            bank.setInt  ("TDC",          i,         hitList.get(i).get_TDC());
+            bank.setFloat("B",            i, (float) hitList.get(i).getB());
+            bank.setFloat("TProp",        i, (float) hitList.get(i).getTProp());
+            bank.setFloat("TFlight",      i, (float) hitList.get(i).getTFlight());
 
             // v TODO: NEW CODE, CHECK THOROUGHLY
             if (!TB) {
-                bank.setFloat("cellSize", i, (float) hitlist.get(i).get_CellSize());
-                bank.setFloat("XMP", i, (float) hitlist.get(i).get_XMP());
-                bank.setFloat("residual", i, (float) hitlist.get(i).get_Residual());
-                bank.setFloat("timeResidual", i, (float) hitlist.get(i).get_TimeResidual());
-                bank.setFloat("qualityFac", i, (float) hitlist.get(i).get_QualityFac());
-                bank.setByte ("trkStatus", i, (byte) hitlist.get(i).get_TrkgStatus());
-                bank.setFloat("clusFitDoca", i, (float) hitlist.get(i).get_ClusFitDoca());
-                bank.setFloat("trkFitDoca", i, (float) hitlist.get(i).get_TrkFitDoca());
-                bank.setFloat("timeToDistance", i, (float) hitlist.get(i).get_TimeToDistance());
-                bank.setFloat("beta", i, (float) hitlist.get(i).get_Beta());
-                bank.setFloat("doca", i, (float) hitlist.get(i).get_Doca());
-                bank.setByte ("lr", i, (byte) hitlist.get(i)._lr);
-                // bank.setFloat("crossDirIntersWireX", i, (float) hitlist.get(i).getCrossDirIntersWire().x());
-                // bank.setFloat("crossDirIntersWireY", i, (float) hitlist.get(i).getCrossDirIntersWire().y());
-                // bank.setFloat("crossDirIntersWireZ", i, (float) hitlist.get(i).getCrossDirIntersWire().z());
-                bank.setFloat("signalPropagAlongWire", i, (float) hitlist.get(i).getSignalPropagAlongWire());
-                bank.setFloat("signalTimeOfFlight", i, (float) hitlist.get(i).getSignalTimeOfFlight());
-                bank.setFloat("t0", i, (float) hitlist.get(i).getT0());
-                bank.setFloat("tStart", i, (float) hitlist.get(i).getTStart());
-                bank.setFloat("time", i, (float) hitlist.get(i).get_Time());
-                bank.setByte ("outOfTimeFlag", i, (byte) (hitlist.get(i).get_OutOfTimeFlag() ? 1 : 0));
-                bank.setFloat("wireLength", i, (float) hitlist.get(i).get_WireLength());
-                bank.setFloat("wireMaxSag", i, (float) hitlist.get(i).get_WireMaxSag());
-                bank.setFloat("trkResid", i, (float) hitlist.get(i).get_TrkResid());
-                bank.setFloat("deltaTimeBeta", i, (float) hitlist.get(i).get_DeltaTimeBeta());
+                bank.setFloat("cellSize", i, (float) hitList.get(i).get_CellSize());
+                bank.setFloat("XMP", i, (float) hitList.get(i).get_XMP());
+                bank.setFloat("residual", i, (float) hitList.get(i).get_Residual());
+                bank.setFloat("timeResidual", i, (float) hitList.get(i).get_TimeResidual());
+                bank.setFloat("qualityFac", i, (float) hitList.get(i).get_QualityFac());
+                bank.setByte ("trkStatus", i, (byte) hitList.get(i).get_TrkgStatus());
+                bank.setFloat("clusFitDoca", i, (float) hitList.get(i).get_ClusFitDoca());
+                bank.setFloat("trkFitDoca", i, (float) hitList.get(i).get_TrkFitDoca());
+                bank.setFloat("timeToDistance", i, (float) hitList.get(i).get_TimeToDistance());
+                bank.setFloat("beta", i, (float) hitList.get(i).get_Beta());
+                bank.setFloat("doca", i, (float) hitList.get(i).get_Doca());
+                bank.setByte ("lr", i, (byte) hitList.get(i)._lr);
+                // bank.setFloat("crossDirIntersWireX", i, (float) hitList.get(i).getCrossDirIntersWire().x());
+                // bank.setFloat("crossDirIntersWireY", i, (float) hitList.get(i).getCrossDirIntersWire().y());
+                // bank.setFloat("crossDirIntersWireZ", i, (float) hitList.get(i).getCrossDirIntersWire().z());
+                bank.setFloat("signalPropagAlongWire", i, (float) hitList.get(i).getSignalPropagAlongWire());
+                bank.setFloat("signalTimeOfFlight", i, (float) hitList.get(i).getSignalTimeOfFlight());
+                bank.setFloat("t0", i, (float) hitList.get(i).getT0());
+                bank.setFloat("tStart", i, (float) hitList.get(i).getTStart());
+                bank.setFloat("time", i, (float) hitList.get(i).get_Time());
+                bank.setByte ("outOfTimeFlag", i, (byte) (hitList.get(i).get_OutOfTimeFlag() ? 1 : 0));
+                bank.setFloat("wireLength", i, (float) hitList.get(i).get_WireLength());
+                bank.setFloat("wireMaxSag", i, (float) hitList.get(i).get_WireMaxSag());
+                bank.setFloat("trkResid", i, (float) hitList.get(i).get_TrkResid());
+                bank.setFloat("deltaTimeBeta", i, (float) hitList.get(i).get_DeltaTimeBeta());
             }
             // TODO: UP TO HERE
 
             if (!TB) {
                 bank.setShort("status", i, (short) 0);
-                bank.setFloat("LocX",   i, (float) hitlist.get(i).get_lX());
-                bank.setFloat("LocY",   i, (float) hitlist.get(i).get_lY());
+                bank.setFloat("LocX",   i, (float) hitList.get(i).get_lX());
+                bank.setFloat("LocY",   i, (float) hitList.get(i).get_lY());
 
-                if (hitlist.get(i).get_AssociatedHBTrackID() > -1 && !event.hasBank("MC::Particle")) {
-                    bank.setFloat("TProp", i, (float) hitlist.get(i).getSignalPropagTimeAlongWire());
-                    bank.setFloat("TFlight", i, (float) hitlist.get(i).getSignalTimeOfFlight());
+                if (hitList.get(i).get_AssociatedHBTrackID() > -1 && !event.hasBank("MC::Particle")) {
+                    bank.setFloat("TProp", i, (float) hitList.get(i).getSignalPropagTimeAlongWire());
+                    bank.setFloat("TFlight", i, (float) hitList.get(i).getSignalTimeOfFlight());
                 }
                 continue;
             }
 
             // else
-            bank.setShort("status", i, (short) hitlist.get(i).get_QualityFac());
+            bank.setShort("status", i, (short) hitList.get(i).get_QualityFac());
 
             // Checks the existing schema to fill the time
             if (bank.getDescriptor().hasEntry("time")) {
-                bank.setFloat("time", i, (float) (hitlist.get(i).get_Time() -
-                                                  hitlist.get(i).get_DeltaTimeBeta()));
+                bank.setFloat("time", i, (float) (hitList.get(i).get_Time() -
+                                                  hitList.get(i).get_DeltaTimeBeta()));
             }
             if (bank.getDescriptor().hasEntry("beta")) {
-                bank.setFloat("beta", i, (float) hitlist.get(i).get_Beta());
+                bank.setFloat("beta", i, (float) hitList.get(i).get_Beta());
             }
             if (bank.getDescriptor().hasEntry("tBeta")) {
-                bank.setFloat("tBeta", i, (float) hitlist.get(i).get_DeltaTimeBeta());
+                bank.setFloat("tBeta", i, (float) hitList.get(i).get_DeltaTimeBeta());
             }
             if (bank.getDescriptor().hasEntry("fitResidual")) {
-                bank.setFloat("fitResidual", i, (float) hitlist.get(i).get_TrkResid());
+                bank.setFloat("fitResidual", i, (float) hitList.get(i).get_TrkResid());
             }
 
-            bank.setFloat("doca",         i, (float) hitlist.get(i).get_Doca());
-            bank.setFloat("timeResidual", i, (float) hitlist.get(i).get_TimeResidual());
+            bank.setFloat("doca",         i, (float) hitList.get(i).get_Doca());
+            bank.setFloat("timeResidual", i, (float) hitList.get(i).get_TimeResidual());
 
-            bank.setFloat("T0",           i, (float) hitlist.get(i).getT0());
-            bank.setFloat("TStart",       i, (float) hitlist.get(i).getTStart());
+            bank.setFloat("T0",           i, (float) hitList.get(i).getT0());
+            bank.setFloat("TStart",       i, (float) hitList.get(i).getTStart());
 
-            if (hitlist.get(i).get_AssociatedTBTrackID() > -1 && !event.hasBank("MC::Particle")) {
-                if (hitlist.get(i).getSignalPropagTimeAlongWire() != 0 &&
-                        hitlist.get(i).get_AssociatedTBTrackID() >= 1) {
-                    bank.setFloat("TProp", i, (float) hitlist.get(i).getSignalPropagTimeAlongWire());
+            if (hitList.get(i).get_AssociatedTBTrackID() > -1 && !event.hasBank("MC::Particle")) {
+                if (hitList.get(i).getSignalPropagTimeAlongWire() != 0 &&
+                        hitList.get(i).get_AssociatedTBTrackID() >= 1) {
+                    bank.setFloat("TProp", i, (float) hitList.get(i).getSignalPropagTimeAlongWire());
                 }
 
-                if (hitlist.get(i).getSignalTimeOfFlight() != 0 &&
-                        hitlist.get(i).get_AssociatedTBTrackID() >= 1) {
-                    bank.setFloat("TFlight", i, (float) hitlist.get(i).getSignalTimeOfFlight());
+                if (hitList.get(i).getSignalTimeOfFlight() != 0 &&
+                        hitList.get(i).get_AssociatedTBTrackID() >= 1) {
+                    bank.setFloat("TFlight", i, (float) hitList.get(i).getSignalTimeOfFlight());
                 }
             }
         }
@@ -196,57 +198,59 @@ public class RecoBankWriter {
     /**
      * Writes a list of clusters into the EvioEvent's bank.
      * @param event    the EvioEvent
-     * @param cluslist the list of clusters
+     * @param clusList the list of clusters
      * @param TB       boolean set to 1 if time-based and 0 otherwise.
      * @return         clusters bank
      */
-    private DataBank fillClustersBank(DataEvent event, List<FittedCluster> cluslist, boolean TB) {
-
+    private DataBank fillClustersBank(DataEvent event, List<FittedCluster> clusList, boolean TB) {
         if (TB && event.hasBank("TimeBasedTrkg::TBClusters")) {
             // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBClusters");
         }
+        if (!TB && event.hasBank("HitBasedTrkg::HBClusters")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBClusters");
+        }
 
         DataBank bank;
-        if (!TB) bank = event.createBank("HitBasedTrkg::HBClusters",  cluslist.size());
-        else     bank = event.createBank("TimeBasedTrkg::TBClusters", cluslist.size());
+        if (!TB) bank = event.createBank("HitBasedTrkg::HBClusters",  clusList.size());
+        else     bank = event.createBank("TimeBasedTrkg::TBClusters", clusList.size());
 
-        for (int i = 0; i < cluslist.size(); i++) {
-            if (cluslist.get(i).get_Id() == -1) continue;
+        for (int i = 0; i < clusList.size(); i++) {
+            if (clusList.get(i).get_Id() == -1) continue;
             List<Integer> hitIdxArray = new ArrayList<Integer>();
 
             double chi2 = 0;
 
-            bank.setShort("id",         i, (short) cluslist.get(i).get_Id());
-            bank.setByte ("superlayer", i, (byte)  cluslist.get(i).get_Superlayer());
-            bank.setByte ("sector",     i, (byte)  cluslist.get(i).get_Sector());
-            bank.setFloat("avgWire",    i, (float) cluslist.get(i).getAvgwire());
-            bank.setByte ("size",       i, (byte)  cluslist.get(i).size());
+            bank.setShort("id",         i, (short) clusList.get(i).get_Id());
+            bank.setByte ("superlayer", i, (byte)  clusList.get(i).get_Superlayer());
+            bank.setByte ("sector",     i, (byte)  clusList.get(i).get_Sector());
+            bank.setFloat("avgWire",    i, (float) clusList.get(i).getAvgwire());
+            bank.setByte ("size",       i, (byte)  clusList.get(i).size());
 
             if (!TB) {
-                if (cluslist.get(i).size() < 6) bank.setShort("status", i, (short) 1);
+                if (clusList.get(i).size() < 6) bank.setShort("status", i, (short) 1);
                 else                            bank.setShort("status", i, (short) 0);
             }
 
-            bank.setFloat("fitSlope",     i, (float) cluslist.get(i).get_clusterLineFitSlope());
-            bank.setFloat("fitSlopeErr",  i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
-            bank.setFloat("fitInterc",    i, (float) cluslist.get(i).get_clusterLineFitIntercept());
-            bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
-            bank.setFloat("fitSlIntCov",  i, (float) cluslist.get(i).get_clusterLineFitSlIntCov());
+            bank.setFloat("fitSlope",     i, (float) clusList.get(i).get_clusterLineFitSlope());
+            bank.setFloat("fitSlopeErr",  i, (float) clusList.get(i).get_clusterLineFitSlopeErr());
+            bank.setFloat("fitInterc",    i, (float) clusList.get(i).get_clusterLineFitIntercept());
+            bank.setFloat("fitIntercErr", i, (float) clusList.get(i).get_clusterLineFitInterceptErr());
+            bank.setFloat("fitSlIntCov",  i, (float) clusList.get(i).get_clusterLineFitSlIntCov());
 
-            for (int j = 0; j < cluslist.get(i).size() && j < 12; j++) {
-                hitIdxArray.add(cluslist.get(i).get(j).get_Id());
+            for (int j = 0; j < clusList.get(i).size() && j < 12; j++) {
+                hitIdxArray.add(clusList.get(i).get(j).get_Id());
 
                 // TODO: See further into these lines
                 // Math.sqrt(12.) = 3.4641016151377544
-                // double residual = cluslist.get(i).get(j).get_ClusFitDoca() /
-                //                   (cluslist.get(i).get(j).get_CellSize() / 3.4641016151377544);
+                // double residual = clusList.get(i).get(j).get_ClusFitDoca() /
+                //                   (clusList.get(i).get(j).get_CellSize() / 3.4641016151377544);
                 // chi2 += residual * residual;
             }
             // bank.setFloat("fitChisqProb", i,
-            //               (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
-            bank.setFloat("fitChisqProb", i, (float) cluslist.get(i).get_fitProb());
-            bank.setFloat("chisqProb",    i, (float) cluslist.get(i).get_Chisq());
+            //               (float) ProbChi2perNDF.prob(chi2, clusList.get(i).size() - 2));
+            bank.setFloat("fitChisqProb", i, (float) clusList.get(i).get_fitProb());
+            bank.setFloat("chisqProb",    i, (float) clusList.get(i).get_Chisq());
 
             for (int j = 1; j < hitIdxArray.size() + 1; j++) {
                 bank.setShort("Hit" + j + "_ID", i, (short) hitIdxArray.get(j - 1).intValue());
@@ -254,26 +258,26 @@ public class RecoBankWriter {
 
             // v TODO: NEW CODE, CHECK THOROUGHLY
             if (!TB) {
-                bank.setFloat("clusLine1X", i, (float) cluslist.get(i).get_clusLine().origin().x());
-                bank.setFloat("clusLine1Y", i, (float) cluslist.get(i).get_clusLine().origin().y());
-                bank.setFloat("clusLine1Z", i, (float) cluslist.get(i).get_clusLine().origin().z());
-                bank.setFloat("clusLine2X", i, (float) cluslist.get(i).get_clusLine().end().x());
-                bank.setFloat("clusLine2Y", i, (float) cluslist.get(i).get_clusLine().end().y());
-                bank.setFloat("clusLine2Z", i, (float) cluslist.get(i).get_clusLine().end().z());
-                bank.setFloat("clusLineErr1X", i, (float) cluslist.get(i).get_clusLineErr().origin().x());
-                bank.setFloat("clusLineErr1Y", i, (float) cluslist.get(i).get_clusLineErr().origin().y());
-                bank.setFloat("clusLineErr1Z", i, (float) cluslist.get(i).get_clusLineErr().origin().z());
-                bank.setFloat("clusLineErr2X", i, (float) cluslist.get(i).get_clusLineErr().end().x());
-                bank.setFloat("clusLineErr2Y", i, (float) cluslist.get(i).get_clusLineErr().end().y());
-                bank.setFloat("clusLineErr2Z", i, (float) cluslist.get(i).get_clusLineErr().end().z());
+                bank.setFloat("clusLine1X", i, (float) clusList.get(i).get_clusLine().origin().x());
+                bank.setFloat("clusLine1Y", i, (float) clusList.get(i).get_clusLine().origin().y());
+                bank.setFloat("clusLine1Z", i, (float) clusList.get(i).get_clusLine().origin().z());
+                bank.setFloat("clusLine2X", i, (float) clusList.get(i).get_clusLine().end().x());
+                bank.setFloat("clusLine2Y", i, (float) clusList.get(i).get_clusLine().end().y());
+                bank.setFloat("clusLine2Z", i, (float) clusList.get(i).get_clusLine().end().z());
+                bank.setFloat("clusLineErr1X", i, (float) clusList.get(i).get_clusLineErr().origin().x());
+                bank.setFloat("clusLineErr1Y", i, (float) clusList.get(i).get_clusLineErr().origin().y());
+                bank.setFloat("clusLineErr1Z", i, (float) clusList.get(i).get_clusLineErr().origin().z());
+                bank.setFloat("clusLineErr2X", i, (float) clusList.get(i).get_clusLineErr().end().x());
+                bank.setFloat("clusLineErr2Y", i, (float) clusList.get(i).get_clusLineErr().end().y());
+                bank.setFloat("clusLineErr2Z", i, (float) clusList.get(i).get_clusLineErr().end().z());
                 bank.setFloat("clusterLineFitSlopeMP", i,
-                        (float) cluslist.get(i).get_clusterLineFitSlopeMP());
+                        (float) clusList.get(i).get_clusterLineFitSlopeMP());
                 bank.setFloat("clusterLineFitSlopeErrMP", i,
-                        (float) cluslist.get(i).get_clusterLineFitSlopeErrMP());
+                        (float) clusList.get(i).get_clusterLineFitSlopeErrMP());
                 bank.setFloat("clusterLineFitInterceptMP", i,
-                        (float) cluslist.get(i).get_clusterLineFitInterceptMP());
+                        (float) clusList.get(i).get_clusterLineFitInterceptMP());
                 bank.setFloat("clusterLineFitInterceptErrMP", i,
-                        (float) cluslist.get(i).get_clusterLineFitInterceptErrMP());
+                        (float) clusList.get(i).get_clusterLineFitInterceptErrMP());
             }
             // TODO: UP TO HERE
         }
@@ -284,24 +288,26 @@ public class RecoBankWriter {
     /**
      * Writes a list of segments into the EvioEvent's bank.
      * @param event   the EvioEvent
-     * @param seglist the list of segments
+     * @param segList the list of segments
      * @param TB      boolean set to 1 if time-based and 0 otherwise.
      * @return        segments bank
      */
-    private DataBank fillSegmentsBank(DataEvent event, List<Segment> seglist, boolean TB) {
-
+    private DataBank fillSegmentsBank(DataEvent event, List<Segment> segList, boolean TB) {
         if (TB && event.hasBank("TimeBasedTrkg::TBSegments")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBSegments");
         }
+        if (!TB && event.hasBank("HitBasedTrkg::HBSegments")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBSegments");
+        }
 
         DataBank bank;
-        if (!TB) bank = event.createBank("HitBasedTrkg::HBSegments",  seglist.size());
-        else     bank = event.createBank("TimeBasedTrkg::TBSegments", seglist.size());
+        if (!TB) bank = event.createBank("HitBasedTrkg::HBSegments",  segList.size());
+        else     bank = event.createBank("TimeBasedTrkg::TBSegments", segList.size());
 
         int[] hitIdxArray = new int[12];
 
-        for (int i = 0; i < seglist.size(); i++) {
-            if (seglist.get(i).get_Id() == -1) continue;
+        for (int i = 0; i < segList.size(); i++) {
+            if (segList.get(i).get_Id() == -1) continue;
 
             for (int j = 0; j < hitIdxArray.length; j++) {
                 hitIdxArray[j] = -1;
@@ -309,42 +315,42 @@ public class RecoBankWriter {
 
             double chi2 = 0;
 
-            bank.setShort("id",        i, (short) seglist.get(i).get_Id());
-            bank.setByte("superlayer", i, (byte) seglist.get(i).get_Superlayer());
-            bank.setByte("sector",     i, (byte) seglist.get(i).get_Sector());
-            if (TB) bank.setShort("status", i, (short) seglist.get(i).get_Status());
+            bank.setShort("id",        i, (short) segList.get(i).get_Id());
+            bank.setByte("superlayer", i, (byte) segList.get(i).get_Superlayer());
+            bank.setByte("sector",     i, (byte) segList.get(i).get_Sector());
+            if (TB) bank.setShort("status", i, (short) segList.get(i).get_Status());
 
-            FittedCluster cls = seglist.get(i).get_fittedCluster();
+            FittedCluster cls = segList.get(i).get_fittedCluster();
             bank.setShort("Cluster_ID",    i, (short) cls.get_Id());
 
             // bank.setFloat("avgWire",       i, (float) cls.getAvgwire());
-            // bank.setByte ("size",          i, (byte)  seglist.get(i).size());
+            // bank.setByte ("size",          i, (byte)  segList.get(i).size());
             // bank.setFloat("fitSlope",      i, (float) cls.get_clusterLineFitSlope());
             // bank.setFloat("fitSlopeErr",   i, (float) cls.get_clusterLineFitSlopeErr());
             // bank.setFloat("fitInterc",     i, (float) cls.get_clusterLineFitIntercept());
             // bank.setFloat("fitIntercErr",  i, (float) cls.get_clusterLineFitInterceptErr());
-            bank.setFloat("SegEndPoint1X", i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
-            bank.setFloat("SegEndPoint1Z", i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
-            bank.setFloat("SegEndPoint2X", i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
-            bank.setFloat("SegEndPoint2Z", i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
+            bank.setFloat("SegEndPoint1X", i, (float) segList.get(i).get_SegmentEndPoints()[0]);
+            bank.setFloat("SegEndPoint1Z", i, (float) segList.get(i).get_SegmentEndPoints()[1]);
+            bank.setFloat("SegEndPoint2X", i, (float) segList.get(i).get_SegmentEndPoints()[2]);
+            bank.setFloat("SegEndPoint2Z", i, (float) segList.get(i).get_SegmentEndPoints()[3]);
 
             if (TB) {
-                bank.setFloat("resiSum", i, (float) seglist.get(i).get_ResiSum());
-                bank.setFloat("timeSum", i, (float) seglist.get(i).get_TimeSum());
+                bank.setFloat("resiSum", i, (float) segList.get(i).get_ResiSum());
+                bank.setFloat("timeSum", i, (float) segList.get(i).get_TimeSum());
             }
 
-            // for (int j = 0; j < seglist.get(i).size(); j++) {
-            //     if (seglist.get(i).get_Id() == -1) continue;
+            // for (int j = 0; j < segList.get(i).size(); j++) {
+            //     if (segList.get(i).get_Id() == -1) continue;
             //     if (j < hitIdxArray.length) {
-            //         hitIdxArray[j] = seglist.get(i).get(j).get_Id();
+            //         hitIdxArray[j] = segList.get(i).get(j).get_Id();
             //     }
             //     // Math.sqrt(12.) = 3.4641016151377544
-            //     double residual = seglist.get(i).get(j).get_ClusFitDoca() /
-            //                       (seglist.get(i).get(j).get_CellSize() / 3.4641016151377544);
+            //     double residual = segList.get(i).get(j).get_ClusFitDoca() /
+            //                       (segList.get(i).get(j).get_CellSize() / 3.4641016151377544);
             //     chi2 += residual * residual;
             // }
             // bank.setFloat("fitChisqProb", i,
-            //               (float) ProbChi2perNDF.prob(chi2, seglist.get(i).size() - 2));
+            //               (float) ProbChi2perNDF.prob(chi2, segList.get(i).size() - 2));
             //
             // for (int j = 0; j < hitIdxArray.length; j++) {
             //     String hitStrg = "Hit";
@@ -355,11 +361,18 @@ public class RecoBankWriter {
 
             // v TODO: NEW CODE, TEST THOROUGHLY
             if (!TB) {
-                bank.setByte("isOnTrack", i, (byte) (seglist.get(i).isOnTrack ? 1 : 0));
-                bank.setFloat("resiSum", i, (float) seglist.get(i).get_ResiSum());
-                bank.setFloat("timeSum", i, (float) seglist.get(i).get_TimeSum());
-                bank.setByte("status", i, (byte) seglist.get(i).get_Status());
-                bank.setShort("associatedCrossId", i, (short) seglist.get(i).associatedCrossId);
+                bank.setByte("isOnTrack", i, (byte) (segList.get(i).isOnTrack ? 1 : 0));
+                bank.setFloat("resiSum", i, (float) segList.get(i).get_ResiSum());
+                bank.setFloat("timeSum", i, (float) segList.get(i).get_TimeSum());
+                bank.setByte("status", i, (byte) segList.get(i).get_Status());
+                bank.setShort("associatedCrossId", i, (short) segList.get(i).associatedCrossId);
+
+                bank.setFloat("fitPlane_px", i, (float) segList.get(i).get_fitPlane().point().x());
+                bank.setFloat("fitPlane_py", i, (float) segList.get(i).get_fitPlane().point().y());
+                bank.setFloat("fitPlane_pz", i, (float) segList.get(i).get_fitPlane().point().z());
+                bank.setFloat("fitPlane_nx", i, (float) segList.get(i).get_fitPlane().normal().x());
+                bank.setFloat("fitPlane_ny", i, (float) segList.get(i).get_fitPlane().normal().y());
+                bank.setFloat("fitPlane_nz", i, (float) segList.get(i).get_fitPlane().normal().z());
             }
             // TODO: UP TO HERE
         }
@@ -374,13 +387,15 @@ public class RecoBankWriter {
      * @param TB        boolean set to 1 if time-based and 0 otherwise.
      * @return          crosses bank
      */
-    private DataBank fillCrossesBank(DataEvent event, List<Cross> crosslist, boolean TB) {
-
+    private DataBank fillCrossesBank(DataEvent event, List<Cross> crossList, boolean TB) {
         if (TB && event.hasBank("TimeBasedTrkg::TBCrosses")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCrosses");
         }
+        if (!TB && event.hasBank("HitBasedTrkg::HBCrosses")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBCrosses");
+        }
         int banksize = 0;
-        for (Cross cross : crosslist) {
+        for (Cross cross : crossList) {
             if (cross.get_Id() != -1) banksize++;
         }
 
@@ -389,7 +404,7 @@ public class RecoBankWriter {
         else     bank = event.createBank("TimeBasedTrkg::TBCrosses", banksize);
 
         int idx = 0;
-        for (Cross cross : crosslist) {
+        for (Cross cross : crossList) {
             if (cross.get_Id() == -1) continue;
             bank.setShort("id",          idx, (short) cross.get_Id());
             bank.setByte ("sector",      idx, (byte)  cross.get_Sector());
@@ -425,82 +440,106 @@ public class RecoBankWriter {
     /**
      * Writes a list of tracks into the EvioEvent's bank.
      * @param event    the EvioEvent
-     * @param candlist the list of tracks
+     * @param candList the list of tracks
      * @param TB       boolean set to 1 if time-based and 0 otherwise.
      * @return         tracks bank
      */
-    private DataBank fillTracksBank(DataEvent event, List<Track> candlist, boolean TB) {
-
+    private DataBank fillTracksBank(DataEvent event, List<Track> candList, boolean TB) {
         if (TB && event.hasBank("TimeBasedTrkg::TBTracks")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBTracks");
         }
+        if (!TB && event.hasBank("HitBasedTrkg::HBTracks")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBTracks");
+        }
 
         DataBank bank;
-        if (!TB) bank = event.createBank("HitBasedTrkg::HBTracks",  candlist.size());
-        else     bank = event.createBank("TimeBasedTrkg::TBTracks", candlist.size());
+        if (!TB) bank = event.createBank("HitBasedTrkg::HBTracks",  candList.size());
+        else     bank = event.createBank("TimeBasedTrkg::TBTracks", candList.size());
 
-        for (int i = 0; i < candlist.size(); i++) {
-            bank.setShort("id",     i, (short) candlist.get(i).get_Id());
-            bank.setByte ("sector", i, (byte)  candlist.get(i).get_Sector());
-            bank.setByte ("q",      i, (byte)  candlist.get(i).get_Q());
-            bank.setShort("status", i, (short) (100 + candlist.get(i).get_Status() * 10 +
-                                                candlist.get(i).get_MissingSuperlayer()));
+        if (candList.size() == 0) return bank;
 
-            if (candlist.get(i).get_PreRegion1CrossPoint() != null) {
-                bank.setFloat("c1_x",  i, (float) candlist.get(i).get_PreRegion1CrossPoint().x());
-                bank.setFloat("c1_y",  i, (float) candlist.get(i).get_PreRegion1CrossPoint().y());
-                bank.setFloat("c1_z",  i, (float) candlist.get(i).get_PreRegion1CrossPoint().z());
-                bank.setFloat("c1_ux", i, (float) candlist.get(i).get_PreRegion1CrossDir().x());
-                bank.setFloat("c1_uy", i, (float) candlist.get(i).get_PreRegion1CrossDir().y());
-                bank.setFloat("c1_uz", i, (float) candlist.get(i).get_PreRegion1CrossDir().z());
+        for (int i = 0; i < candList.size(); i++) {
+            bank.setShort("id",     i, (short) candList.get(i).get_Id());
+            bank.setByte ("sector", i, (byte)  candList.get(i).get_Sector());
+            bank.setByte ("q",      i, (byte)  candList.get(i).get_Q());
+            bank.setShort("status", i, (short) (100 + candList.get(i).get_Status() * 10 +
+                                                candList.get(i).get_MissingSuperlayer()));
+
+            if (candList.get(i).get_PreRegion1CrossPoint() != null) {
+                bank.setFloat("c1_x",  i, (float) candList.get(i).get_PreRegion1CrossPoint().x());
+                bank.setFloat("c1_y",  i, (float) candList.get(i).get_PreRegion1CrossPoint().y());
+                bank.setFloat("c1_z",  i, (float) candList.get(i).get_PreRegion1CrossPoint().z());
+                bank.setFloat("c1_ux", i, (float) candList.get(i).get_PreRegion1CrossDir().x());
+                bank.setFloat("c1_uy", i, (float) candList.get(i).get_PreRegion1CrossDir().y());
+                bank.setFloat("c1_uz", i, (float) candList.get(i).get_PreRegion1CrossDir().z());
             }
-            if (candlist.get(i).get_PostRegion3CrossPoint() != null) {
-                bank.setFloat("c3_x",  i, (float) candlist.get(i).get_PostRegion3CrossPoint().x());
-                bank.setFloat("c3_y",  i, (float) candlist.get(i).get_PostRegion3CrossPoint().y());
-                bank.setFloat("c3_z",  i, (float) candlist.get(i).get_PostRegion3CrossPoint().z());
-                bank.setFloat("c3_ux", i, (float) candlist.get(i).get_PostRegion3CrossDir().x());
-                bank.setFloat("c3_uy", i, (float) candlist.get(i).get_PostRegion3CrossDir().y());
-                bank.setFloat("c3_uz", i, (float) candlist.get(i).get_PostRegion3CrossDir().z());
+            if (candList.get(i).get_PostRegion3CrossPoint() != null) {
+                bank.setFloat("c3_x",  i, (float) candList.get(i).get_PostRegion3CrossPoint().x());
+                bank.setFloat("c3_y",  i, (float) candList.get(i).get_PostRegion3CrossPoint().y());
+                bank.setFloat("c3_z",  i, (float) candList.get(i).get_PostRegion3CrossPoint().z());
+                bank.setFloat("c3_ux", i, (float) candList.get(i).get_PostRegion3CrossDir().x());
+                bank.setFloat("c3_uy", i, (float) candList.get(i).get_PostRegion3CrossDir().y());
+                bank.setFloat("c3_uz", i, (float) candList.get(i).get_PostRegion3CrossDir().z());
             }
-            if (candlist.get(i).get_Region1TrackX() != null) {
-                bank.setFloat("t1_x",  i, (float) candlist.get(i).get_Region1TrackX().x());
-                bank.setFloat("t1_y",  i, (float) candlist.get(i).get_Region1TrackX().y());
-                bank.setFloat("t1_z",  i, (float) candlist.get(i).get_Region1TrackX().z());
-                bank.setFloat("t1_px", i, (float) candlist.get(i).get_Region1TrackP().x());
-                bank.setFloat("t1_py", i, (float) candlist.get(i).get_Region1TrackP().y());
-                bank.setFloat("t1_pz", i, (float) candlist.get(i).get_Region1TrackP().z());
+            if (candList.get(i).get_Region1TrackX() != null) {
+                bank.setFloat("t1_x",  i, (float) candList.get(i).get_Region1TrackX().x());
+                bank.setFloat("t1_y",  i, (float) candList.get(i).get_Region1TrackX().y());
+                bank.setFloat("t1_z",  i, (float) candList.get(i).get_Region1TrackX().z());
+                bank.setFloat("t1_px", i, (float) candList.get(i).get_Region1TrackP().x());
+                bank.setFloat("t1_py", i, (float) candList.get(i).get_Region1TrackP().y());
+                bank.setFloat("t1_pz", i, (float) candList.get(i).get_Region1TrackP().z());
             }
 
-            bank.setFloat("pathlength", i, (float) candlist.get(i).get_TotPathLen());
-            bank.setFloat("Vtx0_x",     i, (float) candlist.get(i).get_Vtx0().x());
-            bank.setFloat("Vtx0_y",     i, (float) candlist.get(i).get_Vtx0().y());
-            bank.setFloat("Vtx0_z",     i, (float) candlist.get(i).get_Vtx0().z());
-            bank.setFloat("p0_x",       i, (float) candlist.get(i).get_pAtOrig().x());
-            bank.setFloat("p0_y",       i, (float) candlist.get(i).get_pAtOrig().y());
-            bank.setFloat("p0_z",       i, (float) candlist.get(i).get_pAtOrig().z());
-            bank.setFloat("chi2",       i, (float) candlist.get(i).get_FitChi2());
-            bank.setShort("ndf",        i, (short) candlist.get(i).get_FitNDF());
+            bank.setFloat("pathlength", i, (float) candList.get(i).get_TotPathLen());
+            bank.setFloat("Vtx0_x",     i, (float) candList.get(i).get_Vtx0().x());
+            bank.setFloat("Vtx0_y",     i, (float) candList.get(i).get_Vtx0().y());
+            bank.setFloat("Vtx0_z",     i, (float) candList.get(i).get_Vtx0().z());
+            bank.setFloat("p0_x",       i, (float) candList.get(i).get_pAtOrig().x());
+            bank.setFloat("p0_y",       i, (float) candList.get(i).get_pAtOrig().y());
+            bank.setFloat("p0_z",       i, (float) candList.get(i).get_pAtOrig().z());
+            bank.setFloat("chi2",       i, (float) candList.get(i).get_FitChi2());
+            bank.setShort("ndf",        i, (short) candList.get(i).get_FitNDF());
+
+            // TODO: v CHECK THIS VARIABLES v
+            if (!TB) {
+                bank.setFloat("_IntegralBdl",   i, (float) candList.get(i).get_IntegralBdl());
+                bank.setFloat("_pathLength",    i, (float) candList.get(i).get_PathLength());
+                bank.setFloat("_P",             i, (float) candList.get(i).get_P());
+                bank.setFloat("_Vtx0_x",        i, (float) candList.get(i).get_Vtx0().x());
+                bank.setFloat("_Vtx0_y",        i, (float) candList.get(i).get_Vtx0().y());
+                bank.setFloat("_Vtx0_z",        i, (float) candList.get(i).get_Vtx0().z());
+                bank.setFloat("_pAtOrig_TiltedCS_x",     i, (float) candList.get(i).get_pAtOrig().x());
+                bank.setFloat("_pAtOrig_TiltedCS_y",     i, (float) candList.get(i).get_pAtOrig().y());
+                bank.setFloat("_pAtOrig_TiltedCS_z",     i, (float) candList.get(i).get_pAtOrig().z());
+                bank.setByte ("fit_Successful", i, (byte) (candList.get(i).fit_Successful ? 1 : 0));
+                bank.setShort("_missingSuperlayer", i, (short) candList.get(i).get_MissingSuperlayer());
+                bank.setShort("_fitConvergenceStatus", i, (short) candList.get(i).get_FitConvergenceStatus());
+                bank.setFloat("b_0", i, (float) candList.get(i).b[0]);
+                bank.setFloat("b_1", i, (float) candList.get(i).b[1]);
+                bank.setFloat("b_2", i, (float) candList.get(i).b[2]);
+            }
+            // TODO: UP UNTIL HERE
 
             if (!TB) {
-                bank.setShort("Cross1_ID",  i, (short) candlist.get(i).get(0).get_Id());
-                bank.setShort("Cross2_ID",  i, (short) candlist.get(i).get(1).get_Id());
-                bank.setShort("Cross3_ID",  i, (short) candlist.get(i).get(2).get_Id());
+                bank.setShort("Cross1_ID",  i, (short) candList.get(i).get(0).get_Id());
+                bank.setShort("Cross2_ID",  i, (short) candList.get(i).get(1).get_Id());
+                bank.setShort("Cross3_ID",  i, (short) candList.get(i).get(2).get_Id());
                 continue;
             }
 
             // else
-            if (candlist.get(i).size() == 3) {
-                bank.setShort("Cross1_ID", i, (short) candlist.get(i).get(0).get_Id());
-                bank.setShort("Cross2_ID", i, (short) candlist.get(i).get(1).get_Id());
-                bank.setShort("Cross3_ID", i, (short) candlist.get(i).get(2).get_Id());
+            if (candList.get(i).size() == 3) {
+                bank.setShort("Cross1_ID", i, (short) candList.get(i).get(0).get_Id());
+                bank.setShort("Cross2_ID", i, (short) candList.get(i).get(1).get_Id());
+                bank.setShort("Cross3_ID", i, (short) candList.get(i).get(2).get_Id());
             }
-            else if (candlist.get(i).size() == 2) {
-                bank.setShort("Cross1_ID", i, (short) candlist.get(i).get(0).get_Id());
-                bank.setShort("Cross2_ID", i, (short) candlist.get(i).get(1).get_Id());
+            else if (candList.get(i).size() == 2) {
+                bank.setShort("Cross1_ID", i, (short) candList.get(i).get(0).get_Id());
+                bank.setShort("Cross2_ID", i, (short) candList.get(i).get(1).get_Id());
                 bank.setShort("Cross3_ID", i, (short) -1);
             }
-            else if (candlist.get(i).size() == 1) {
-                bank.setShort("Cross1_ID", i, (short) candlist.get(i).get(0).get_Id());
+            else if (candList.get(i).size() == 1) {
+                bank.setShort("Cross1_ID", i, (short) candList.get(i).get(0).get_Id());
                 bank.setShort("Cross2_ID", i, (short) -1);
                 bank.setShort("Cross3_ID", i, (short) -1);
             }
@@ -511,42 +550,42 @@ public class RecoBankWriter {
     /**
      * writes the covariance matrix from HB fits to be used for starting the Time-based tracking.
      * @param event    hipo event
-     * @param candlist list of tracks
+     * @param candList list of tracks
      * @return         covariance matrix
      */
-    private DataBank fillTrackCovMatBank(DataEvent event, List<Track> candlist) {
+    private DataBank fillTrackCovMatBank(DataEvent event, List<Track> candList) {
 
         if (event == null) return null;
-        DataBank bank = event.createBank("TimeBasedTrkg::TBCovMat", candlist.size());
+        DataBank bank = event.createBank("TimeBasedTrkg::TBCovMat", candList.size());
 
-        for (int i = 0; i < candlist.size(); i++) {
-            bank.setShort("id", i, (short) candlist.get(i).get_Id());
-            if (candlist.get(i).get_CovMat() == null) continue;
-            bank.setFloat("C11", i, (float) candlist.get(i).get_CovMat().get(0, 0));
-            bank.setFloat("C12", i, (float) candlist.get(i).get_CovMat().get(0, 1));
-            bank.setFloat("C13", i, (float) candlist.get(i).get_CovMat().get(0, 2));
-            bank.setFloat("C14", i, (float) candlist.get(i).get_CovMat().get(0, 3));
-            bank.setFloat("C15", i, (float) candlist.get(i).get_CovMat().get(0, 4));
-            bank.setFloat("C21", i, (float) candlist.get(i).get_CovMat().get(1, 0));
-            bank.setFloat("C22", i, (float) candlist.get(i).get_CovMat().get(1, 1));
-            bank.setFloat("C23", i, (float) candlist.get(i).get_CovMat().get(1, 2));
-            bank.setFloat("C24", i, (float) candlist.get(i).get_CovMat().get(1, 3));
-            bank.setFloat("C25", i, (float) candlist.get(i).get_CovMat().get(1, 4));
-            bank.setFloat("C31", i, (float) candlist.get(i).get_CovMat().get(2, 0));
-            bank.setFloat("C32", i, (float) candlist.get(i).get_CovMat().get(2, 1));
-            bank.setFloat("C33", i, (float) candlist.get(i).get_CovMat().get(2, 2));
-            bank.setFloat("C34", i, (float) candlist.get(i).get_CovMat().get(2, 3));
-            bank.setFloat("C35", i, (float) candlist.get(i).get_CovMat().get(2, 4));
-            bank.setFloat("C41", i, (float) candlist.get(i).get_CovMat().get(3, 0));
-            bank.setFloat("C42", i, (float) candlist.get(i).get_CovMat().get(3, 1));
-            bank.setFloat("C43", i, (float) candlist.get(i).get_CovMat().get(3, 2));
-            bank.setFloat("C44", i, (float) candlist.get(i).get_CovMat().get(3, 3));
-            bank.setFloat("C45", i, (float) candlist.get(i).get_CovMat().get(3, 4));
-            bank.setFloat("C51", i, (float) candlist.get(i).get_CovMat().get(4, 0));
-            bank.setFloat("C52", i, (float) candlist.get(i).get_CovMat().get(4, 1));
-            bank.setFloat("C53", i, (float) candlist.get(i).get_CovMat().get(4, 2));
-            bank.setFloat("C54", i, (float) candlist.get(i).get_CovMat().get(4, 3));
-            bank.setFloat("C55", i, (float) candlist.get(i).get_CovMat().get(4, 4));
+        for (int i = 0; i < candList.size(); i++) {
+            bank.setShort("id", i, (short) candList.get(i).get_Id());
+            if (candList.get(i).get_CovMat() == null) continue;
+            bank.setFloat("C11", i, (float) candList.get(i).get_CovMat().get(0, 0));
+            bank.setFloat("C12", i, (float) candList.get(i).get_CovMat().get(0, 1));
+            bank.setFloat("C13", i, (float) candList.get(i).get_CovMat().get(0, 2));
+            bank.setFloat("C14", i, (float) candList.get(i).get_CovMat().get(0, 3));
+            bank.setFloat("C15", i, (float) candList.get(i).get_CovMat().get(0, 4));
+            bank.setFloat("C21", i, (float) candList.get(i).get_CovMat().get(1, 0));
+            bank.setFloat("C22", i, (float) candList.get(i).get_CovMat().get(1, 1));
+            bank.setFloat("C23", i, (float) candList.get(i).get_CovMat().get(1, 2));
+            bank.setFloat("C24", i, (float) candList.get(i).get_CovMat().get(1, 3));
+            bank.setFloat("C25", i, (float) candList.get(i).get_CovMat().get(1, 4));
+            bank.setFloat("C31", i, (float) candList.get(i).get_CovMat().get(2, 0));
+            bank.setFloat("C32", i, (float) candList.get(i).get_CovMat().get(2, 1));
+            bank.setFloat("C33", i, (float) candList.get(i).get_CovMat().get(2, 2));
+            bank.setFloat("C34", i, (float) candList.get(i).get_CovMat().get(2, 3));
+            bank.setFloat("C35", i, (float) candList.get(i).get_CovMat().get(2, 4));
+            bank.setFloat("C41", i, (float) candList.get(i).get_CovMat().get(3, 0));
+            bank.setFloat("C42", i, (float) candList.get(i).get_CovMat().get(3, 1));
+            bank.setFloat("C43", i, (float) candList.get(i).get_CovMat().get(3, 2));
+            bank.setFloat("C44", i, (float) candList.get(i).get_CovMat().get(3, 3));
+            bank.setFloat("C45", i, (float) candList.get(i).get_CovMat().get(3, 4));
+            bank.setFloat("C51", i, (float) candList.get(i).get_CovMat().get(4, 0));
+            bank.setFloat("C52", i, (float) candList.get(i).get_CovMat().get(4, 1));
+            bank.setFloat("C53", i, (float) candList.get(i).get_CovMat().get(4, 2));
+            bank.setFloat("C54", i, (float) candList.get(i).get_CovMat().get(4, 3));
+            bank.setFloat("C55", i, (float) candList.get(i).get_CovMat().get(4, 4));
         }
 
         return bank;

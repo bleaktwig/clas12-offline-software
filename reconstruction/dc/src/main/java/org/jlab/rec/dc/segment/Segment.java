@@ -88,6 +88,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     public void set_TimeSum(double _TimeSum) {this._TimeSum = _TimeSum;}
 
     public Plane3D get_fitPlane() {return _fitPlane;}
+    public void set_fitPlane(Plane3D _fitPlane) {this._fitPlane = _fitPlane;}
 
     public SegmentTrajectory get_Trajectory() {return _Trajectory;}
     public void set_Trajectory(SegmentTrajectory _Trajectory) {this._Trajectory = _Trajectory;}

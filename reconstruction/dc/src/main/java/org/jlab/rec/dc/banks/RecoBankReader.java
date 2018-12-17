@@ -2,12 +2,13 @@ package org.jlab.rec.dc.banks;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Plane3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
-import org.jlab.geom.prim.Point3D;
-import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
@@ -253,6 +254,13 @@ public class RecoBankReader {
         segment.set_TimeSum((double) bank.getFloat("timeSum", idx));
         segment.set_Status((int) bank.getByte("status", idx));
         segment.associatedCrossId = (int) bank.getShort("associatedCrossId", idx);
+
+        segment.set_fitPlane(new Plane3D((double) bank.getFloat("fitPlane_px", idx),
+                                         (double) bank.getFloat("fitPlane_py", idx),
+                                         (double) bank.getFloat("fitPlane_pz", idx),
+                                         (double) bank.getFloat("fitPlane_nx", idx),
+                                         (double) bank.getFloat("fitPlane_ny", idx),
+                                         (double) bank.getFloat("fitPlane_nz", idx)));
         // TODO: UP TO HERE
 
         // segment.get_fittedCluster()
@@ -396,6 +404,25 @@ public class RecoBankReader {
         track.set_FitChi2             ((double) bank.getFloat("chi2", idx));
         track.set_FitNDF              ((int)    bank.getShort("ndf", idx));
 
+        // TODO: v CHECK THIS VARIABLES v
+        track.set_IntegralBdl((double) bank.getFloat("_IntegralBdl", idx));
+        track.set_PathLength((double) bank.getFloat("_pathLength", idx));
+        track.set_P((double) bank.getFloat("_P", idx));
+        track.set_Vtx0(new Point3D((double) bank.getFloat("_Vtx0_x", idx),
+                                   (double) bank.getFloat("_Vtx0_y", idx),
+                                   (double) bank.getFloat("_Vtx0_z", idx)));
+        track.set_Vtx0(new Point3D((double) bank.getFloat("_pAtOrig_TiltedCS_x", idx),
+                                   (double) bank.getFloat("_pAtOrig_TiltedCS_y", idx),
+                                   (double) bank.getFloat("_pAtOrig_TiltedCS_z", idx)));
+
+        track.fit_Successful = bank.getByte("fit_Successful", idx) == 1 ? true : false;
+        track.set_MissingSuperlayer(bank.getShort("_missingSuperlayer", idx));
+        track.set_FitConvergenceStatus(bank.getShort("_fitConvergenceStatus", idx));
+        track.b[0] = bank.getFloat("b_0", idx);
+        track.b[1] = bank.getFloat("b_1", idx);
+        track.b[2] = bank.getFloat("b_2", idx);
+        // TODO: UP UNTIL HERE
+
         return track;
     }
 
@@ -408,6 +435,12 @@ public class RecoBankReader {
         System.out.println(cross.get_Segment1().getDetailedInfo());
         System.out.println(cross.get_Segment1().get_fittedCluster().getDetailedInfo());
         System.out.println(cross.get_Segment1().get_fittedCluster().get(0).getDetailedInfo());
+    }
+
+    public static void printSampleSegment(Segment segment) {
+        System.out.println(segment.getDetailedInfo());
+        System.out.println(segment.get_fittedCluster().getDetailedInfo());
+        System.out.println(segment.get_fittedCluster().get(0).getDetailedInfo());
     }
 
     /**

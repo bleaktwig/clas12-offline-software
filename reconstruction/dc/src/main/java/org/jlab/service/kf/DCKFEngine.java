@@ -75,7 +75,7 @@ public class DCKFEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 2) return true;
+        if (currentEvent != 21) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -149,18 +149,18 @@ public class DCKFEngine extends ReconstructionEngine {
                                                            dcSwim);
 
         // === WRITE TO THE BANKS ======================================================
-        System.out.println("\n[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
+        System.out.println("\nCurrent event: " + currentEvent);
+        System.out.println("[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
             // TODO: Depending on how much this method takes in relation to how much writing the
             //       tracks to the bank takes, it might be more efficient to just write everything
             //       and to remove overlapping tracks in DCHB2.
             trkCandFinder.removeOverlappingTracks(trkcands);
-            rbw.fillHBTracksBanks(event, rbw, trkcands);
         }
-        System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
-        // System.out.println("DCKF2:");
-        // RecoBankReader.printSample(crosses.get(1));
+        rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
+        // rbw.fillHBTracksBanks(event, rbw, trkcands);
+        System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
         return true;
     }

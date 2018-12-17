@@ -56,7 +56,7 @@ public class DCHB1Engine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 2) return true;
+        if (currentEvent != 21) return true;
 
         // setRunConditionsParameters(event);
         if (!event.hasBank("RUN::config")) return true;
@@ -152,6 +152,11 @@ public class DCHB1Engine extends DCEngine {
 
         if (crosses.isEmpty()) crosses = null;
         rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
+
+        for (FittedCluster cluster : clusters) {
+            if (cluster.size() >= 10)
+                System.out.println("[DCHB1] # OF HITS IN CLUSTER " + cluster.get_Id() + ": " + cluster.size());
+        }
 
         // System.out.println("DCHB1:");
         // RecoBankReader.printSample(crosses.get(1));

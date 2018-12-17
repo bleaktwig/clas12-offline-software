@@ -66,7 +66,7 @@ public class DCHB2Engine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 2) return true;
+        if (currentEvent != 21) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -90,32 +90,38 @@ public class DCHB2Engine extends DCEngine {
         DataBank clBank = event.getBank("HitBasedTrkg::HBClusters");
         DataBank seBank = event.getBank("HitBasedTrkg::HBSegments");
         DataBank crBank = event.getBank("HitBasedTrkg::HBCrosses");
-        DataBank trBank = event.getBank("HitBasedTrkg::HBTracks");
 
-        // Pull the crosses and tracks from the bank.
+        // Pull the hits, clusters, segments and crosses from their banks
         if (hiBank.rows() == 0) return true;
         if (clBank.rows() == 0) return true;
         if (seBank.rows() == 0) return true;
         if (crBank.rows() == 0) return true;
-        if (trBank.rows() == 0) return true;
 
         List<FittedHit> hits         = new ArrayList();
         List<FittedCluster> clusters = new ArrayList();
         List<Segment> segments       = new ArrayList();
         List<Cross> crosses          = new ArrayList();
-        List<Track> trkCands         = new ArrayList();
 
         for (int h = 0; h < hiBank.rows(); ++h) hits.add(rbr.getHit(hiBank, h));
         for (int c = 0; c < clBank.rows(); ++c) clusters.add(rbr.getCluster(clBank, hits, c));
         for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
         for (int c = 0; c < crBank.rows(); ++c) crosses.add(rbr.getCross(crBank, segments, c));
-        for (int t = 0; t < trBank.rows(); ++t) trkCands.add(rbr.getHBTrack(trBank, crosses, t));
+
+        // Pull the tracks from the banks if available
+        List<Track> trkCands = new ArrayList();
+        DataBank trBank = event.getBank("HitBasedTrkg::HBTracks");
+        if (trBank.rows() > 0) {
+            for (int t = 0; t < trBank.rows(); ++t) trkCands.add(rbr.getHBTrack(trBank, crosses, t));
+        }
+        else System.out.println("YES!");
 
         // === RUN DCHB2 ===============================================================
+        // System.out.println("[DCHB2] 00 track candidates size: " + trkCands.size());
         int trkId = 1;
         if (trkCands.size() > 0) {
             for (Track trk : trkCands) {
                 trk.set_Id(trkId); // Reset the id
+                // System.out.println("[DCHB2] 01 matching hits");
                 trkCandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
                     c.get_Segment1().isOnTrack = true;
@@ -132,11 +138,18 @@ public class DCHB2Engine extends DCEngine {
         List<Segment> psegments           = new ArrayList<>();
 
         for (Cross c : crosses) {
-            if (!c.get_Segment1().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment1());
-            if (!c.get_Segment2().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment2());
+            if (!c.get_Segment1().isOnTrack) {
+                crossSegsNotOnTrack.add(c.get_Segment1());
+                // System.out.println("[DCHB2] 01A Segment1 not on track!");
+            }
+            if (!c.get_Segment2().isOnTrack) {
+                crossSegsNotOnTrack.add(c.get_Segment2());
+                // System.out.println("[DCHB2] 01B Segment2 not on track!");
+            }
         }
 
         RoadFinder rf = new RoadFinder();
+        // System.out.println("[DCHB2] 02 Finding roads");
         List<Road> allRoads = rf.findRoads(segments, dcDetector);
         List<Segment> Segs2Road = new ArrayList<>();
         for (Road r : allRoads) {
@@ -169,20 +182,31 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
-
+        // System.out.println("[DCHB2] 03 Roads found, making segments");
         segments.addAll(psegments);
+        // System.out.println("[DCHB2] 03A psegments size: " + psegments.size());
+        // System.out.println("[DCHB2] 03B segments size:  " + segments.size());
+        // RecoBankReader.printSampleSegment(segments.get(0));
+        // System.out.println("[DCHB2] 04 Making crosses");
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
+
+        // System.out.println("[DCHB2] 04A prcrosses size: " + pcrosses.size());
+        // RecoBankReader.printSample(pcrosses.get(0));
+        // System.out.println("[DCHB2] 05 Making crosslists");
         CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
                 false,
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector,
                 null,
                 dcSwim);
+        // System.out.println("[DCHB2] 06 Finding mistrkcands");
         List<Track> mistrkcands = trkCandFinder.getTrackCands(pcrosslist,
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
 
+        // System.out.println("[DCHB2] 07 # of mistrkcands before removing overlapping tracks: "
+                           // + mistrkcands.size());
         // remove overlaps
         if (mistrkcands.size() > 0) {
             trkCandFinder.removeOverlappingTracks(mistrkcands);
@@ -199,21 +223,15 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
-        System.out.println("[DCHB2] # of mistrkcands: " + mistrkcands.size());
+        System.out.println("[DCHB2] # of mistrkcands after removing overlapping tracks: "
+                           + mistrkcands.size());
         trkCands.addAll(mistrkcands);
 
         // TODO: Some changes were made to at least the hits, segments and crosses. Remove these
         //       from the banks and write them again.
 
-        if (trkCands.isEmpty()) {
-            return true; // No candidates found
-        }
-        rbw.fillHBTracksBanks(event, rbw, trkCands);
-
         System.out.println("[DCHB2] final # of tracks: " + trkCands.size() + "\n");
-
-        // System.out.println("DCHB2:");
-        // RecoBankReader.printSample(crosses.get(1));
+        if (!trkCands.isEmpty()) rbw.fillHBTracksBanks(event, rbw, trkCands);
 
         return true;
     }

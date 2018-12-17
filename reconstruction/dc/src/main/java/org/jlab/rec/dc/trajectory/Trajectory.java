@@ -30,7 +30,7 @@ public class Trajectory extends ArrayList<Cross> {
     private double _pathLength;
 
     public List<TrajectoryStateVec> trajectory;
-    float b[] = new float[3];
+    public float b[] = new float[3];
 
     public Trajectory() {}
 
