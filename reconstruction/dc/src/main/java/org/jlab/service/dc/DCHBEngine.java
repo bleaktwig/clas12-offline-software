@@ -82,7 +82,6 @@ public class DCHBEngine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 21) return true;
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
@@ -221,11 +220,6 @@ public class DCHBEngine extends DCEngine {
             return true;
         }
 
-        for (FittedCluster cluster : clusters) {
-            if (cluster.size() >= 10)
-                System.out.println("[DCHB] # OF HITS IN CLUSTER " + cluster.get_Id() + ": " + cluster.size());
-        }
-
         /* 17 */
         CrossListFinder crossLister = new CrossListFinder();
 
@@ -320,32 +314,22 @@ public class DCHBEngine extends DCEngine {
             }
         }
 
-        // System.out.println("[DCHB] 03 Roads found, making segments");
         segments.addAll(psegments);
-        // System.out.println("[DCHB] 03A psegments size: " + psegments.size());
-        // System.out.println("[DCHB] 03B segments size:  " + segments.size());
-        RecoBankReader.printSampleSegment(segments.get(0));
-        // System.out.println("[DCHB] 04 Making crosses");
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
 
-        // System.out.println("[DCHB] 04A prcrosses size: " + pcrosses.size());
-        // RecoBankReader.printSample(pcrosses.get(0));
-
-        // System.out.println("[DCHB] 05 Making crosslists");
         CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
                 false,
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector,
                 null,
                 dcSwim);
-        // System.out.println("[DCHB] 06 Finding mistrkcands");
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
                 dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim);
 
-        // System.out.println("[DCHB] 07 # of mistrkcands before removing overlapping tracks: "
-                           // + mistrkcands.size());
+        System.out.println("[DCHB] 07 # of mistrkcands before removing overlapping tracks: "
+                           + mistrkcands.size());
         // remove overlaps
         if (mistrkcands.size() > 0) {
             trkcandFinder.removeOverlappingTracks(mistrkcands);

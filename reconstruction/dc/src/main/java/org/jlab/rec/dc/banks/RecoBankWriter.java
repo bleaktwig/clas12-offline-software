@@ -554,6 +554,10 @@ public class RecoBankWriter {
      * @return         covariance matrix
      */
     private DataBank fillTrackCovMatBank(DataEvent event, List<Track> candList) {
+        if (event.hasBank("HitBasedTrkg::TBCovMat")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::TBCovMat");
+        }
+
 
         if (event == null) return null;
         DataBank bank = event.createBank("TimeBasedTrkg::TBCovMat", candList.size());
@@ -679,20 +683,6 @@ public class RecoBankWriter {
                                List<Cross>         crosses,
                                List<Track>         trkcands) {
         fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, false);
-        return;
-    }
-
-    public void fillHBTracksBanks(DataEvent event, RecoBankWriter rbw, List<Track> trkcands) {
-        if (event.hasBank("HitBasedTrkg::HBTracks"))
-            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::HBTracks");
-        if (event.hasBank("TimeBasedTrkg::TBCovMat"))
-            ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCovMat");
-
-        if (trkcands != null) {
-            event.appendBanks(rbw.fillTracksBank(event, trkcands, false));
-            event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
-        }
-
         return;
     }
 

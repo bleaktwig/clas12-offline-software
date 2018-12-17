@@ -75,7 +75,6 @@ public class DCKFEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 21) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -112,9 +111,6 @@ public class DCKFEngine extends ReconstructionEngine {
         for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
         for (int c = 0; c < crBank.rows(); ++c) crosses.add (rbr.getCross  (crBank, segments, c));
 
-        // System.out.println("DCKF1:");
-        // RecoBankReader.printSample(crosses.get(1));
-
         // TODO: after all is up and running I should check what data from the
         //       crosses/segments/clusters/hits I can ignore so that I minimize
         //       what RecoBankReader has to read and accelerate the whole ordeal
@@ -122,24 +118,12 @@ public class DCKFEngine extends ReconstructionEngine {
         // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
 
-        // TODO: v Only one issue, with Cluster Line Fit Slope Int Cov v
         CrossList crosslist = crossLister.candCrossLists(crosses,
                 false,
                 this.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector,
                 null,
                 dcSwim);
-
-        // TODO: When candCrossLists runs, the cross' pointErr spikes, being multiplyed by 57.38 for
-        //       some reason. As a patch solution, the code below is applied.
-        //       If I'm going to actually go with this the at least I should change the scaling
-        //       value so as to be more accurate.
-        // TODO: This scaling factor is really inaccurate. I should seriously improve it if I'm
-        //       going to go for this option.
-        // for (Cross cross : crosses)
-        //     cross.set_PointErr(new Point3D(cross.get_PointErr().x() / 57.38,
-        //                                    cross.get_PointErr().y() / 57.38,
-        //                                    cross.get_PointErr().z() / 57.38));
 
         // === INSTANCE AND RUN TrackCandListFinder ====================================
         TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
@@ -149,8 +133,6 @@ public class DCKFEngine extends ReconstructionEngine {
                                                            dcSwim);
 
         // === WRITE TO THE BANKS ======================================================
-        System.out.println("\nCurrent event: " + currentEvent);
-        System.out.println("[DCKF] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
             // TODO: Depending on how much this method takes in relation to how much writing the
             //       tracks to the bank takes, it might be more efficient to just write everything
@@ -159,8 +141,6 @@ public class DCKFEngine extends ReconstructionEngine {
         }
 
         rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
-        // rbw.fillHBTracksBanks(event, rbw, trkcands);
-        System.out.println("[DCKF] # of tracks after removing overlapping tracks: " + trkcands.size());
 
         return true;
     }

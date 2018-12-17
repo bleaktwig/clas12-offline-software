@@ -53,7 +53,6 @@ public class DCHB2Engine extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int currentEvent = eventCounter;
         eventCounter++;
-        if (currentEvent != 21) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -193,15 +192,9 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
-        System.out.println("[DCHB2] # of mistrkcands after removing overlapping tracks: "
-                           + mistrkcands.size());
         trkCands.addAll(mistrkcands);
 
-        // TODO: Some changes were made to at least the hits, segments and crosses. Remove these
-        //       from the banks and write them again.
-
-        System.out.println("[DCHB2] final # of tracks: " + trkCands.size() + "\n");
-        if (!trkCands.isEmpty()) rbw.fillHBTracksBanks(event, rbw, trkCands);
+        rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkCands);
 
         return true;
     }
