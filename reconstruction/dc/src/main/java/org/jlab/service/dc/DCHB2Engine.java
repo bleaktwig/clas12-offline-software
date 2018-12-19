@@ -96,9 +96,14 @@ public class DCHB2Engine extends DCEngine {
         // Pull the tracks from the banks if available
         List<Track> trkCands = new ArrayList();
         if (event.hasBank("HitBasedTrkg::HBTracks")) {
-            DataBank trBank = event.getBank("HitBasedTrkg::HBTracks");
-            for (int t = 0; t < trBank.rows(); ++t) trkCands.add(rbr.getHBTrack(trBank, crosses, t));
+            DataBank trBank  = event.getBank("HitBasedTrkg::HBTracks");
+            DataBank covBank = event.getBank("TimeBasedTrkg::TBCovMat");
+            for (int t = 0; t < trBank.rows(); ++t) {
+                trkCands.add(rbr.getHBTrack(trBank, crosses, t));
+                trkCands.get(t).set_CovMat(rbr.getTBCovMat(covBank, t));
+            }
         }
+
 
         // === RUN DCHB2 ===============================================================
         int trkId = 1;

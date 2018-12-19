@@ -101,7 +101,7 @@ public class Trajectory extends ArrayList<Cross> {
         public void setDetName(String name) {this._Name = name;}
     }
 
-    // NOTE: Lacks JavaDoc description.
+    // NOTE: Lacks JavaDoc description
     private int getFTOFPanel(Line3d trk, FTOFGeant4Factory ftofDetector) {
         List<DetHit> hits = ftofDetector.getIntersections(trk);
 

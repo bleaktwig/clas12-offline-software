@@ -13,13 +13,12 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
-import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.track.Track;
 
 import trackfitter.fitter.utilities.*;
 
 /**
- * A class to fill the reconstructed DC banks.
+ * A class to fill the reconstructed DC banks
  *
  * @author ziegler
  */
@@ -35,12 +34,9 @@ public class RecoBankWriter {
         List<FittedHit> fhits = new ArrayList<>();
 
         for (Hit hit : hits) {
-            FittedHit fhit = new FittedHit(hit.get_Sector(),
-                                           hit.get_Superlayer(),
-                                           hit.get_Layer(),
-                                           hit.get_Wire(),
-                                           hit.get_TDC(),
-                                           hit.get_Id());
+            FittedHit fhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(),
+                                           hit.get_Layer(),  hit.get_Wire(),
+                                           hit.get_TDC(),    hit.get_Id());
             fhit.set_Id(hit.get_Id());
             fhit.set_DocaErr(hit.get_DocaErr());
             fhits.add(fhit);
@@ -236,7 +232,6 @@ public class RecoBankWriter {
             bank.setFloat("fitSlopeErr",  i, (float) clusList.get(i).get_clusterLineFitSlopeErr());
             bank.setFloat("fitInterc",    i, (float) clusList.get(i).get_clusterLineFitIntercept());
             bank.setFloat("fitIntercErr", i, (float) clusList.get(i).get_clusterLineFitInterceptErr());
-            bank.setFloat("fitSlIntCov",  i, (float) clusList.get(i).get_clusterLineFitSlIntCov());
 
             for (int j = 0; j < clusList.get(i).size() && j < 12; j++) {
                 hitIdxArray.add(clusList.get(i).get(j).get_Id());
@@ -250,7 +245,6 @@ public class RecoBankWriter {
             // bank.setFloat("fitChisqProb", i,
             //               (float) ProbChi2perNDF.prob(chi2, clusList.get(i).size() - 2));
             bank.setFloat("fitChisqProb", i, (float) clusList.get(i).get_fitProb());
-            bank.setFloat("chisqProb",    i, (float) clusList.get(i).get_Chisq());
 
             for (int j = 1; j < hitIdxArray.size() + 1; j++) {
                 bank.setShort("Hit" + j + "_ID", i, (short) hitIdxArray.get(j - 1).intValue());
@@ -258,6 +252,8 @@ public class RecoBankWriter {
 
             // v TODO: NEW CODE, CHECK THOROUGHLY
             if (!TB) {
+                bank.setFloat("fitSlIntCov",  i, (float) clusList.get(i).get_clusterLineFitSlIntCov());
+                bank.setFloat("chisqProb",    i, (float) clusList.get(i).get_Chisq());
                 bank.setFloat("clusLine1X", i, (float) clusList.get(i).get_clusLine().origin().x());
                 bank.setFloat("clusLine1Y", i, (float) clusList.get(i).get_clusLine().origin().y());
                 bank.setFloat("clusLine1Z", i, (float) clusList.get(i).get_clusLine().origin().z());
@@ -554,10 +550,9 @@ public class RecoBankWriter {
      * @return         covariance matrix
      */
     private DataBank fillTrackCovMatBank(DataEvent event, List<Track> candList) {
-        if (event.hasBank("HitBasedTrkg::TBCovMat")) {
-            ((HipoDataEvent) event).getHipoEvent().removeGroup("HitBasedTrkg::TBCovMat");
+        if (event.hasBank("TimeBasedTrkg::TBCovMat")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBCovMat");
         }
-
 
         if (event == null) return null;
         DataBank bank = event.createBank("TimeBasedTrkg::TBCovMat", candList.size());

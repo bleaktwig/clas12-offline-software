@@ -18,7 +18,6 @@ import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
-import org.jlab.rec.dc.banks.RecoBankReader; // TODO: Delete
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
 import org.jlab.rec.dc.cluster.ClusterFitter;
@@ -47,8 +46,6 @@ public class DCHBEngine extends DCEngine {
     private AtomicInteger Run = new AtomicInteger(0);
     private double triggerPhase;
     private int newRun = 0;
-
-    private int eventCounter = 0;
 
     public DCHBEngine() {
         super("DCHB");
@@ -80,9 +77,6 @@ public class DCHBEngine extends DCEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        int currentEvent = eventCounter;
-        eventCounter++;
-
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
         if (!event.hasBank("RUN::config")) {
@@ -219,7 +213,6 @@ public class DCHBEngine extends DCEngine {
                     null);
             return true;
         }
-
         /* 17 */
         CrossListFinder crossLister = new CrossListFinder();
 
@@ -238,19 +231,14 @@ public class DCHBEngine extends DCEngine {
                 dcSwim);
         /* 19 */
 
-        // === RUN DCHB2 ===============================================================
         // track found
         int trkId = 1;
-        System.out.println("\nCurrent event: " + currentEvent);
-        System.out.println("[DCHB] # of tracks before removing overlapping tracks: " + trkcands.size());
         if (trkcands.size() > 0) {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
-            System.out.println("[DCHB] # of tracks after removing overlapping tracks: " + trkcands.size());
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);
-                // System.out.println("[DCHB] 01 matching hits");
                 trkcandFinder.matchHits(trk.get_Trajectory(),
                         trk,
                         dcDetector,
@@ -273,17 +261,12 @@ public class DCHBEngine extends DCEngine {
         List<Segment> psegments = new ArrayList<>();
 
         for (Cross c : crosses) {
-            if (!c.get_Segment1().isOnTrack) {
-                // System.out.println("[DCHB] 01A Segment1 not on track!");
+            if (!c.get_Segment1().isOnTrack)
                 crossSegsNotOnTrack.add(c.get_Segment1());
-            }
-            if (!c.get_Segment2().isOnTrack) {
-                // System.out.println("[DCHB] 01B Segment2 not on track!");
+            if (!c.get_Segment2().isOnTrack)
                 crossSegsNotOnTrack.add(c.get_Segment2());
-            }
         }
         RoadFinder rf = new RoadFinder();
-        // System.out.println("[DCHB] 02 Finding roads");
         List<Road> allRoads = rf.findRoads(segments, dcDetector);
         List<Segment> Segs2Road = new ArrayList<>();
         for (Road r : allRoads) {
@@ -291,8 +274,11 @@ public class DCHBEngine extends DCEngine {
             int missingSL = -1;
             for (int ri = 0; ri < 3; ri++) {
                 if (r.get(ri).associatedCrossId == -1) {
-                    if (r.get(ri).get_Superlayer() % 2 == 1) missingSL = r.get(ri).get_Superlayer() + 1;
-                    else                                     missingSL = r.get(ri).get_Superlayer() - 1;
+                    if (r.get(ri).get_Superlayer() % 2 == 1) {
+                        missingSL = r.get(ri).get_Superlayer() + 1;
+                    } else {
+                        missingSL = r.get(ri).get_Superlayer() - 1;
+                    }
                 }
             }
             for (int ri = 0; ri < 3; ri++) {
@@ -310,13 +296,12 @@ public class DCHBEngine extends DCEngine {
                 Segment pSegment = rf.findRoadMissingSegment(Segs2Road,
                         dcDetector,
                         r.a);
-                if (pSegment != null) psegments.add(pSegment);
+                if (pSegment != null)
+                    psegments.add(pSegment);
             }
         }
-
         segments.addAll(psegments);
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
-
         CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
                 false,
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
@@ -328,8 +313,6 @@ public class DCHBEngine extends DCEngine {
                 Swimmer.getTorScale(),
                 dcSwim);
 
-        System.out.println("[DCHB] 07 # of mistrkcands before removing overlapping tracks: "
-                           + mistrkcands.size());
         // remove overlaps
         if (mistrkcands.size() > 0) {
             trkcandFinder.removeOverlappingTracks(mistrkcands);
@@ -352,11 +335,7 @@ public class DCHBEngine extends DCEngine {
                 trkId++;
             }
         }
-        System.out.println("[DCHB] # of mistrkcands after removing overlapping tracks: "
-                           + mistrkcands.size());
-
         trkcands.addAll(mistrkcands);
-        System.out.println("[DCHB] final # of tracks: " + trkcands.size() + "\n");
 
         // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses
@@ -377,10 +356,6 @@ public class DCHBEngine extends DCEngine {
                 segments,
                 crosses,
                 trkcands);
-
-        // System.out.println("DCHB:");
-        // RecoBankReader.printSample(crosses.get(1));
-
         return true;
     }
 

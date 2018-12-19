@@ -2,6 +2,7 @@ package org.jlab.rec.dc.banks;
 
 import java.util.ArrayList;
 import java.util.List;
+import Jama.Matrix;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.geom.prim.Line3D;
@@ -333,7 +334,7 @@ public class RecoBankReader {
     }
 
     /**
-     * Gets a track from a databank, given by an index, along with its three referenced segments.
+     * Gets a track from a databank, given by an index, along with its three referenced crosses.
      * @param bank    tracks bank
      * @param crosses list of crosses
      * @param idx     index of the track
@@ -404,7 +405,7 @@ public class RecoBankReader {
         track.set_FitChi2             ((double) bank.getFloat("chi2", idx));
         track.set_FitNDF              ((int)    bank.getShort("ndf", idx));
 
-        // TODO: v CHECK THIS VARIABLES v
+        // TODO: v CHECK THESE VARIABLES v
         track.set_IntegralBdl((double) bank.getFloat("_IntegralBdl", idx));
         track.set_PathLength((double) bank.getFloat("_pathLength", idx));
         track.set_P((double) bank.getFloat("_P", idx));
@@ -427,20 +428,53 @@ public class RecoBankReader {
     }
 
     /**
+     * Gets a TB covariance matrix from a bank.
+     * @param bank    covariance matrices bank
+     * @param idx     index of the track
+     * @return        the retrieved matrix
+     */
+    public Matrix getTBCovMat(DataBank bank, int idx) {
+        if (validateBank(bank, idx, "TBCovMat")) return null;
+
+        double[] tmpArr = {(double) bank.getFloat("C11", idx),
+                           (double) bank.getFloat("C12", idx),
+                           (double) bank.getFloat("C13", idx),
+                           (double) bank.getFloat("C14", idx),
+                           (double) bank.getFloat("C15", idx),
+                           (double) bank.getFloat("C21", idx),
+                           (double) bank.getFloat("C22", idx),
+                           (double) bank.getFloat("C23", idx),
+                           (double) bank.getFloat("C24", idx),
+                           (double) bank.getFloat("C25", idx),
+                           (double) bank.getFloat("C31", idx),
+                           (double) bank.getFloat("C32", idx),
+                           (double) bank.getFloat("C33", idx),
+                           (double) bank.getFloat("C34", idx),
+                           (double) bank.getFloat("C35", idx),
+                           (double) bank.getFloat("C41", idx),
+                           (double) bank.getFloat("C42", idx),
+                           (double) bank.getFloat("C43", idx),
+                           (double) bank.getFloat("C44", idx),
+                           (double) bank.getFloat("C45", idx),
+                           (double) bank.getFloat("C51", idx),
+                           (double) bank.getFloat("C52", idx),
+                           (double) bank.getFloat("C53", idx),
+                           (double) bank.getFloat("C54", idx),
+                           (double) bank.getFloat("C55", idx)};
+
+        return new Matrix(tmpArr, 5);
+    }
+
+    /**
      * Prints the data associated to one cross along with its first segment, cluster and hit.
      * @param cross the cross to be printed
      */
-    public static void printSample(Cross cross) {
+    @SuppressWarnings("unused")
+    public static void printSampleCross(Cross cross) {
         System.out.println(cross.getDetailedInfo());
         System.out.println(cross.get_Segment1().getDetailedInfo());
         System.out.println(cross.get_Segment1().get_fittedCluster().getDetailedInfo());
         System.out.println(cross.get_Segment1().get_fittedCluster().get(0).getDetailedInfo());
-    }
-
-    public static void printSampleSegment(Segment segment) {
-        System.out.println(segment.getDetailedInfo());
-        System.out.println(segment.get_fittedCluster().getDetailedInfo());
-        System.out.println(segment.get_fittedCluster().get(0).getDetailedInfo());
     }
 
     /**
@@ -448,6 +482,7 @@ public class RecoBankReader {
      * Warning: The output is usually very extensive.
      * @param cList the list of crosses to be printed
      */
+    @SuppressWarnings("unused")
     public static void printFullInfo(List<Cross> cList) {
         System.out.println("Crosses info:");
         for (int c = 0; c < cList.size(); c++) {

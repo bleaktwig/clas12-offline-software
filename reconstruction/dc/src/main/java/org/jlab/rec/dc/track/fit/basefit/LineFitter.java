@@ -1,91 +1,91 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package org.jlab.rec.dc.track.fit.basefit;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * A least square fitting method.
- * For a linear fit, f(a,b) = a + bx taking y errors into account.
- *
- * @author ziegler
- */
+/** A least square fitting method
+*   For a linear fit,f(a,b)=a+bx taking  y errors into account
+*/
+
 public class LineFitter {
 
+	//instantiate
 	private LineFitPars _linefitresult;
-
-	// fit status
-	public boolean fitStatus(List<Double> x,       List<Double> y,
-							 List<Double> sigma_x, List<Double> sigma_y,
-							 int nbpoints) {
-		// must have enough points to do the fit
-		if (nbpoints < 2) {
-			return false;
-		}
-
-		// now do the fit
-		// initialize weight-sum and moments
-		double Sw, Sx, Sy, Sxx, Sxy;
-		Sw = Sx = Sy = Sxx = Sxy = 0.;
-
-		ArrayList<Double> w = new ArrayList<Double>(nbpoints);
-
-		for (int i = 0; i < nbpoints; i++) {
-			double sigmaPreCalc = (sigma_y.get(i) * sigma_y.get(i) +
-						  		   sigma_x.get(i) * sigma_x.get(i));
-			if (sigmaPreCalc == 0) {
-				return false;
-			}
-			w.add(i, 1./sigmaPreCalc);
-			Sw  += w.get(i);
-			// the moments
-			double xPreCalc = w.get(i) * x.get(i);
-			Sx  += xPreCalc;
-			Sy  += w.get(i) * y.get(i);
-			Sxy += xPreCalc * y.get(i);
-			Sxx += xPreCalc * x.get(i);
-		}
-
-		// the determinant; must be > 0
-		double determ = Sw*Sxx - Sx*Sx;
-		if(determ < 1e-19) determ = 1e-19; //straight track approximation
-
-		double slopeSol  = (Sw*Sxy - Sx*Sy)/determ;
-		double intercSol = (Sy*Sxx - Sx*Sxy)/determ;
-		// the errors on these parameters
-		double slopeErr  = Math.sqrt(Sw/determ);
-		double intercErr = Math.sqrt(Sxx/determ);
-		double SlInCov   = -Sx/determ;
-
-		if (Math.abs(slopeSol) < 0 || Math.abs(intercSol) < 0) {
-			return false;
-		}
-
-		// calculate the chi^2
-		double chi_2 = 0.;
-		// individual chi^2 for each fitted point
-		double pointchi_2[] = new double[nbpoints];
-		for (int i = 0; i < nbpoints; i++) {
-			pointchi_2[i] = w.get(i) *
-							((y.get(i) - (slopeSol * x.get(i) + intercSol)) *
-							 (y.get(i) - (slopeSol * x.get(i) + intercSol)));
-			chi_2 += pointchi_2[i];
-		}
-
-		// the number of degrees of freedom
-		int ndf = nbpoints - 2;
-
-		// instantiate fit object to be returned;
-		_linefitresult = new LineFitPars(slopeSol,   intercSol,
-										 slopeErr,   intercErr,
-										 SlInCov,    chi_2,
-										 pointchi_2, ndf);
-
-		// if there is a fit return true
-		return true;
+	
+	// the constructor
+	public LineFitter() {
 	}
-
+	private List<Double> w = new ArrayList<Double>();
+	// fit status
+	public boolean fitStatus(List<Double> x, List<Double> y, List<Double> sigma_x, List<Double> sigma_y, int nbpoints) {
+		boolean fitStat = false;
+		
+		if (nbpoints>=2) {  // must have enough points to do the fit
+			// now do the fit
+			// initialize weight-sum and moments
+			double Sw, Sx, Sy, Sxx, Sxy;
+			Sw = Sx = Sy = Sxx = Sxy =0.;
+			
+			w.clear();
+			((ArrayList<Double>) w).ensureCapacity(nbpoints);
+			
+			for (int i = 0; i<nbpoints; i++) { 
+				if((sigma_y.get(i)*sigma_y.get(i)+sigma_x.get(i)*sigma_x.get(i))==0) {
+					return false;
+				}
+				w.add(i, 1./(sigma_y.get(i)*sigma_y.get(i)+sigma_x.get(i)*sigma_x.get(i)) ); 
+				//w.get(i) = 1./(sigma_x.get(i)*sigma_x.get(i)); 
+				Sw  += w.get(i);
+				// the moments
+				Sx  += x.get(i)*w.get(i);
+				Sy  += y.get(i)*w.get(i);
+				Sxy += x.get(i)*y.get(i)*w.get(i);
+				Sxx += x.get(i)*x.get(i)*w.get(i); 
+			}
+			// the determinant
+			double determ = Sw*Sxx - Sx*Sx;  // the determinant; must be >0
+			
+			if(determ<1e-19) 
+				determ=1e-19; //straight track approximation
+			
+			double slopeSol  = (Sw*Sxy - Sx*Sy)/determ;
+			double intercSol = (Sy*Sxx - Sx*Sxy)/determ;
+			// the errors on these parameters
+			double slopeEr  = Math.sqrt(Sw/determ);
+			double intercEr = Math.sqrt(Sxx/determ);
+			double SlInCov   = -Sx/determ; 
+			
+			if(Math.abs(slopeSol)>=0 && Math.abs(intercSol)>=0) {
+				
+				// calculate the chi^2
+				double chi_2 = 0.; 
+				double pointchi_2[] = new double[nbpoints]; //individual chi2 for each fitted point
+				for (int j = 0; j<nbpoints; j++) { 
+					chi_2 += ((y.get(j)-(slopeSol*x.get(j)+intercSol))*(y.get(j)-(slopeSol*x.get(j)+intercSol)))*w.get(j);
+					pointchi_2[j] = ((y.get(j)-(slopeSol*x.get(j)+intercSol))*(y.get(j)-(slopeSol*x.get(j)+intercSol)))*w.get(j);  					
+				}
+				// the number of degrees of freedom
+				int Ndf = nbpoints - 2;
+				
+				// instantiate fit object to be returned;
+				_linefitresult = new LineFitPars(slopeSol, intercSol, slopeEr, intercEr, SlInCov, chi_2, pointchi_2, Ndf);
+				
+				fitStat = true;
+				}
+		}
+		
+		// if there is a fit return true
+		return fitStat;
+	}
 	// return the fit result
 	public LineFitPars getFit() {
 		return _linefitresult;
 	}
+	
+	
 }
