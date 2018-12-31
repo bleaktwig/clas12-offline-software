@@ -54,6 +54,8 @@ public class DCHB2Engine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
+        if (currentEvent != 136) return true;
+
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
@@ -200,6 +202,9 @@ public class DCHB2Engine extends DCEngine {
         trkCands.addAll(mistrkcands);
 
         rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkCands);
+        System.out.println("[DCKF. " + currentEvent + "] trkCands size: " + trkCands.size());
+
+        trkCands.get(0).printDetailedInfo();
 
         return true;
     }

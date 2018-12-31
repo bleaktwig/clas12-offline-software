@@ -33,11 +33,14 @@ public class DCTBEngine extends DCEngine {
 //    DCGeant4Factory dcDetector;
 //    FTOFGeant4Factory ftofDetector;
 //    ECGeant4Factory ecDetector;
-//    PCALGeant4Factory pcalDetector; 
+//    PCALGeant4Factory pcalDetector;
 //    TrajectorySurfaces tSurf;
-    
+
     private TimeToDistanceEstimator tde;
     private double tarCent=-1.942;
+
+    private int eventCounter = 0;
+
     public DCTBEngine() {
         super("DCTB");
         tde = new TimeToDistanceEstimator();
@@ -49,16 +52,25 @@ public class DCTBEngine extends DCEngine {
     }
     @Override
     public boolean processDataEvent(DataEvent event) {
+        int currentEvent = eventCounter;
+        eventCounter++;
+
+        // if (currentEvent != 136) return true;
+
+        // System.out.println("00");
+
         //setRunConditionsParameters( event) ;
         if(event.hasBank("RUN::config")==false) {
             System.err.println("RUN CONDITIONS NOT READ AT TIMEBASED LEVEL!");
             return true;
         }
+
+        // System.out.println("01");
         if(event.hasBank("MC::Event")==true)
             tarCent=0;
         //if(event.getBank("RECHB::Event").getFloat("STTime", 0)<0)
         //    return true; // require the start time to reconstruct the tracks in the event
-        
+
         DataBank bank = event.getBank("RUN::config");
         // Load the constants
         //-------------------
@@ -66,24 +78,30 @@ public class DCTBEngine extends DCEngine {
         if(newRun==0)
             return true;
 
+        // System.out.println("02");
         double T_Start = 0;
-        if(Constants.isUSETSTART() == true) {
-            if(event.hasBank("RECHB::Event")==true) {
+
+        // TODO: ----- V THE THING'S EXITING HERE V -------------------------------------
+        if (Constants.isUSETSTART() == true) {
+            if (event.hasBank("RECHB::Event")==true) {
                 T_Start = event.getBank("RECHB::Event").getFloat("STTime", 0);
-                if(T_Start<0) {
+                if (T_Start<0) {
                     return true; // quit if start time not found in data
                 }
             } else {
                 return true; // no REC HB bank
             }
         }
+        // TODO: ----- ^ THE THING'S EXITING HERE ^ -------------------------------------
+
+        // System.out.println("03");
         // get Field
-        Swim dcSwim = new Swim();        
-        //System.out.println(" RUNNING TIME BASED....................................");
+        Swim dcSwim = new Swim();
+        // System.out.println(" RUNNING TIME BASED....................................");
         ClusterFitter cf = new ClusterFitter();
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
 
-        List<FittedHit> fhits = new ArrayList<FittedHit>();	
+        List<FittedHit> fhits = new ArrayList<FittedHit>();
         List<FittedCluster> clusters = new ArrayList<FittedCluster>();
         List<Segment> segments = new ArrayList<Segment>();
         List<Cross> crosses = new ArrayList<Cross>();
@@ -93,11 +111,11 @@ public class DCTBEngine extends DCEngine {
         RecoBankWriter rbc = new RecoBankWriter();
 
         HitReader hitRead = new HitReader();
-        hitRead.read_HBHits(event, 
+        hitRead.read_HBHits(event,
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/signal_generation/doca_resolution"),
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"),
             Constants.getT0(), Constants.getT0Err(), dcDetector, tde);
-        hitRead.read_TBHits(event, 
+        hitRead.read_TBHits(event,
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/signal_generation/doca_resolution"),
             super.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"), tde, Constants.getT0(), Constants.getT0Err());
         List<FittedHit> hits = new ArrayList<FittedHit>();
@@ -114,6 +132,7 @@ public class DCTBEngine extends DCEngine {
         if(hits.isEmpty() ) {
                 return true;
         }
+        // System.out.println("04");
 
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
@@ -124,6 +143,7 @@ public class DCTBEngine extends DCEngine {
             rbc.fillAllTBBanks(event, rbc, hits, null, null, null, null);
             return true;
         }
+        // System.out.println("05");
 
         //3) find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();
@@ -133,43 +153,46 @@ public class DCTBEngine extends DCEngine {
         segments =  segFinder.get_Segments(pclusters, event, dcDetector, false);
 
         if(segments.isEmpty()) { // need 6 segments to make a trajectory
-            for(FittedCluster c : clusters) {					
-                for(FittedHit hit : c) {		
+            for(FittedCluster c : clusters) {
+                for(FittedHit hit : c) {
                     hit.set_AssociatedClusterID(c.get_Id());
                     hit.set_AssociatedHBTrackID(c.get(0).get_AssociatedHBTrackID());
-                    fhits.add(hit);						
+                    fhits.add(hit);
                 }
             }
             rbc.fillAllTBBanks( event, rbc, fhits, clusters, null, null, null);
             return true;
         }
+        // System.out.println("06");
 
-        for(Segment seg : segments) {					
+        for(Segment seg : segments) {
             for(FittedHit hit : seg.get_fittedCluster()) {
-                fhits.add(hit);						
+                fhits.add(hit);
             }
         }
 
         CrossMaker crossMake = new CrossMaker();
         //crosses = crossMake.find_Crosses(segments, dcDetector);
 
-        //if(crosses.isEmpty() ) {			
+        //if(crosses.isEmpty() ) {
         //    rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, null, null);
         //    return true;
         //}
-        
+
         //
         // also need Track bank
         if (event.hasBank("HitBasedTrkg::HBTracks") == false) {
             return true;
         }
-        
+        System.out.println("07");
+
         DataBank trkbank = event.getBank("HitBasedTrkg::HBTracks");
         DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
         int trkrows = trkbank.rows();
         if(trkbank.rows()!=trkcovbank.rows()) {
             return true; // HB tracks not saved correctly
         }
+        System.out.println("08");
         Track[] TrackArray = new Track[trkrows];
         for (int i = 0; i < trkrows; i++) {
             Track HBtrk = new Track();
@@ -187,18 +210,22 @@ public class DCTBEngine extends DCEngine {
             {trkcovbank.getFloat("C51", i), trkcovbank.getFloat("C52", i), trkcovbank.getFloat("C53", i), trkcovbank.getFloat("C54", i), trkcovbank.getFloat("C55", i)}
             });
             HBtrk.set_CovMat(initCMatrix);
-            TrackArray[HBtrk.get_Id()-1] = HBtrk; 
+            TrackArray[HBtrk.get_Id()-1] = HBtrk;
             TrackArray[HBtrk.get_Id()-1].set_Status(0);
         }
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
         }
+        System.out.println("09");
         for(Segment seg : segments) {
-            TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg); 
+            TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg);
             if(seg.get_Status()==1)
                 TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
         }
-        
+
+        System.out.println("DCTBTRACK:");
+        if (TrackArray.length > 0) TrackArray[0].printDetailedInfo();
+
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
         TrajectoryFinder trjFind = new TrajectoryFinder();
@@ -214,36 +241,36 @@ public class DCTBEngine extends DCEngine {
             //    resetTrackParams(TrackArray[i], new DCSwimmer());
             //}
             KFitter kFit = new KFitter(TrackArray[i], dcDetector, true, dcSwim);
-           
+
             StateVec fn = new StateVec();
             kFit.runFitter(TrackArray[i].get(0).get_Sector());
-            
-            if(kFit.setFitFailed==false && kFit.finalStateVec!=null) { 
+
+            if(kFit.setFitFailed==false && kFit.finalStateVec!=null) {
                 // set the state vector at the last measurement site
-                fn.set(kFit.finalStateVec.x, kFit.finalStateVec.y, kFit.finalStateVec.tx, kFit.finalStateVec.ty); 
+                fn.set(kFit.finalStateVec.x, kFit.finalStateVec.y, kFit.finalStateVec.tx, kFit.finalStateVec.ty);
                 //set the track parameters if the filter does not fail
                 TrackArray[i].set_P(1./Math.abs(kFit.finalStateVec.Q));
                 TrackArray[i].set_Q((int)Math.signum(kFit.finalStateVec.Q));
-                trkcandFinder.setTrackPars(TrackArray[i], new Trajectory(), trjFind, fn, 
+                trkcandFinder.setTrackPars(TrackArray[i], new Trajectory(), trjFind, fn,
                         kFit.finalStateVec.z, dcDetector, dcSwim);
                 // candidate parameters are set from the state vector
-                TrackArray[i].set_FitChi2(kFit.chi2); 
+                TrackArray[i].set_FitChi2(kFit.chi2);
                 TrackArray[i].set_FitNDF(kFit.NDF);
                 TrackArray[i].set_Trajectory(kFit.kfStateVecsAlongTrajectory);
                 TrackArray[i].set_FitConvergenceStatus(kFit.ConvStatus);
                 TrackArray[i].set_Id(TrackArray[i].size()+1);
-                TrackArray[i].set_CovMat(kFit.finalCovMat.covMat); 
+                TrackArray[i].set_CovMat(kFit.finalCovMat.covMat);
                 if(TrackArray[i].get_Vtx0().toVector3D().mag()>500)
                     continue;
                 trkcands.add(TrackArray[i]);
             }
         }
-        
-        
+
+
         for(int i = 0; i < crosses.size(); i++) {
             crosses.get(i).set_Id(i+1);
         }
-        // track found	
+        // track found
         int trkId = 1;
 
         if(trkcands.size()>0) {
@@ -253,8 +280,8 @@ public class DCTBEngine extends DCEngine {
                 // reset the id
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
-                trk.calcTrajectory(trkId, dcSwim, trk.get_Vtx0().x(), trk.get_Vtx0().y(), 
-                        trk.get_Vtx0().z(), trk.get_pAtOrig().x(), trk.get_pAtOrig().y(), trk.get_pAtOrig().z(), trk.get_Q(), 
+                trk.calcTrajectory(trkId, dcSwim, trk.get_Vtx0().x(), trk.get_Vtx0().y(),
+                        trk.get_Vtx0().z(), trk.get_pAtOrig().x(), trk.get_pAtOrig().y(), trk.get_pAtOrig().z(), trk.get_Q(),
                         ftofDetector, tSurf, tarCent);
 //                for(int j = 0; j< trk.trajectory.size(); j++) {
 //                System.out.println(trk.get_Id()+" "+trk.trajectory.size()+" ("+trk.trajectory.get(j).getDetId()+") ["+
@@ -266,25 +293,25 @@ public class DCTBEngine extends DCEngine {
 //                            (float)trk.trajectory.get(j).getpY()/trk.get_P()+", "+
 //                            (float)trk.trajectory.get(j).getpZ()/trk.get_P()+", "+
 //                            (float)trk.trajectory.get(j).getPathLen()+" "
-//                            );               
+//                            );
 //                }
- 
-                for(Cross c : trk) { 
+
+                for(Cross c : trk) {
                     c.get_Segment1().isOnTrack=true;
                     c.get_Segment2().isOnTrack=true;
-                    
-                    for(FittedHit h1 : c.get_Segment1()) { 
+
+                    for(FittedHit h1 : c.get_Segment1()) {
                         h1.set_AssociatedTBTrackID(trk.get_Id());
 
                     }
                     for(FittedHit h2 : c.get_Segment2()) {
-                        h2.set_AssociatedTBTrackID(trk.get_Id());                              
+                        h2.set_AssociatedTBTrackID(trk.get_Id());
                     }
                 }
                 trkId++;
             }
-        }    
-       
+        }
+
         if(trkcands.isEmpty()) {
 
             rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
@@ -292,14 +319,16 @@ public class DCTBEngine extends DCEngine {
         }
         rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
 
+        // System.out.println("DCTB GOT TO THE END ON RUN #" + currentEvent);
+
         return true;
     }
 
-    
+
 
     private int get_Status(Track track) {
-        int miss = 0;    
-        
+        int miss = 0;
+
         int L[] = new int[6];
         for(int l = 0; l<track.get_ListOfHBSegments().size(); l++) {
             L[track.get_ListOfHBSegments().get(l).get_Superlayer()-1]++;
@@ -310,6 +339,6 @@ public class DCTBEngine extends DCEngine {
         }
         return miss;
     }
-    
-   
+
+
 }

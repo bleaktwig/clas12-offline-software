@@ -46,6 +46,7 @@ public class DCHBEngine extends DCEngine {
     private AtomicInteger Run = new AtomicInteger(0);
     private double triggerPhase;
     private int newRun = 0;
+    private int eventCounter = 0;
 
     public DCHBEngine() {
         super("DCHB");
@@ -77,6 +78,11 @@ public class DCHBEngine extends DCEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
+        int currentEvent = eventCounter;
+        eventCounter++;
+
+        // if (currentEvent != 136) return true;
+
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
         if (!event.hasBank("RUN::config")) {
@@ -356,6 +362,11 @@ public class DCHBEngine extends DCEngine {
                 segments,
                 crosses,
                 trkcands);
+
+        // System.out.println("[DCHB. " + currentEvent + "] trkCands size: " + trkcands.size());
+        // System.out.println("DCHBTRACK:");
+        // trkcands.get(0).printDetailedInfo();
+
         return true;
     }
 

@@ -126,23 +126,23 @@ public class Track extends Trajectory implements Comparable<Track>{
     public Point3D get_Region1TrackP() {return _Region1TrackP;}
     public void set_Region1TrackP(Point3D _Region1TrackP) {this._Region1TrackP = _Region1TrackP;}
 
-    public void set_TotPathLen(double totPathLen) {_totPathLen = totPathLen;}
     public double get_TotPathLen() {return _totPathLen;}
+    public void set_TotPathLen(double totPathLen) {_totPathLen = totPathLen;}
 
-    public void set_Vtx0(Point3D trakOrig) {_trakOrig = trakOrig;}
     public Point3D get_Vtx0() {return _trakOrig;}
+    public void set_Vtx0(Point3D trakOrig) {_trakOrig = trakOrig;}
 
-    public void set_pAtOrig(Vector3D pOrig) {_pOrig = pOrig;}
     public Vector3D get_pAtOrig() {return _pOrig;}
+    public void set_pAtOrig(Vector3D pOrig) {_pOrig = pOrig;}
 
-    public void set_TrackingInfoString(String trking) {_trking = trking;}
     public String get_TrackingInfoString() {return _trking;}
+    public void set_TrackingInfoString(String trking) {_trking = trking;}
 
     public int get_FitNDF() {return _FitNDF;}
     public void set_FitNDF(int _FitNDF) {this._FitNDF = _FitNDF;}
 
+    public double get_FitChi2() {return _fitChisq;}
     public void set_FitChi2(double fitChisq) {_fitChisq = fitChisq;}
-    public double  get_FitChi2() {return _fitChisq;}
 
     public Matrix get_CovMat() {return _CovMat;}
     public void set_CovMat(Matrix _CovMat) {this._CovMat = _CovMat;}
@@ -169,6 +169,40 @@ public class Track extends Trajectory implements Comparable<Track>{
     /** Prints basic track info */
     public void printInfo() {
         System.out.println("Track " + this._Id + " Q= " + this._Q + " P= " + this._P);
+    }
+
+    /** Prints every variable in the track */
+    public void printDetailedInfo() {
+        System.out.println("Track " + this._Id + ":");
+        System.out.println("  _MissingSuperlayer         : " + get_MissingSuperlayer());
+        System.out.println("  _Status                    : " + get_Status());
+        System.out.println("  _Q                         : " + get_Q());
+        System.out.println("  _P                         : " + get_P());
+        System.out.println("  _Region3CrossPoint         : " + get_PostRegion3CrossPoint()); // POINT/DIR
+        System.out.println("  _Region3CrossDir           : " + get_PostRegion3CrossDir()); // POINT/DIR
+        System.out.println("  _Region1CrossPoint         : " + get_PreRegion1CrossPoint()); // POINT/DIR
+        System.out.println("  _Region1CrossDir           : " + get_PreRegion1CrossDir()); // POINT/DIR
+        System.out.println("  _Region1TrackX             : " + get_Region1TrackX()); // POINT/DIR
+        System.out.println("  _Region1TrackP             : " + get_Region1TrackP()); // POINT/DIR
+        System.out.println("  _TotPathLen                : " + get_TotPathLen());
+        System.out.println("  _Vtx0                      : " + get_Vtx0()); // POINT/DIR
+        System.out.println("  _pOrig                     : " + get_pAtOrig()); // VECTOR
+        System.out.println("  _TrackingInfoString        : " + get_TrackingInfoString());
+        System.out.println("  _FitNDF                    : " + get_FitNDF());
+        System.out.println("  _fitChisq                  : " + get_FitChi2());
+        System.out.println("  _CovMat                    : " + get_CovMat()); // MATRIX
+        System.out.println("  _FitConvergenceStatus      : " + get_FitConvergenceStatus());
+        System.out.println("  _StateVecAtReg1MiddlePlane : " + get_StateVecAtReg1MiddlePlane()); // STATEVEC
+        if (get_AssociatedHBTrack() != null)
+            System.out.println("  _AssociatedHBTrack         : " + get_AssociatedHBTrack()._Id);
+        else
+            System.out.println("  _AssociatedHBTrack         : null");
+        System.out.println("  list of segments:");
+        if (get_ListOfHBSegments().size() == 0) System.out.println("    empty.");
+        else {
+            for (Segment segment : get_ListOfHBSegments())
+                System.out.println("    Segment " + segment.get_Id());
+        }
     }
 
     // NOTE: Lacks explanation of the comparison criteria.
