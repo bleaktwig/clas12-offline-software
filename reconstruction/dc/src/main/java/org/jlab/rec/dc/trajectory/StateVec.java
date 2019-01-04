@@ -1,30 +1,104 @@
 package org.jlab.rec.dc.trajectory;
 
 import Jama.*;
+
 /**
  * A StateVec describes a cross measurement in the DC.  It is characterized by a point in the DC
- * tilted coordinate system at each wire plane (i.e. constant z) and by unit tangent vectors in the x and y 
+ * tilted coordinate system at each wire plane (i.e. constant z) and by unit tangent vectors in the x and y
  * directions in that coordinate system.  The state vector parameters are the plane index, (x, y, tanTheta_x, tanTheta_y).
  * [The tilted coordinate system is the sector coordinate system rotated by 25 degrees so that the z axis perperdicular to the wire planes]
  * @author ziegler
  *
  */
 public class StateVec extends Matrix {
-	
+
     /**
      * serialVersionUID
      */
     private static final long serialVersionUID = 1874984192960130771L;
 
+    private static int count = 0;
+    private int id = -1;
+
+    private int _planeIdx;
+    private double z;
+    private double b;
+    private double h;
+    private double _PathLength;
 
     /**
      * Instantiates a new  vec.
      */
     public StateVec() {
-            super(4,1);
+        super(4,1);
+        id = count++;
     }
 
-    private double _PathLength;
+    /**
+     * Instantiates a new stateVec
+     * @param y the _y
+     * @param x the _x
+     * @param tanThX the _tanThetaX
+     * @param tanThY the _tanThetaY
+     */
+    public StateVec(double x, double y, double tanThX, double tanThY) {
+        super(4,1);
+        set(0,0,x);
+        set(1,0,y);
+        set(2,0,tanThX);
+        set(3,0,tanThY);
+        id = count++;
+    }
+
+    /**
+     * Instantiates a new stateVec
+     * @param id     the id
+     * @param y      the _y
+     * @param x      the _x
+     * @param tanThX the _tanThetaX
+     * @param tanThY the _tanThetaY
+     */
+    public StateVec(int id, double x, double y, double tanThX, double tanThY) {
+        super(4,1);
+        set(0,0,x);
+        set(1,0,y);
+        set(2,0,tanThX);
+        set(3,0,tanThY);
+        this.id = id;
+    }
+
+
+    /**
+     * Instantiates a new stateVec
+     *
+     * @param v the v
+     */
+    public StateVec(StateVec v) {
+        super(4,1);
+        set(0,0,v.x());
+        set(1,0,v.y());
+        set(2,0,v.tanThetaX());
+        set(3,0,v.tanThetaY());
+        id = count++;
+    }
+
+
+    /**
+     * Instantiates a new  StateVec.
+     *
+     * @param m the m
+     */
+    private StateVec(Matrix m) { //needed since Jama.Matrix cannot be casted into StateVec
+        super(4,1);
+        set(0,0,m.get(0, 0));
+        set(1,0,m.get(1, 0));
+        set(2,0,m.get(2, 0));
+        set(3,0,m.get(3, 0));
+        id = count++;
+    }
+
+    public int getId() {return id;}
+    public void setId(int id) {this.id = id;}
 
     public double getPathLength() {
         return _PathLength;
@@ -46,16 +120,16 @@ public class StateVec extends Matrix {
             set(3,0,V.tanThetaY());
     }
 
-    private int _planeIdx;
+
     /**
-     * 
+     *
      * @return the wire plane index in the series of planes used in the trajectory
-     */  
+     */
     public int getPlaneIdx() {
         return _planeIdx;
     }
 
-    
+
     /**
      * Sets the wire plane index in the series of planes used in the trajectory
      * @param _planeIdx wire plane index in the series of planes used in the trajectory
@@ -63,8 +137,7 @@ public class StateVec extends Matrix {
     public void setPlaneIdx(int _planeIdx) {
         this._planeIdx = _planeIdx;
     }
-    
-    private double z;
+
 
     public double getZ() {
         return z;
@@ -73,8 +146,7 @@ public class StateVec extends Matrix {
     public void setZ(double z) {
         this.z = z;
     }
-    
-    private double b;
+
 
     public double getB() {
         return b;
@@ -84,7 +156,6 @@ public class StateVec extends Matrix {
         this.b = b;
     }
     // KF projector
-    private double h;
 
     public double getProjector() {
         return h;
@@ -93,9 +164,9 @@ public class StateVec extends Matrix {
     public void setProjector(double h) {
         this.h = h;
     }
-    
+
     /**
-     * Sets the stateVec 
+     * Sets the stateVec
      *
      * @param y the _y
      * @param x the _x
@@ -105,52 +176,10 @@ public class StateVec extends Matrix {
     public void set(double x, double y, double tanThX, double tanThY) {
             set(0,0,x);
             set(1,0,y);
-            set(2,0,tanThX);  
-            set(3,0,tanThY); 
+            set(2,0,tanThX);
+            set(3,0,tanThY);
     }
 
-    /**
-     * Instantiates a new stateVec
-     *
-     * @param y the _y
-     * @param x the _x
-     * @param tanThX the _tanThetaX
-     * @param tanThY the _tanThetaY
-     */
-    public StateVec(double x, double y, double tanThX, double tanThY) {
-            super(4,1);
-            set(0,0,x);
-            set(1,0,y);
-            set(2,0,tanThX);  
-            set(3,0,tanThY); 
-    }
-
-    /**
-     * Instantiates a new stateVec
-     *
-     * @param v the v
-     */
-    public StateVec(StateVec v) {
-            super(4,1);
-            set(0,0,v.x());
-            set(1,0,v.y());
-            set(2,0,v.tanThetaX());
-            set(3,0,v.tanThetaY());
-    }
-
-
-    /**
-     * Instantiates a new  StateVec.
-     *
-     * @param m the m
-     */
-    private StateVec(Matrix m) { //needed since Jama.Matrix cannot be casted into StateVec		
-            super(4,1);
-            set(0,0,m.get(0, 0));
-            set(1,0,m.get(1, 0));
-            set(2,0,m.get(2, 0));
-            set(3,0,m.get(3, 0));
-    }
 
 
     /**
@@ -166,7 +195,7 @@ public class StateVec extends Matrix {
      * Description of y().
      *
      * @return the y component
-     */ 
+     */
 
     public double y() {
             return(get(1,0));
@@ -176,7 +205,7 @@ public class StateVec extends Matrix {
      * Description of tanThetaX().
      *
      * @return the tanThetaX component
-     */ 
+     */
     public double tanThetaX() {
             return(get(2,0));
     }
@@ -185,7 +214,7 @@ public class StateVec extends Matrix {
      * Description of tanThetaY().
      *
      * @return the tanThetaY component
-     */ 
+     */
     public double tanThetaY() {
             return(get(3,0));
     }

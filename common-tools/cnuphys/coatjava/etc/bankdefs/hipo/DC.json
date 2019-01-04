@@ -218,7 +218,48 @@
         {"name":"_fitConvergenceStatus", "id":46, "type":"int16", "info":"idk"},
         {"name":"b_0", "id":47, "type":"float", "info":"idk"},
         {"name":"b_1", "id":48, "type":"float", "info":"idk"},
-        {"name":"b_2", "id":49, "type":"float", "info":"idk"}
+        {"name":"b_2", "id":49, "type":"float", "info":"idk"},
+        {"name":"svid0",  "id":50, "type": "int16", "info":"state vector id"},
+        {"name":"svid1",  "id":51, "type": "int16", "info":"state vector id"},
+        {"name":"svid2",  "id":52, "type": "int16", "info":"state vector id"},
+        {"name":"svid3",  "id":53, "type": "int16", "info":"state vector id"},
+        {"name":"svid4",  "id":54, "type": "int16", "info":"state vector id"},
+        {"name":"svid5",  "id":55, "type": "int16", "info":"state vector id"},
+        {"name":"svid6",  "id":56, "type": "int16", "info":"state vector id"},
+        {"name":"svid7",  "id":57, "type": "int16", "info":"state vector id"},
+        {"name":"svid8",  "id":58, "type": "int16", "info":"state vector id"},
+        {"name":"svid9",  "id":59, "type": "int16", "info":"state vector id"},
+        {"name":"svid10", "id":60, "type": "int16", "info":"state vector id"},
+        {"name":"svid11", "id":61, "type": "int16", "info":"state vector id"},
+        {"name":"svid12", "id":62, "type": "int16", "info":"state vector id"},
+        {"name":"svid13", "id":63, "type": "int16", "info":"state vector id"},
+        {"name":"svid14", "id":64, "type": "int16", "info":"state vector id"},
+        {"name":"svid15", "id":65, "type": "int16", "info":"state vector id"},
+        {"name":"svid16", "id":66, "type": "int16", "info":"state vector id"},
+        {"name":"svid17", "id":67, "type": "int16", "info":"state vector id"},
+        {"name":"svid18", "id":68, "type": "int16", "info":"state vector id"},
+        {"name":"svid19", "id":69, "type": "int16", "info":"state vector id"},
+        {"name":"svid20", "id":70, "type": "int16", "info":"state vector id"},
+        {"name":"svid21", "id":71, "type": "int16", "info":"state vector id"},
+        {"name":"svid22", "id":72, "type": "int16", "info":"state vector id"},
+        {"name":"svid23", "id":73, "type": "int16", "info":"state vector id"},
+        {"name":"svid24", "id":74, "type": "int16", "info":"state vector id"},
+        {"name":"svid25", "id":75, "type": "int16", "info":"state vector id"},
+        {"name":"svid26", "id":76, "type": "int16", "info":"state vector id"},
+        {"name":"svid27", "id":77, "type": "int16", "info":"state vector id"},
+        {"name":"svid28", "id":78, "type": "int16", "info":"state vector id"},
+        {"name":"svid29", "id":79, "type": "int16", "info":"state vector id"},
+        {"name":"svid30", "id":80, "type": "int16", "info":"state vector id"},
+        {"name":"svid31", "id":81, "type": "int16", "info":"state vector id"},
+        {"name":"svid32", "id":82, "type": "int16", "info":"state vector id"},
+        {"name":"svid33", "id":83, "type": "int16", "info":"state vector id"},
+        {"name":"svid34", "id":84, "type": "int16", "info":"state vector id"},
+        {"name":"svid35", "id":85, "type": "int16", "info":"state vector id"},
+        {"name":"svid36", "id":86, "type": "int16", "info":"state vector id"},
+        {"name":"svid37", "id":87, "type": "int16", "info":"state vector id"},
+        {"name":"svid38", "id":88, "type": "int16", "info":"state vector id"},
+        {"name":"svid39", "id":89, "type": "int16", "info":"state vector id"},
+        {"name":"n_sv",   "id":90, "type": "int16", "info":"number of state vectors"}
     ]
   },
   {
@@ -447,6 +488,23 @@
         {"name":"tz",      "id":8, "type":"float",  "info":"track unit direction vector z component at detector surface"},
         {"name":"B",       "id":9, "type":"float",  "info":"B-field magnitude at detector surface (cm)"},
         {"name":"L",       "id":10, "type":"float",  "info":"pathlength of the track from the DOCA to the Beamline to the detector surface (cm)"}
+    ]
+  },
+  {
+    "bank": "TimeBasedTrkg::StateVec",
+    "group": 20654,
+    "info": "State Vectors",
+    "items": [
+        {"name":"id",          "id":1,  "type":"int16", "info":"idk"},
+        {"name":"x",           "id":2,  "type":"float", "info":"idk"},
+        {"name":"y",           "id":3,  "type":"float", "info":"idk"},
+        {"name":"thX",         "id":4,  "type":"float", "info":"idk"},
+        {"name":"thY",         "id":5,  "type":"float", "info":"idk"},
+        {"name":"z",           "id":6,  "type":"float", "info":"idk"},
+        {"name":"b",           "id":7,  "type":"float", "info":"idk"},
+        {"name":"h",           "id":8,  "type":"float", "info":"idk"},
+        {"name":"_PathLength", "id":9,  "type":"float", "info":"idk"},
+        {"name":"_planeIdx",   "id":10, "type":"int16", "info":"idk"}
     ]
   }
 ]

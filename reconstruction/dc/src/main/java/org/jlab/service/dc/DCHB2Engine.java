@@ -19,6 +19,7 @@ import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossMaker;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
+import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.trajectory.RoadFinder;
@@ -54,7 +55,7 @@ public class DCHB2Engine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent != 136) return true;
+        // if (currentEvent != 136) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -78,40 +79,44 @@ public class DCHB2Engine extends DCEngine {
         DataBank clBank = event.getBank("HitBasedTrkg::HBClusters");
         DataBank seBank = event.getBank("HitBasedTrkg::HBSegments");
         DataBank crBank = event.getBank("HitBasedTrkg::HBCrosses");
+        DataBank svBank = event.getBank("TimeBasedTrkg::StateVec");
 
         // Pull the hits, clusters, segments and crosses from their banks
         if (hiBank.rows() == 0) return true;
         if (clBank.rows() == 0) return true;
         if (seBank.rows() == 0) return true;
         if (crBank.rows() == 0) return true;
+        if (svBank.rows() == 0) return true;
 
         List<FittedHit> hits         = new ArrayList();
         List<FittedCluster> clusters = new ArrayList();
         List<Segment> segments       = new ArrayList();
         List<Cross> crosses          = new ArrayList();
+        List<StateVec> stateVecs     = new ArrayList();
 
-        for (int h = 0; h < hiBank.rows(); ++h) hits.add(rbr.getHit(hiBank, h));
-        for (int c = 0; c < clBank.rows(); ++c) clusters.add(rbr.getCluster(clBank, hits, c));
-        for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
-        for (int c = 0; c < crBank.rows(); ++c) crosses.add(rbr.getCross(crBank, segments, c));
+        for (int hi = 0; hi < hiBank.rows(); ++hi) hits.add(rbr.getHit(hiBank, hi));
+        for (int cl = 0; cl < clBank.rows(); ++cl) clusters.add(rbr.getCluster(clBank, hits, cl));
+        for (int se = 0; se < seBank.rows(); ++se) segments.add(rbr.getSegment(seBank, clusters, se));
+        for (int cr = 0; cr < crBank.rows(); ++cr) crosses.add(rbr.getCross(crBank, segments, cr));
+        for (int sv = 0; sv < svBank.rows(); ++sv) stateVecs.add(rbr.getStateVec(svBank, sv));
 
         // Pull the tracks from the banks if available
-        List<Track> trkCands = new ArrayList();
+        List<Track> trkcands = new ArrayList();
         if (event.hasBank("HitBasedTrkg::HBTracks")) {
             DataBank trBank  = event.getBank("HitBasedTrkg::HBTracks");
             DataBank covBank = event.getBank("TimeBasedTrkg::TBCovMat");
             for (int t = 0; t < trBank.rows(); ++t) {
-                trkCands.add(rbr.getHBTrack(trBank, crosses, t));
-                trkCands.get(t).set_CovMat(rbr.getTBCovMat(covBank, t));
+                trkcands.add(rbr.getHBTrack(trBank, crosses, stateVecs, t));
+                trkcands.get(t).set_CovMat(rbr.getTBCovMat(covBank, t));
             }
         }
 
-
         // === RUN DCHB2 ===============================================================
         int trkId = 1;
-        if (trkCands.size() > 0) {
-            for (Track trk : trkCands) {
+        if (trkcands.size() > 0) {
+            for (Track trk : trkcands) {
                 trk.set_Id(trkId); // Reset the id
+
                 trkCandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
                     c.get_Segment1().isOnTrack = true;
@@ -190,6 +195,7 @@ public class DCHB2Engine extends DCEngine {
 
                 // reset the id
                 trk.set_Id(trkId);
+
                 trkCandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
                     for (FittedHit h1 : c.get_Segment1()) h1.set_AssociatedHBTrackID(trk.get_Id());
@@ -199,12 +205,15 @@ public class DCHB2Engine extends DCEngine {
             }
         }
 
-        trkCands.addAll(mistrkcands);
+        trkcands.addAll(mistrkcands);
 
-        rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkCands);
-        System.out.println("[DCKF. " + currentEvent + "] trkCands size: " + trkCands.size());
+        // TODO: Maybe develop a method that doesn't write the statevecs at this point since they
+        //       are no longer needed.
+        rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
 
-        trkCands.get(0).printDetailedInfo();
+        // System.out.println("\n\n DCHB2 CROSS:");
+        // RecoBankReader.printSampleCross(crosses.get(0));
+        // System.out.println("\n\n");
 
         return true;
     }

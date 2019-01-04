@@ -76,6 +76,8 @@ public class DCKFEngine extends ReconstructionEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
+        // if (currentEvent != 136) return true;
+
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
         DataBank headerBank = event.getBank("RUN::config");
@@ -141,7 +143,9 @@ public class DCKFEngine extends ReconstructionEngine {
         }
 
         rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
+        // rbw.fillTrajectoryBank(event, rbw, trkcands);
 
         return true;
+
     }
 }

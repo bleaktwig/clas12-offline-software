@@ -14,6 +14,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.track.Track;
 
 /**
@@ -341,8 +342,8 @@ public class RecoBankReader {
      * @return        the retrieved track
      */
     public Track getHBTrack(DataBank bank, List<Cross> crosses, int idx) {
-        if (validateBank(bank, idx, "HBtracks"))            return null;
-        if (validateList(crosses, "crosses", "HBsegments")) return null;
+        if (validateBank(bank, idx, "HBtracks"))          return null;
+        if (validateList(crosses, "crosses", "HBtracks")) return null;
 
         Track track = new Track();
         track.set_Id    ((int) bank.getShort("id",     idx));
@@ -428,6 +429,52 @@ public class RecoBankReader {
     }
 
     /**
+     * Gets a track from a databank, given by an index, along with its three referenced crosses.
+     * @param bank    tracks bank
+     * @param crosses list of crosses
+     * @param idx     index of the track
+     * @return        the retrieved track
+     */
+    public Track getHBTrack(DataBank bank, List<Cross> crosses, List<StateVec> stateVecs, int idx) {
+        if (validateList(stateVecs, "state vectors", "HBtracks")) return null;
+        Track track = getHBTrack(bank, crosses, idx);
+
+        ArrayList<Integer>  svIDs      = new ArrayList<Integer>();
+        ArrayList<StateVec> fStateVecs = new ArrayList<StateVec>();
+
+        int bSize = (int) bank.getShort("n_sv", idx);
+        if (bSize >= 40) {
+            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: More tracks saved "
+                                        + "than allowed on bank. (" + bSize + ") for index " + idx);
+            return null;
+        }
+        for (int i = 0; i < bSize; ++i) {
+            svIDs.add((int) bank.getShort("svid" + i, idx));
+        }
+
+        // Find the list of state vectors contained in the track
+        for (int svID : svIDs) {
+            StateVec fStateVec = null;
+            for (StateVec stateVec : stateVecs) {
+                if (svID == stateVec.getId()) {
+                    fStateVec = stateVec;
+                    break;
+                }
+            }
+            if (fStateVec == null) {
+                if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: State vector "
+                                            + "with ID " + svID + " was not found in list.");
+                return null;
+            }
+            fStateVecs.add(fStateVec);
+        }
+
+        track.set_Trajectory(fStateVecs);
+
+        return track;
+    }
+
+    /**
      * Gets a TB covariance matrix from a bank.
      * @param bank    covariance matrices bank
      * @param idx     index of the track
@@ -463,6 +510,24 @@ public class RecoBankReader {
                            (double) bank.getFloat("C55", idx)};
 
         return new Matrix(tmpArr, 5);
+    }
+
+    public StateVec getStateVec(DataBank bank, int idx) {
+        if (validateBank(bank, idx, "StateVec")) return null;
+
+        StateVec stateVec = new StateVec((int)    bank.getShort("id",   idx),
+                                         (double) bank.getFloat("x",    idx),
+                                         (double) bank.getFloat("y",    idx),
+                                         (double) bank.getFloat("thX",  idx),
+                                         (double) bank.getFloat("thY",  idx));
+
+        stateVec.setZ         ((double) bank.getFloat("z", idx));
+        stateVec.setB         ((double) bank.getFloat("b", idx));
+        stateVec.setProjector ((double) bank.getFloat("h", idx));
+        stateVec.setPathLength((double) bank.getFloat("_PathLength", idx));
+        stateVec.setPlaneIdx  ((int)    bank.getShort("_planeIdx",   idx));
+
+        return stateVec;
     }
 
     /**

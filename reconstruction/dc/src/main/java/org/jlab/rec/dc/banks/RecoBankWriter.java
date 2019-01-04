@@ -496,7 +496,7 @@ public class RecoBankWriter {
             bank.setFloat("chi2",       i, (float) candList.get(i).get_FitChi2());
             bank.setShort("ndf",        i, (short) candList.get(i).get_FitNDF());
 
-            // TODO: v CHECK THIS VARIABLES v
+            // TODO: v CHECK THESE VARIABLES v
             if (!TB) {
                 bank.setFloat("_IntegralBdl",   i, (float) candList.get(i).get_IntegralBdl());
                 bank.setFloat("_pathLength",    i, (float) candList.get(i).get_PathLength());
@@ -513,6 +513,12 @@ public class RecoBankWriter {
                 bank.setFloat("b_0", i, (float) candList.get(i).b[0]);
                 bank.setFloat("b_1", i, (float) candList.get(i).b[1]);
                 bank.setFloat("b_2", i, (float) candList.get(i).b[2]);
+
+                if (candList.get(i).get_Trajectory() != null) {
+                    bank.setShort("n_sv", i, (short) candList.get(i).get_Trajectory().size());
+                    for (int it = 0; it < candList.get(i).get_Trajectory().size(); ++it)
+                        bank.setShort("svid" + it, i, (short) candList.get(i).get_Trajectory().get(it).getId());
+                }
             }
             // TODO: UP UNTIL HERE
 
@@ -596,7 +602,7 @@ public class RecoBankWriter {
      * @param tracks the list of tracks
      * @return       trajectories bank
      */
-    private DataBank fillTrajectoryBank(DataEvent event, List<Track> tracks) {
+    public DataBank fillTrajectoryBank(DataEvent event, List<Track> tracks) {
         DataBank bank = event.createBank("TimeBasedTrkg::Trajectory", tracks.size() * 21);
 
         int idx = 0;
@@ -622,6 +628,41 @@ public class RecoBankWriter {
                                                    track.get_P()));
                 bank.setFloat("B", idx,   (float) track.trajectory.get(j).getiBdl());
                 bank.setFloat("L", idx,   (float) track.trajectory.get(j).getPathLen());
+
+                idx++;
+            }
+        }
+
+        return bank;
+    }
+
+    private DataBank fillStateVecsBank(DataEvent event, List<Track> tracks) {
+        int bankSize = 0;
+        for (Track track : tracks) {
+            bankSize += track.get_Trajectory().size();
+        }
+
+        if (event.hasBank("TimeBasedTrkg::StateVec")) {
+            ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::StateVec");
+        }
+        DataBank bank = event.createBank("TimeBasedTrkg::StateVec", bankSize);
+
+        int idx = 0;
+        for (Track track : tracks) {
+            if (track == null)                  continue;
+            if (track.get_Trajectory() == null) continue;
+
+            for (int i = 0; i < track.get_Trajectory().size(); ++i) {
+                bank.setShort("id",          idx, (short) track.get_Trajectory().get(i).getId());
+                bank.setFloat("x",           idx, (float) track.get_Trajectory().get(i).x());
+                bank.setFloat("y",           idx, (float) track.get_Trajectory().get(i).y());
+                bank.setFloat("thX",         idx, (float) track.get_Trajectory().get(i).tanThetaX());
+                bank.setFloat("thY",         idx, (float) track.get_Trajectory().get(i).tanThetaY());
+                bank.setFloat("z",           idx, (float) track.get_Trajectory().get(i).getZ());
+                bank.setFloat("b",           idx, (float) track.get_Trajectory().get(i).getB());
+                bank.setFloat("h",           idx, (float) track.get_Trajectory().get(i).getProjector());
+                bank.setFloat("_PathLength", idx, (float) track.get_Trajectory().get(i).getPathLength());
+                bank.setShort("_planeIdx",   idx, (short) track.get_Trajectory().get(i).getPlaneIdx());
 
                 idx++;
             }
@@ -665,8 +706,13 @@ public class RecoBankWriter {
 
         if (trkcands != null) {
             event.appendBanks(rbw.fillTracksBank(event, trkcands, TB));
-            if (!TB) event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
-            else     event.appendBanks(rbw.fillTrajectoryBank(event, trkcands));
+            if (!TB) {
+                event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
+                event.appendBanks(rbw.fillStateVecsBank(event, trkcands));
+            }
+            else {
+                event.appendBanks(rbw.fillTrajectoryBank(event, trkcands));
+            }
         }
         return;
     }

@@ -184,7 +184,7 @@ public class DCTBEngine extends DCEngine {
         if (event.hasBank("HitBasedTrkg::HBTracks") == false) {
             return true;
         }
-        System.out.println("07");
+        // System.out.println("07");
 
         DataBank trkbank = event.getBank("HitBasedTrkg::HBTracks");
         DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
@@ -192,7 +192,7 @@ public class DCTBEngine extends DCEngine {
         if(trkbank.rows()!=trkcovbank.rows()) {
             return true; // HB tracks not saved correctly
         }
-        System.out.println("08");
+        // System.out.println("08");
         Track[] TrackArray = new Track[trkrows];
         for (int i = 0; i < trkrows; i++) {
             Track HBtrk = new Track();
@@ -216,15 +216,15 @@ public class DCTBEngine extends DCEngine {
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
         }
-        System.out.println("09");
+        // System.out.println("09");
         for(Segment seg : segments) {
             TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg);
             if(seg.get_Status()==1)
                 TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
         }
 
-        System.out.println("DCTBTRACK:");
-        if (TrackArray.length > 0) TrackArray[0].printDetailedInfo();
+        // System.out.println("DCTBTRACK:");
+        // if (TrackArray.length > 0) TrackArray[0].printDetailedInfo();
 
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");

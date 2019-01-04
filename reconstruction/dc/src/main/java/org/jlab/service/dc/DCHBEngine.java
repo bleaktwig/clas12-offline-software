@@ -17,6 +17,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
+import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
@@ -219,6 +220,11 @@ public class DCHBEngine extends DCEngine {
                     null);
             return true;
         }
+
+        // System.out.println("\n\n DCHB1 CROSS:");
+        // RecoBankReader.printSampleCross(crosses.get(0));
+        // System.out.println("\n\n");
+
         /* 17 */
         CrossListFinder crossLister = new CrossListFinder();
 
@@ -242,6 +248,11 @@ public class DCHBEngine extends DCEngine {
         if (trkcands.size() > 0) {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
+
+            // System.out.println("\n\n DCKF CROSS:");
+            // RecoBankReader.printSampleCross(crosses.get(0));
+            // System.out.println("\n\n");
+
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);
@@ -363,59 +374,6 @@ public class DCHBEngine extends DCEngine {
                 crosses,
                 trkcands);
 
-        // System.out.println("[DCHB. " + currentEvent + "] trkCands size: " + trkcands.size());
-        // System.out.println("DCHBTRACK:");
-        // trkcands.get(0).printDetailedInfo();
-
         return true;
     }
-
-    public static void main(String[] args) {
-
-        String inputFile = "/Users/ziegler/Desktop/Work/validation/infiles/straight.hipo";
-        MagFieldsEngine enf = new MagFieldsEngine();
-        enf.init();
-
-        DCHBEngine en = new DCHBEngine();
-        en.init();
-
-        DCTBEngine en2 = new DCTBEngine();
-        en2.init();
-
-        int counter = 0;
-
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(inputFile);
-
-        HipoDataSync writer = new HipoDataSync();
-        //Writer
-
-        String outputFile = "/Users/ziegler/Desktop/Work/Files/test.hipo";
-
-        writer.open(outputFile);
-        long t1 = 0;
-        while (reader.hasEvent()) {
-
-            counter++;
-            System.out.println("************************************************************* ");
-            DataEvent event = reader.getNextEvent();
-            if (counter > 0) {
-                t1 = System.currentTimeMillis();
-            }
-            enf.processDataEvent(event);
-            en.processDataEvent(event);
-
-            // Processing TB
-            en2.processDataEvent(event);
-            writer.writeEvent(event);
-            System.out.println("PROCESSED  EVENT " + event.getBank("RUN::config").getInt("event", 0));
-
-            if(counter>40)
-                break;
-        }
-        writer.close();
-        double t = System.currentTimeMillis() - t1;
-        System.out.println(t1 + " TOTAL  PROCESSING TIME = " + (t / (float) counter));
-    }
-
 }
