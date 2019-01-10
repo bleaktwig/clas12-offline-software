@@ -198,7 +198,8 @@ public class RecoBankWriter {
      * @param TB       boolean set to 1 if time-based and 0 otherwise.
      * @return         clusters bank
      */
-    private DataBank fillClustersBank(DataEvent event, List<FittedCluster> clusList, boolean TB) {
+    private DataBank fillClustersBank(DataEvent event, List<FittedCluster> clusList, boolean TB,
+                                      boolean DCHB2) {
         if (TB && event.hasBank("TimeBasedTrkg::TBClusters")) {
             // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBClusters");
@@ -236,16 +237,20 @@ public class RecoBankWriter {
             for (int j = 0; j < clusList.get(i).size() && j < 12; j++) {
                 hitIdxArray.add(clusList.get(i).get(j).get_Id());
 
-                // TODO: See further into these lines
-                // Math.sqrt(12.) = 3.4641016151377544
-                // double residual = clusList.get(i).get(j).get_ClusFitDoca() /
-                //                   (clusList.get(i).get(j).get_CellSize() / 3.4641016151377544);
-                // chi2 += residual * residual;
+                if (DCHB2) {
+                    // Math.sqrt(12.) = 3.4641016151377544
+                    double residual = clusList.get(i).get(j).get_ClusFitDoca() /
+                                      (clusList.get(i).get(j).get_CellSize() / 3.4641016151377544);
+                    chi2 += residual * residual;
+                }
             }
-            // bank.setFloat("fitChisqProb", i,
-            //               (float) ProbChi2perNDF.prob(chi2, clusList.get(i).size() - 2));
-            bank.setFloat("fitChisqProb", i, (float) clusList.get(i).get_fitProb());
-
+            if (DCHB2) {
+                bank.setFloat("fitChisqProb", i,
+                              (float) ProbChi2perNDF.prob(chi2, clusList.get(i).size() - 2));
+            }
+            else {
+                bank.setFloat("fitChisqProb", i, (float) clusList.get(i).get_fitProb());
+            }
             for (int j = 1; j < hitIdxArray.size() + 1; j++) {
                 bank.setShort("Hit" + j + "_ID", i, (short) hitIdxArray.get(j - 1).intValue());
             }
@@ -274,6 +279,16 @@ public class RecoBankWriter {
                         (float) clusList.get(i).get_clusterLineFitInterceptMP());
                 bank.setFloat("clusterLineFitInterceptErrMP", i,
                         (float) clusList.get(i).get_clusterLineFitInterceptErrMP());
+
+                // if (clusList.get(i).get_Status() != null) {
+                //     for (int c1 = 0; c1 < clusList.get(i).get_Status().length; ++c1) {
+                //         for (int c2 = 0; c2 < clusList.get(i).get_Status()[c1].length; ++c2) {
+                //             bank.setByte(("clusterStatus" + c1) + c2, i,
+                //                     (byte) clusList.get(i).get_Status()[c1][c2]);
+                //         }
+                //     }
+                // }
+                // else bank.setByte("clusterStatus00", i, (byte) -1);
             }
             // TODO: UP TO HERE
         }
@@ -645,6 +660,8 @@ public class RecoBankWriter {
         if (event.hasBank("TimeBasedTrkg::StateVec")) {
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::StateVec");
         }
+
+        if (bankSize == 0) return null;
         DataBank bank = event.createBank("TimeBasedTrkg::StateVec", bankSize);
 
         int idx = 0;
@@ -689,13 +706,14 @@ public class RecoBankWriter {
                              List<Segment>       segments,
                              List<Cross>         crosses,
                              List<Track>         trkcands,
-                             boolean             TB) {
+                             boolean             TB,
+                             boolean             DCHB2) {
 
         if (event == null) return;
         if (fhits != null) event.appendBanks(rbw.fillHitsBank(event, fhits, TB));
         else return;
 
-        if (clusters != null) event.appendBanks(rbw.fillClustersBank(event, clusters, TB));
+        if (clusters != null) event.appendBanks(rbw.fillClustersBank(event, clusters, TB, DCHB2));
         else return;
 
         if (segments != null) event.appendBanks(rbw.fillSegmentsBank(event, segments, TB));
@@ -723,8 +741,17 @@ public class RecoBankWriter {
                                List<Segment>       segments,
                                List<Cross>         crosses,
                                List<Track>         trkcands) {
-        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, false);
+        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, false, false);
         return;
+    }
+
+    public void fillAllHBBanksFinal(DataEvent event, RecoBankWriter rbw,
+                                    List<FittedHit>     fhits,
+                                    List<FittedCluster> clusters,
+                                    List<Segment>       segments,
+                                    List<Cross>         crosses,
+                                    List<Track>         trkcands) {
+        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, false, true);
     }
 
     public void fillAllTBBanks(DataEvent event, RecoBankWriter rbw,
@@ -733,7 +760,7 @@ public class RecoBankWriter {
                                List<Segment>       segments,
                                List<Cross>         crosses,
                                List<Track>         trkcands) {
-        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, true);
+        fillAllBanks(event, rbw, fhits, clusters, segments, crosses, trkcands, true, false);
         return;
     }
 }

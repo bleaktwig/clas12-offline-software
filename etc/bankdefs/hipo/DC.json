@@ -96,7 +96,25 @@
         {"name":"clusterLineFitSlopeMP", "id":38, "type":"float", "info":"idk"},
         {"name":"clusterLineFitSlopeErrMP", "id":39, "type":"float", "info":"idk"},
         {"name":"clusterLineFitInterceptMP", "id":40, "type":"float", "info":"idk"},
-        {"name":"clusterLineFitInterceptErrMP", "id":41, "type":"float", "info":"idk"}
+        {"name":"clusterLineFitInterceptErrMP", "id":41, "type":"float", "info":"idk"},
+        {"name":"clusterStatus00", "id":42, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus01", "id":43, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus02", "id":44, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus03", "id":45, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus04", "id":46, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus05", "id":47, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus10", "id":48, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus11", "id":49, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus12", "id":50, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus13", "id":51, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus14", "id":52, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus15", "id":53, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus20", "id":54, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus21", "id":55, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus22", "id":56, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus23", "id":57, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus24", "id":58, "type":"int8", "info":"idk"},
+        {"name":"clusterStatus25", "id":59, "type":"int8", "info":"idk"}
     ]
   },
   {

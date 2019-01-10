@@ -145,6 +145,10 @@ public class DCKFEngine extends ReconstructionEngine {
         rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
         // rbw.fillTrajectoryBank(event, rbw, trkcands);
 
+        // System.out.println("\n\n DCKF CROSS:");
+        // RecoBankReader.printSampleCross(crosses.get(0));
+        // System.out.println("\n\n");
+
         return true;
 
     }

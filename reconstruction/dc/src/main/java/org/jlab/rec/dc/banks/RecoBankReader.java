@@ -74,6 +74,15 @@ public class RecoBankReader {
         return false;
     }
 
+    public int getStateVecListSize(DataBank bank) {
+        int size = 0;
+        for (int tr = 0; tr < bank.rows(); ++tr) {
+            if (validateBank(bank, tr, "HBTracks")) return -1;
+            size += (int) bank.getShort("n_sv", tr);
+        }
+        return size;
+    }
+
     /**
      * Gets one fitted hit from a hits databank given by an index.
      * @param hBank hits bank
@@ -203,6 +212,16 @@ public class RecoBankReader {
         cluster.set_clusterLineFitSlopeErrMP((double) bank.getFloat("clusterLineFitSlopeErrMP", idx));
         cluster.set_clusterLineFitInterceptMP((double) bank.getFloat("clusterLineFitInterceptMP", idx));
         cluster.set_clusterLineFitInterceptErrMP((double) bank.getFloat("clusterLineFitInterceptErrMP", idx));
+
+        // if (bank.getByte("clusterStatus00", idx) != -1) {
+        //     int[][] status = new int[3][6];
+        //     for (int c1 = 0; c1 < 3; ++c1) {
+        //         for (int c2 = 0; c2 < 6; ++c2) {
+        //             status[c1][c2] = (int) bank.getByte(("clusterStatus" + c1) + c2, idx);
+        //         }
+        //     }
+        //     cluster.set_Status(status);
+        // }
         // TODO: UP TO HERE
 
         /* WARNING:
@@ -430,10 +449,11 @@ public class RecoBankReader {
 
     /**
      * Gets a track from a databank, given by an index, along with its three referenced crosses.
-     * @param bank    tracks bank
-     * @param crosses list of crosses
-     * @param idx     index of the track
-     * @return        the retrieved track
+     * @param bank      tracks bank
+     * @param crosses   list of crosses
+     * @param stateVecs list of state vectors
+     * @param idx       index of the track
+     * @return          the retrieved track
      */
     public Track getHBTrack(DataBank bank, List<Cross> crosses, List<StateVec> stateVecs, int idx) {
         if (validateList(stateVecs, "state vectors", "HBtracks")) return null;
@@ -443,8 +463,9 @@ public class RecoBankReader {
         ArrayList<StateVec> fStateVecs = new ArrayList<StateVec>();
 
         int bSize = (int) bank.getShort("n_sv", idx);
-        if (bSize >= 40) {
-            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: More tracks saved "
+        if (bSize == 0) return track;
+        else if (bSize >= 40) {
+            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: More statevecs saved "
                                         + "than allowed on bank. (" + bSize + ") for index " + idx);
             return null;
         }

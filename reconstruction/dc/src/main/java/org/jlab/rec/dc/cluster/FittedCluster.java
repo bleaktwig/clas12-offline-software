@@ -214,25 +214,37 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
      * @return fitted cluster's data encoded in a string
      */
     public String getDetailedInfo() {
-        return "Fitted DC Cluster " + this.get_Id() + ":" +
-               "\n  Sector                            : " + this.get_Sector() +
-               "\n  Superlayer                        : " + this.get_Superlayer() +
-               "\n  Size                              : " + this.size() +
-               "\n  Status                            : " + this.get_Status() +
-               "\n  Cluster Line:\n   "                   + this.get_clusLine() +
-               "\n  Cluster Line Err:\n   "               + this.get_clusLineErr() +
-               "\n  Fit chi^2 (_fitProb)              : " + this.get_fitProb() +
-               "\n  Fit chi^2 (_Chisq)                : " + this.get_Chisq() +
-               "\n  Cluster Line Fit Slope            : " + this.get_clusterLineFitSlope() +
-               "\n  Cluster Line Fit Slope Err        : " + this.get_clusterLineFitSlopeErr() +
-               "\n  Cluster Line Fit Intercept        : " + this.get_clusterLineFitIntercept() +
-               "\n  Cluster Line Fit Intercept Err    : " + this.get_clusterLineFitInterceptErr() +
-               "\n  Cluster Line Fit Slope Int Cov    : " + this.get_clusterLineFitSlIntCov() +
-               "\n  Cluster Line Fit Slope MP         : " + this.get_clusterLineFitSlopeMP() +
-               "\n  Cluster Line Fit Slope Err MP     : " + this.get_clusterLineFitSlopeErrMP() +
-               "\n  Cluster Line Fit Intercept MP     : " + this.get_clusterLineFitInterceptMP() +
-               "\n  Cluster Line Fit Intercept Err MP : " + this.get_clusterLineFitInterceptErrMP() +
-               "\n  Tracking Status                   : " + this.get_TrkgStatus() +
-               "\n--------------------------------------------\n";
+        String info = "Fitted DC Cluster " + this.get_Id() + ":" +
+                      "\n  Sector                            : " + this.get_Sector() +
+                      "\n  Superlayer                        : " + this.get_Superlayer() +
+                      "\n  Size                              : " + this.size() +
+                      "\n  Cluster Line:\n   "                   + this.get_clusLine() +
+                      "\n  Cluster Line Err:\n   "               + this.get_clusLineErr() +
+                      "\n  Fit chi^2 (_fitProb)              : " + this.get_fitProb() +
+                      "\n  Fit chi^2 (_Chisq)                : " + this.get_Chisq() +
+                      "\n  Cluster Line Fit Slope            : " + this.get_clusterLineFitSlope() +
+                      "\n  Cluster Line Fit Slope Err        : " + this.get_clusterLineFitSlopeErr() +
+                      "\n  Cluster Line Fit Intercept        : " + this.get_clusterLineFitIntercept() +
+                      "\n  Cluster Line Fit Intercept Err    : " + this.get_clusterLineFitInterceptErr() +
+                      "\n  Cluster Line Fit Slope Int Cov    : " + this.get_clusterLineFitSlIntCov() +
+                      "\n  Cluster Line Fit Slope MP         : " + this.get_clusterLineFitSlopeMP() +
+                      "\n  Cluster Line Fit Slope Err MP     : " + this.get_clusterLineFitSlopeErrMP() +
+                      "\n  Cluster Line Fit Intercept MP     : " + this.get_clusterLineFitInterceptMP() +
+                      "\n  Cluster Line Fit Intercept Err MP : " + this.get_clusterLineFitInterceptErrMP() +
+                      "\n  Tracking Status                   : " + this.get_TrkgStatus();
+        if (this.get_Status() != null) {
+            info += "\n  Status:";
+            for (int i = 0; i < this.get_Status().length; ++i) {
+                info += "\n    ";
+                for (int j = 0; j < this.get_Status()[i].length; ++j) {
+                    info += this.get_Status()[i][j];
+                    info += " ";
+                }
+            }
+        }
+        else info += "\n  Status: null";
+        info += "\n--------------------------------------------\n";
+
+        return info;
     }
 }

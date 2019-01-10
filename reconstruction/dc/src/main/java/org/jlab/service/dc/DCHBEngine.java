@@ -374,6 +374,11 @@ public class DCHBEngine extends DCEngine {
                 crosses,
                 trkcands);
 
+        // System.out.println("\n\n DCHB2 CROSS:");
+        // RecoBankReader.printSampleCross(crosses.get(0));
+        // System.out.println("\n\n");
+
+
         return true;
     }
 }
