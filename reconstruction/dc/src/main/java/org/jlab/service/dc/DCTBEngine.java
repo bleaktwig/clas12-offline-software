@@ -10,6 +10,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
+import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
@@ -55,7 +56,7 @@ public class DCTBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        // if (currentEvent != 136) return true;
+        if (currentEvent > 1) return true;
 
         // System.out.println("00");
 
@@ -223,8 +224,14 @@ public class DCTBEngine extends DCEngine {
                 TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
         }
 
-        // System.out.println("DCTBTRACK:");
-        // if (TrackArray.length > 0) TrackArray[0].printDetailedInfo();
+// ==- PRINT TRACKS -===============================================================================
+        if (TrackArray.length > 0 && TrackArray[0] != null) {
+            System.out.println("\n\n DCTB TRACK:");
+            RecoBankReader.printSample(TrackArray[0]);
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCTB TRACK IS NULL.\n\n");
+// ==- ----- ------ -===============================================================================
 
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
@@ -311,6 +318,9 @@ public class DCTBEngine extends DCEngine {
                 trkId++;
             }
         }
+
+// ==- PRINT TRACK COUNT -==========================================================================
+        System.out.println("[DCTB#"+currentEvent+"] Tracks: " + trkcands.size());
 
         if(trkcands.isEmpty()) {
 

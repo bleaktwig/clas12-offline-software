@@ -213,15 +213,15 @@ public class RecoBankReader {
         cluster.set_clusterLineFitInterceptMP((double) bank.getFloat("clusterLineFitInterceptMP", idx));
         cluster.set_clusterLineFitInterceptErrMP((double) bank.getFloat("clusterLineFitInterceptErrMP", idx));
 
-        // if (bank.getByte("clusterStatus00", idx) != -1) {
-        //     int[][] status = new int[3][6];
-        //     for (int c1 = 0; c1 < 3; ++c1) {
-        //         for (int c2 = 0; c2 < 6; ++c2) {
-        //             status[c1][c2] = (int) bank.getByte(("clusterStatus" + c1) + c2, idx);
-        //         }
-        //     }
-        //     cluster.set_Status(status);
-        // }
+        if (bank.getByte("clusterStatus00", idx) != -1) {
+            int[][] status = new int[3][6];
+            for (int c1 = 0; c1 < 3; ++c1) {
+                for (int c2 = 0; c2 < 6; ++c2) {
+                    status[c1][c2] = (int) bank.getByte(("clusterStatus" + c1) + c2, idx);
+                }
+            }
+            cluster.set_Status(status);
+        }
         // TODO: UP TO HERE
 
         /* WARNING:
@@ -442,6 +442,7 @@ public class RecoBankReader {
         track.b[0] = bank.getFloat("b_0", idx);
         track.b[1] = bank.getFloat("b_1", idx);
         track.b[2] = bank.getFloat("b_2", idx);
+        track.set_TrackingInfoString("HitBased"); // DCTB uses another class to read from banks.
         // TODO: UP UNTIL HERE
 
         return track;
@@ -491,6 +492,21 @@ public class RecoBankReader {
         }
 
         track.set_Trajectory(fStateVecs);
+
+        int svar1mpID = (int) bank.getShort("_StateVecAtReg1MiddlePlane", idx);
+        StateVec fStateVec = null;
+        for (StateVec stateVec : stateVecs) {
+            if (svar1mpID == stateVec.getId()) {
+                fStateVec = stateVec;
+                break;
+            }
+        }
+        if (fStateVec == null) {
+            if (debug) System.out.println("[RecoBankReader.getHBTrack] ERROR: State vector with ID "
+                                          + svar1mpID + " was not found in list.");
+            return null;
+        }
+        track.set_StateVecAtReg1MiddlePlane(fStateVec);
 
         return track;
     }
@@ -551,17 +567,39 @@ public class RecoBankReader {
         return stateVec;
     }
 
-    /**
-     * Prints the data associated to one cross along with its first segment, cluster and hit.
-     * @param cross the cross to be printed
-     */
+    /** Set of functions to print the data associated to a track, cross, segment, cluster or hit. */
     @SuppressWarnings("unused")
-    public static void printSampleCross(Cross cross) {
-        System.out.println(cross.getDetailedInfo());
-        System.out.println(cross.get_Segment1().getDetailedInfo());
-        System.out.println(cross.get_Segment1().get_fittedCluster().getDetailedInfo());
-        System.out.println(cross.get_Segment1().get_fittedCluster().get(0).getDetailedInfo());
+    public static void printSample(Track track) {
+        // System.out.println(track.getDetailedInfo());
+        track.printDetailedInfo();
+        if (track.size() <= 0)         System.out.println("Track doesn't have any associated crosses.");
+        else if (track.get(0) != null) printSample(track.get(0));
+        else                           System.out.println("Track's first cross is null.");
     }
+    @SuppressWarnings("unused")
+    public static void printSample(Cross cross) {
+        System.out.println(cross.getDetailedInfo());
+        if (cross.get_Segment1() != null) printSample(cross.get_Segment1());
+        else                              System.out.println("Cross' first segment is null.");
+    }
+    @SuppressWarnings("unused")
+    public static void printSample(Segment segment) {
+        System.out.println(segment.getDetailedInfo());
+        if (segment.get_fittedCluster() != null) printSample(segment.get_fittedCluster());
+        else                                     System.out.println("Segment's fitted cluster is null.");
+    }
+    @SuppressWarnings("unused")
+    public static void printSample(FittedCluster cluster) {
+        System.out.println(cluster.getDetailedInfo());
+        if (cluster.size() <= 0)    System.out.println("Cluster doesn't have any associated hits.");
+        if (cluster.get(0) != null) printSample(cluster.get(0));
+        else                        System.out.println("Cluster's first hit is null.");
+    }
+    @SuppressWarnings("unused")
+    public static void printSample(FittedHit hit) {
+        System.out.println(hit.getDetailedInfo());
+    }
+
 
     /**
      * Prints the data contained in a list of crosses along with all the referenced objects.

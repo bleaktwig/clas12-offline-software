@@ -571,53 +571,58 @@ public class FittedHit extends Hit implements Comparable<Hit> {
      * @return fitted hit's data encoded in a string
      */
     public String getDetailedInfo() {
-        return "DC Fitted Hit " + this.get_Id() + ":" +
-               "\n  Hit Data:" +
-               "\n    Sector                        : " + this.get_Sector() +
-               "\n    Superlayer                    : " + this.get_Superlayer() +
-               "\n    Layer                         : " + this.get_Layer() +
-               "\n    Wire                          : " + this.get_Wire() +
-               "\n    TDC                           : " + this.get_TDC() +
-               "\n    Cell size                     : " + this.get_CellSize() +
-               "\n    Doca err                      : " + this.get_DocaErr() +
-               "\n  Fitted Hit Data:" +
-               "\n    B                             : " + this.getB() +
-               "\n    Doca (_Doca)                  : " + this.get_Doca() +
-               "\n    Doca (_TimeToDistance)        : " + this.get_TimeToDistance() +
-               "\n    Doca Error                    : " + this.get_DocaErr() +
-               "\n    _lX                           : " + this.get_lX() +
-               "\n    _lY                           : " + this.get_lY() +
-               "\n    Time Residual                 : " + this.get_TimeResidual() +
-               "\n    Residual                      : " + this.get_Residual() +
-               "\n    Left Right Ambiguity          : " + this.get_LeftRightAmb() +
-               "\n    Quality Fac                   : " + this.get_QualityFac() +
-               "\n    Tracking Status               : " + this.get_TrkgStatus() +
-               "\n    Time to Distance              : " + this.get_TimeToDistance() +
-               "\n    Associated State Vector       : " + this.getAssociatedStateVec() +
-               "\n    Cluster Fit Doca              : " + this.get_ClusFitDoca() +
-               "\n    Tracking Fit Doca             : " + this.get_TrkFitDoca() +
-               "\n    Updated Position (_X)         : " + this.get_X() +
-               "\n    _XMP                          : " + this.get_XMP() +
-               "\n    _Z                            : " + this.get_Z() +
-               "\n    Wire Length                   : " + this.get_WireLength() +
-               "\n    _WireMaxSag                   : " + this.get_WireMaxSag() +
-               "\n    Tracking Residual             : " + this.get_TrkResid() +
-               "\n    Associated Cluster Id         : " + this.get_AssociatedClusterID() +
-               "\n    Associated HB Track Id        : " + this.get_AssociatedHBTrackID() +
-               "\n    Associated TB Track Id        : " + this.get_AssociatedTBTrackID() +
-               "\n    Cross Dir Inters Wire         : " + this.getCrossDirIntersWire() +
-               "\n    Beta                          : " + this.get_Beta() +
-               "\n    Signal Propag Along Wire      : " + this.getSignalPropagAlongWire() +
-               "\n    Signal Propag Time Along Wire : " + this.getSignalPropagTimeAlongWire() +
-               "\n    Signal Time of Flight         : " + this.getSignalTimeOfFlight() +
-               "\n    T Start                       : " + this.getTStart() +
-               "\n    T0                            : " + this.getT0() +
-               "\n    TFlight                       : " + this.getTFlight() +
-               "\n    TProp                         : " + this.getTProp() +
-               "\n    Time (_Time)                  : " + this.get_Time() +
-               "\n    Out of Time Flag              : " + this.get_OutOfTimeFlag() +
-               "\n    Delta Time Beta               : " + this.get_DeltaTimeBeta() +
-               // "\n    Position Error                : " + this.get_PosErr() +
-               "\n----------------------\n";
+        String returnStr = "DC Fitted Hit " + this.get_Id() + ":" +
+                           "\n  Hit Data:" +
+                           "\n    Sector                        : " + this.get_Sector() +
+                           "\n    Superlayer                    : " + this.get_Superlayer() +
+                           "\n    Layer                         : " + this.get_Layer() +
+                           "\n    Wire                          : " + this.get_Wire() +
+                           "\n    TDC                           : " + this.get_TDC() +
+                           "\n    Cell size                     : " + this.get_CellSize() +
+                           "\n    Doca err                      : " + this.get_DocaErr() +
+                           "\n  Fitted Hit Data:" +
+                           "\n    B                             : " + this.getB() +
+                           "\n    Doca (_Doca)                  : " + this.get_Doca() +
+                           "\n    Doca (_TimeToDistance)        : " + this.get_TimeToDistance() +
+                           "\n    Doca Error                    : " + this.get_DocaErr() +
+                           "\n    _lX                           : " + this.get_lX() +
+                           "\n    _lY                           : " + this.get_lY() +
+                           "\n    Time Residual                 : " + this.get_TimeResidual() +
+                           "\n    Residual                      : " + this.get_Residual() +
+                           "\n    Left Right Ambiguity          : " + this.get_LeftRightAmb() +
+                           "\n    Quality Fac                   : " + this.get_QualityFac() +
+                           "\n    Tracking Status               : " + this.get_TrkgStatus() +
+                           "\n    Time to Distance              : " + this.get_TimeToDistance();
+        if (this.getAssociatedStateVec() != null)
+            returnStr += "\n    Associated State Vector         :\n" +
+                         this.getAssociatedStateVec().getDetailedInfo();
+        else
+            returnStr += "\n    Associated State Vector         : null";
+        returnStr += "\n    Cluster Fit Doca              : " + this.get_ClusFitDoca() +
+                     "\n    Tracking Fit Doca             : " + this.get_TrkFitDoca() +
+                     "\n    Updated Position (_X)         : " + this.get_X() +
+                     "\n    _XMP                          : " + this.get_XMP() +
+                     "\n    _Z                            : " + this.get_Z() +
+                     "\n    Wire Length                   : " + this.get_WireLength() +
+                     "\n    _WireMaxSag                   : " + this.get_WireMaxSag() +
+                     "\n    Tracking Residual             : " + this.get_TrkResid() +
+                     "\n    Associated Cluster Id         : " + this.get_AssociatedClusterID() +
+                     "\n    Associated HB Track Id        : " + this.get_AssociatedHBTrackID() +
+                     "\n    Associated TB Track Id        : " + this.get_AssociatedTBTrackID() +
+                     "\n    Cross Dir Inters Wire         : " + this.getCrossDirIntersWire() +
+                     "\n    Beta                          : " + this.get_Beta() +
+                     "\n    Signal Propag Along Wire      : " + this.getSignalPropagAlongWire() +
+                     "\n    Signal Propag Time Along Wire : " + this.getSignalPropagTimeAlongWire() +
+                     "\n    Signal Time of Flight         : " + this.getSignalTimeOfFlight() +
+                     "\n    T Start                       : " + this.getTStart() +
+                     "\n    T0                            : " + this.getT0() +
+                     "\n    TFlight                       : " + this.getTFlight() +
+                     "\n    TProp                         : " + this.getTProp() +
+                     "\n    Time (_Time)                  : " + this.get_Time() +
+                     "\n    Out of Time Flag              : " + this.get_OutOfTimeFlag() +
+                     "\n    Delta Time Beta               : " + this.get_DeltaTimeBeta() +
+                     // "\n    Position Error                : " + this.get_PosErr() +
+                     "\n----------------------\n";
+        return returnStr;
     }
 }

@@ -58,7 +58,7 @@ public class DCHB1Engine extends DCEngine {
         eventCounter++;
 
 
-        // if (currentEvent != 136) return true;
+        if (currentEvent > 1) return true;
 
         // setRunConditionsParameters(event);
         if (!event.hasBank("RUN::config")) return true;
@@ -155,9 +155,12 @@ public class DCHB1Engine extends DCEngine {
         if (crosses.isEmpty()) crosses = null;
         rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
 
-        // System.out.println("\n\n DCHB1 CROSS:");
-        // RecoBankReader.printSampleCross(crosses.get(0));
-        // System.out.println("\n\n");
+        if (crosses.size() > 0 && crosses.get(0) != null) {
+            System.out.println("\n\n DCHB1 CROSS:");
+            RecoBankReader.printSample(crosses.get(0));
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCHB1 CROSS IS NULL.\n\n");
 
         return true;
     }

@@ -59,21 +59,7 @@ public class DCHBEngine extends DCEngine {
         Constants.Load();
         super.setStartTimeOption();
         super.LoadTables();
-//        newRun = 809;
-//        long timeStamp = 371468548086L;
-//        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-//            IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
-//            double period = tabJ.getDoubleValue("period", 0, 0, 0);
-//            int phase = tabJ.getIntValue("phase", 0, 0, 0);
-//            int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
-//
-//            if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
-//
-//            TableLoader.FillT0Tables(newRun, super.variationName);
-//            TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
-//
-//            Run.set(newRun);
-//        }
+
         return true;
     }
 
@@ -82,7 +68,7 @@ public class DCHBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        // if (currentEvent != 136) return true;
+        if (currentEvent > 1) return true;
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
@@ -221,9 +207,13 @@ public class DCHBEngine extends DCEngine {
             return true;
         }
 
-        // System.out.println("\n\n DCHB1 CROSS:");
-        // RecoBankReader.printSampleCross(crosses.get(0));
-        // System.out.println("\n\n");
+// ==- DCHB1 ENDS -================================================================================-
+        if (crosses.size() > 0 && crosses.get(0) != null) {
+            System.out.println("\n\n DCHB1 CROSS:");
+            RecoBankReader.printSample(crosses.get(0));
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCHB1 CROSS IS NULL.\n\n");
 
         /* 17 */
         CrossListFinder crossLister = new CrossListFinder();
@@ -249,9 +239,13 @@ public class DCHBEngine extends DCEngine {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
 
-            // System.out.println("\n\n DCKF CROSS:");
-            // RecoBankReader.printSampleCross(crosses.get(0));
-            // System.out.println("\n\n");
+// ==- DCKF ENDS -=================================================================================-
+            if (trkcands.size() > 0 && trkcands.get(0) != null) {
+                System.out.println("\n\n DCKF TRACK:");
+                RecoBankReader.printSample(trkcands.get(0));
+                System.out.println("\n\n");
+            }
+            else System.out.println("\n\n DCKF TRACK IS NULL.\n\n");
 
             for (Track trk : trkcands) {
                 // reset the id
@@ -374,10 +368,13 @@ public class DCHBEngine extends DCEngine {
                 crosses,
                 trkcands);
 
-        // System.out.println("\n\n DCHB2 CROSS:");
-        // RecoBankReader.printSampleCross(crosses.get(0));
-        // System.out.println("\n\n");
-
+// ==- DCHB2 ENDS -================================================================================-
+        if (trkcands.size() > 0 && trkcands.get(0) != null) {
+            System.out.println("\n\n DCHB2 TRACK:");
+            RecoBankReader.printSample(trkcands.get(0));
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
 
         return true;
     }

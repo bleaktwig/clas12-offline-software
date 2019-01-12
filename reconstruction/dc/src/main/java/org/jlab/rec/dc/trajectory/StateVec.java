@@ -100,69 +100,11 @@ public class StateVec extends Matrix {
     public int getId() {return id;}
     public void setId(int id) {this.id = id;}
 
-    public double getPathLength() {
-        return _PathLength;
-    }
-
-    public void setPathLength(double _PathLength) {
-        this._PathLength = _PathLength;
-    }
-
-    /**
-     * Sets the.
-     *
-     * @param V the v
-     */
     public void set(StateVec V) {
             set(0,0,V.x());
             set(1,0,V.y());
             set(2,0,V.tanThetaX());
             set(3,0,V.tanThetaY());
-    }
-
-
-    /**
-     *
-     * @return the wire plane index in the series of planes used in the trajectory
-     */
-    public int getPlaneIdx() {
-        return _planeIdx;
-    }
-
-
-    /**
-     * Sets the wire plane index in the series of planes used in the trajectory
-     * @param _planeIdx wire plane index in the series of planes used in the trajectory
-     */
-    public void setPlaneIdx(int _planeIdx) {
-        this._planeIdx = _planeIdx;
-    }
-
-
-    public double getZ() {
-        return z;
-    }
-
-    public void setZ(double z) {
-        this.z = z;
-    }
-
-
-    public double getB() {
-        return b;
-    }
-
-    public void setB(double b) {
-        this.b = b;
-    }
-    // KF projector
-
-    public double getProjector() {
-        return h;
-    }
-
-    public void setProjector(double h) {
-        this.h = h;
     }
 
     /**
@@ -180,46 +122,47 @@ public class StateVec extends Matrix {
             set(3,0,tanThY);
     }
 
+    /** Description of x(). */
+    public double x() {return(get(0,0));}
 
+    /** Description of y(). */
+    public double y() {return(get(1,0));}
 
-    /**
-     * Description of x().
-     *
-     * @return the x component
-     */
-    public double x() {
-            return(get(0,0));
+    /** Description of tanThetaX(). */
+    public double tanThetaX() {return(get(2,0));}
+
+    /** Description of tanThetaY(). */
+    public double tanThetaY() {return(get(3,0));}
+
+    public double getPathLength() {return _PathLength;}
+    public void setPathLength(double _PathLength) {this._PathLength = _PathLength;}
+
+    /** @return the wire plane index in the series of planes used in the trajectory */
+    public int getPlaneIdx() {return _planeIdx;}
+    /** Sets the wire plane index in the series of planes used in the trajectory */
+    public void setPlaneIdx(int _planeIdx) {this._planeIdx = _planeIdx;}
+
+    public double getZ() {return z;}
+    public void setZ(double z) {this.z = z;}
+
+    public double getB() {return b;}
+    public void setB(double b) {this.b = b;}
+
+    // KF projector
+    public double getProjector() {return h;}
+    public void setProjector(double h) {this.h = h;}
+
+    public String getDetailedInfo() {
+        return "    StateVec " + this.getId() + ":" +
+               "\n      x           : " + this.x() +
+               "\n      y           : " + this.y() +
+               "\n      tThX        : " + this.tanThetaX() +
+               "\n      tThY        : " + this.tanThetaY() +
+               "\n      _PathLength : " + this.getPathLength() +
+               "\n      _planeIdx   : " + this.getPlaneIdx() +
+               "\n      z           : " + this.getZ() +
+               "\n      b           : " + this.getB();
     }
-
-    /**
-     * Description of y().
-     *
-     * @return the y component
-     */
-
-    public double y() {
-            return(get(1,0));
-    }
-
-    /**
-     * Description of tanThetaX().
-     *
-     * @return the tanThetaX component
-     */
-    public double tanThetaX() {
-            return(get(2,0));
-    }
-
-    /**
-     * Description of tanThetaY().
-     *
-     * @return the tanThetaY component
-     */
-    public double tanThetaY() {
-            return(get(3,0));
-    }
-
-
 
     public void printInfo() {
             System.out.println("StateVec [ "+this.x()+", "+this.y()+", "+this.tanThetaX()+", "+this.tanThetaY()+" ] ");

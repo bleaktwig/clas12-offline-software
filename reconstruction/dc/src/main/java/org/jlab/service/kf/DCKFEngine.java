@@ -76,7 +76,7 @@ public class DCKFEngine extends ReconstructionEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        // if (currentEvent != 136) return true;
+        if (currentEvent > 1) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -143,11 +143,13 @@ public class DCKFEngine extends ReconstructionEngine {
         }
 
         rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
-        // rbw.fillTrajectoryBank(event, rbw, trkcands);
 
-        // System.out.println("\n\n DCKF CROSS:");
-        // RecoBankReader.printSampleCross(crosses.get(0));
-        // System.out.println("\n\n");
+        if (trkcands.size() > 0 && trkcands.get(0) != null) {
+            System.out.println("\n\n DCKF TRACK:");
+            RecoBankReader.printSample(trkcands.get(0));
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCKF TRACK IS NULL.\n\n");
 
         return true;
 

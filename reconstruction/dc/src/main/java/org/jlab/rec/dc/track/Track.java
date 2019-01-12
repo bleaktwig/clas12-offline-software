@@ -190,9 +190,25 @@ public class Track extends Trajectory implements Comparable<Track>{
         System.out.println("  _TrackingInfoString        : " + get_TrackingInfoString());
         System.out.println("  _FitNDF                    : " + get_FitNDF());
         System.out.println("  _fitChisq                  : " + get_FitChi2());
-        System.out.println("  _CovMat                    : " + get_CovMat()); // MATRIX
+        System.out.println("  _CovMat                    : "); // MATRIX
+        String CovMatStr = "";
+        for (int ii = 0; ii < get_CovMat().getRowDimension(); ++ii) {
+            CovMatStr += "    ";
+            for (int jj = 0; jj < get_CovMat().getColumnDimension(); ++jj) {
+                CovMatStr += get_CovMat().get(ii, jj);
+                CovMatStr += " ";
+            }
+            CovMatStr += "\n";
+        }
+        System.out.println(CovMatStr);
         System.out.println("  _FitConvergenceStatus      : " + get_FitConvergenceStatus());
         System.out.println("  _StateVecAtReg1MiddlePlane : " + get_StateVecAtReg1MiddlePlane()); // STATEVEC
+        if (get_StateVecAtReg1MiddlePlane() != null) {
+            System.out.println(get_StateVecAtReg1MiddlePlane().getDetailedInfo());
+        }
+        else {
+            System.out.println("  _StateVecAtReg1MiddlePlane : null");
+        }
         if (get_AssociatedHBTrack() != null)
             System.out.println("  _AssociatedHBTrack         : " + get_AssociatedHBTrack()._Id);
         else

@@ -277,7 +277,8 @@
         {"name":"svid37", "id":87, "type": "int16", "info":"state vector id"},
         {"name":"svid38", "id":88, "type": "int16", "info":"state vector id"},
         {"name":"svid39", "id":89, "type": "int16", "info":"state vector id"},
-        {"name":"n_sv",   "id":90, "type": "int16", "info":"number of state vectors"}
+        {"name":"n_sv",   "id":90, "type": "int16", "info":"number of state vectors"},
+        {"name":"_StateVecAtReg1MiddlePlane", "id":91, "type": "int16", "info":"idk"}
     ]
   },
   {

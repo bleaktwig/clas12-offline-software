@@ -13,6 +13,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.track.Track;
 
 import trackfitter.fitter.utilities.*;
@@ -280,15 +281,15 @@ public class RecoBankWriter {
                 bank.setFloat("clusterLineFitInterceptErrMP", i,
                         (float) clusList.get(i).get_clusterLineFitInterceptErrMP());
 
-                // if (clusList.get(i).get_Status() != null) {
-                //     for (int c1 = 0; c1 < clusList.get(i).get_Status().length; ++c1) {
-                //         for (int c2 = 0; c2 < clusList.get(i).get_Status()[c1].length; ++c2) {
-                //             bank.setByte(("clusterStatus" + c1) + c2, i,
-                //                     (byte) clusList.get(i).get_Status()[c1][c2]);
-                //         }
-                //     }
-                // }
-                // else bank.setByte("clusterStatus00", i, (byte) -1);
+                if (clusList.get(i).get_Status() != null) {
+                    for (int c1 = 0; c1 < clusList.get(i).get_Status().length; ++c1) {
+                        for (int c2 = 0; c2 < clusList.get(i).get_Status()[c1].length; ++c2) {
+                            bank.setByte(("clusterStatus" + c1) + c2, i,
+                                    (byte) clusList.get(i).get_Status()[c1][c2]);
+                        }
+                    }
+                }
+                else bank.setByte("clusterStatus00", i, (byte) -1);
             }
             // TODO: UP TO HERE
         }
@@ -455,7 +456,8 @@ public class RecoBankWriter {
      * @param TB       boolean set to 1 if time-based and 0 otherwise.
      * @return         tracks bank
      */
-    private DataBank fillTracksBank(DataEvent event, List<Track> candList, boolean TB) {
+    private DataBank fillTracksBank(DataEvent event, List<Track> candList, boolean TB,
+                                    boolean DCHB2) {
         if (TB && event.hasBank("TimeBasedTrkg::TBTracks")) { // For second pass tracking
             ((HipoDataEvent) event).getHipoEvent().removeGroup("TimeBasedTrkg::TBTracks");
         }
@@ -473,8 +475,9 @@ public class RecoBankWriter {
             bank.setShort("id",     i, (short) candList.get(i).get_Id());
             bank.setByte ("sector", i, (byte)  candList.get(i).get_Sector());
             bank.setByte ("q",      i, (byte)  candList.get(i).get_Q());
-            bank.setShort("status", i, (short) (100 + candList.get(i).get_Status() * 10 +
-                                                candList.get(i).get_MissingSuperlayer()));
+            if (!DCHB2) bank.setShort("status", i, (short) candList.get(i).get_Status());
+            else        bank.setShort("status", i, (short) (100 + candList.get(i).get_Status() * 10
+                                                            + candList.get(i).get_MissingSuperlayer()));
 
             if (candList.get(i).get_PreRegion1CrossPoint() != null) {
                 bank.setFloat("c1_x",  i, (float) candList.get(i).get_PreRegion1CrossPoint().x());
@@ -528,6 +531,9 @@ public class RecoBankWriter {
                 bank.setFloat("b_0", i, (float) candList.get(i).b[0]);
                 bank.setFloat("b_1", i, (float) candList.get(i).b[1]);
                 bank.setFloat("b_2", i, (float) candList.get(i).b[2]);
+
+                bank.setShort("_StateVecAtReg1MiddlePlane", i,
+                              (short) candList.get(i).get_StateVecAtReg1MiddlePlane().getId());
 
                 if (candList.get(i).get_Trajectory() != null) {
                     bank.setShort("n_sv", i, (short) candList.get(i).get_Trajectory().size());
@@ -655,6 +661,7 @@ public class RecoBankWriter {
         int bankSize = 0;
         for (Track track : tracks) {
             bankSize += track.get_Trajectory().size();
+            bankSize++;
         }
 
         if (event.hasBank("TimeBasedTrkg::StateVec")) {
@@ -664,25 +671,32 @@ public class RecoBankWriter {
         if (bankSize == 0) return null;
         DataBank bank = event.createBank("TimeBasedTrkg::StateVec", bankSize);
 
-        int idx = 0;
+        List<StateVec> stateVecList = new ArrayList<>();
         for (Track track : tracks) {
             if (track == null)                  continue;
             if (track.get_Trajectory() == null) continue;
 
             for (int i = 0; i < track.get_Trajectory().size(); ++i) {
-                bank.setShort("id",          idx, (short) track.get_Trajectory().get(i).getId());
-                bank.setFloat("x",           idx, (float) track.get_Trajectory().get(i).x());
-                bank.setFloat("y",           idx, (float) track.get_Trajectory().get(i).y());
-                bank.setFloat("thX",         idx, (float) track.get_Trajectory().get(i).tanThetaX());
-                bank.setFloat("thY",         idx, (float) track.get_Trajectory().get(i).tanThetaY());
-                bank.setFloat("z",           idx, (float) track.get_Trajectory().get(i).getZ());
-                bank.setFloat("b",           idx, (float) track.get_Trajectory().get(i).getB());
-                bank.setFloat("h",           idx, (float) track.get_Trajectory().get(i).getProjector());
-                bank.setFloat("_PathLength", idx, (float) track.get_Trajectory().get(i).getPathLength());
-                bank.setShort("_planeIdx",   idx, (short) track.get_Trajectory().get(i).getPlaneIdx());
-
-                idx++;
+                stateVecList.add(track.get_Trajectory().get(i));
             }
+            stateVecList.add(track.get_StateVecAtReg1MiddlePlane());
+        }
+
+        int idx = 0;
+
+        for (StateVec stateVec : stateVecList) {
+            bank.setShort("id",          idx, (short) stateVec.getId());
+            bank.setFloat("x",           idx, (float) stateVec.x());
+            bank.setFloat("y",           idx, (float) stateVec.y());
+            bank.setFloat("thX",         idx, (float) stateVec.tanThetaX());
+            bank.setFloat("thY",         idx, (float) stateVec.tanThetaY());
+            bank.setFloat("z",           idx, (float) stateVec.getZ());
+            bank.setFloat("b",           idx, (float) stateVec.getB());
+            bank.setFloat("h",           idx, (float) stateVec.getProjector());
+            bank.setFloat("_PathLength", idx, (float) stateVec.getPathLength());
+            bank.setShort("_planeIdx",   idx, (short) stateVec.getPlaneIdx());
+
+            idx++;
         }
 
         return bank;
@@ -723,7 +737,7 @@ public class RecoBankWriter {
         else return;
 
         if (trkcands != null) {
-            event.appendBanks(rbw.fillTracksBank(event, trkcands, TB));
+            event.appendBanks(rbw.fillTracksBank(event, trkcands, TB, DCHB2));
             if (!TB) {
                 event.appendBanks(rbw.fillTrackCovMatBank(event, trkcands));
                 event.appendBanks(rbw.fillStateVecsBank(event, trkcands));
