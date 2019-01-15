@@ -56,18 +56,15 @@ public class DCTBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent > 1) return true;
-
-        // System.out.println("00");
+        if (currentEvent != 127) return true;
 
         //setRunConditionsParameters( event) ;
-        if(event.hasBank("RUN::config")==false) {
+        if(!event.hasBank("RUN::config")) {
             System.err.println("RUN CONDITIONS NOT READ AT TIMEBASED LEVEL!");
             return true;
         }
 
-        // System.out.println("01");
-        if(event.hasBank("MC::Event")==true)
+        if(event.hasBank("MC::Event"))
             tarCent=0;
         //if(event.getBank("RECHB::Event").getFloat("STTime", 0)<0)
         //    return true; // require the start time to reconstruct the tracks in the event
@@ -79,10 +76,8 @@ public class DCTBEngine extends DCEngine {
         if(newRun==0)
             return true;
 
-        // System.out.println("02");
         double T_Start = 0;
 
-        // TODO: ----- V THE THING'S EXITING HERE V -------------------------------------
         if (Constants.isUSETSTART() == true) {
             if (event.hasBank("RECHB::Event")==true) {
                 T_Start = event.getBank("RECHB::Event").getFloat("STTime", 0);
@@ -93,12 +88,9 @@ public class DCTBEngine extends DCEngine {
                 return true; // no REC HB bank
             }
         }
-        // TODO: ----- ^ THE THING'S EXITING HERE ^ -------------------------------------
 
-        // System.out.println("03");
         // get Field
         Swim dcSwim = new Swim();
-        // System.out.println(" RUNNING TIME BASED....................................");
         ClusterFitter cf = new ClusterFitter();
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
 
@@ -130,26 +122,34 @@ public class DCTBEngine extends DCEngine {
 
         //II) process the hits
         //1) exit if hit list is empty
-        if(hits.isEmpty() ) {
-                return true;
+        if (hits.isEmpty()) {
+            return true;
         }
-        // System.out.println("04");
 
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
 
-        clusters = clusFinder.FindTimeBasedClusters(hits, cf, ct, super.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"), dcDetector, tde);
+        // TODO: For some reason, 9 clusters are being detected here instead of 6.
+        clusters = clusFinder.FindTimeBasedClusters(hits, cf, ct,
+                super.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"),
+                dcDetector, tde);
 
         if(clusters.isEmpty()) {
             rbc.fillAllTBBanks(event, rbc, hits, null, null, null, null);
             return true;
         }
-        // System.out.println("05");
+
+        System.out.println("\n\nCluster list size: " + clusters.size() + "\n\n");
+        for (FittedCluster cluster : clusters) {
+            System.out.println("Cluster id: " + cluster.get_Id());
+        }
 
         //3) find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();
 
         List<FittedCluster> pclusters = segFinder.selectTimeBasedSegments(clusters);
+
+        System.out.println("\n\nPCluster list size: " + pclusters.size() + "\n\n");
 
         segments =  segFinder.get_Segments(pclusters, event, dcDetector, false);
 
@@ -164,7 +164,8 @@ public class DCTBEngine extends DCEngine {
             rbc.fillAllTBBanks( event, rbc, fhits, clusters, null, null, null);
             return true;
         }
-        // System.out.println("06");
+
+        System.out.println("\n\nSegment list size: " + segments.size() + "\n\n");
 
         for(Segment seg : segments) {
             for(FittedHit hit : seg.get_fittedCluster()) {
@@ -185,7 +186,6 @@ public class DCTBEngine extends DCEngine {
         if (event.hasBank("HitBasedTrkg::HBTracks") == false) {
             return true;
         }
-        // System.out.println("07");
 
         DataBank trkbank = event.getBank("HitBasedTrkg::HBTracks");
         DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
@@ -193,7 +193,6 @@ public class DCTBEngine extends DCEngine {
         if(trkbank.rows()!=trkcovbank.rows()) {
             return true; // HB tracks not saved correctly
         }
-        // System.out.println("08");
         Track[] TrackArray = new Track[trkrows];
         for (int i = 0; i < trkrows; i++) {
             Track HBtrk = new Track();
@@ -202,6 +201,7 @@ public class DCTBEngine extends DCEngine {
             HBtrk.set_Q(trkbank.getByte("q", i));
             HBtrk.set_pAtOrig(new Vector3D(trkbank.getFloat("p0_x", i), trkbank.getFloat("p0_y", i), trkbank.getFloat("p0_z", i)));
             HBtrk.set_Vtx0(new Point3D(trkbank.getFloat("Vtx0_x", i), trkbank.getFloat("Vtx0_y", i), trkbank.getFloat("Vtx0_z", i)));
+            System.out.println("[track#"+HBtrk.get_Id()+" DCTB00] setting Vtx0 to " + HBtrk.get_Vtx0());
             HBtrk.set_FitChi2(trkbank.getFloat("chi2", i));
             Matrix initCMatrix = new Matrix(new double[][]{
             {trkcovbank.getFloat("C11", i), trkcovbank.getFloat("C12", i), trkcovbank.getFloat("C13", i), trkcovbank.getFloat("C14", i), trkcovbank.getFloat("C15", i)},
@@ -217,17 +217,17 @@ public class DCTBEngine extends DCEngine {
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
         }
-        // System.out.println("09");
-        for(Segment seg : segments) {
+
+        for (Segment seg : segments) {
             TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg);
-            if(seg.get_Status()==1)
-                TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
+            if (seg.get_Status() == 1) TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
         }
 
 // ==- PRINT TRACKS -===============================================================================
         if (TrackArray.length > 0 && TrackArray[0] != null) {
             System.out.println("\n\n DCTB TRACK:");
-            RecoBankReader.printSample(TrackArray[0]);
+            TrackArray[0].printDetailedInfo();
+            // RecoBankReader.printSample(TrackArray[0]);
             System.out.println("\n\n");
         }
         else System.out.println("\n\n DCTB TRACK IS NULL.\n\n");
@@ -320,16 +320,11 @@ public class DCTBEngine extends DCEngine {
         }
 
 // ==- PRINT TRACK COUNT -==========================================================================
-        System.out.println("[DCTB#"+currentEvent+"] Tracks: " + trkcands.size());
-
         if(trkcands.isEmpty()) {
-
             rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
             return true;
         }
         rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
-
-        // System.out.println("DCTB GOT TO THE END ON RUN #" + currentEvent);
 
         return true;
     }

@@ -68,7 +68,7 @@ public class DCHBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent > 1) return true;
+        if (currentEvent != 127) return true;
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
@@ -208,12 +208,12 @@ public class DCHBEngine extends DCEngine {
         }
 
 // ==- DCHB1 ENDS -================================================================================-
-        if (crosses.size() > 0 && crosses.get(0) != null) {
-            System.out.println("\n\n DCHB1 CROSS:");
-            RecoBankReader.printSample(crosses.get(0));
-            System.out.println("\n\n");
-        }
-        else System.out.println("\n\n DCHB1 CROSS IS NULL.\n\n");
+        // if (crosses.size() > 0 && crosses.get(0) != null) {
+        //     System.out.println("\n\n DCHB1 CROSS:");
+        //     RecoBankReader.printSample(crosses.get(0));
+        //     System.out.println("\n\n");
+        // }
+        // else System.out.println("\n\n DCHB1 CROSS IS NULL.\n\n");
 
         /* 17 */
         CrossListFinder crossLister = new CrossListFinder();
@@ -238,15 +238,17 @@ public class DCHBEngine extends DCEngine {
         if (trkcands.size() > 0) {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
+        }
 
 // ==- DCKF ENDS -=================================================================================-
-            if (trkcands.size() > 0 && trkcands.get(0) != null) {
-                System.out.println("\n\n DCKF TRACK:");
-                RecoBankReader.printSample(trkcands.get(0));
-                System.out.println("\n\n");
-            }
-            else System.out.println("\n\n DCKF TRACK IS NULL.\n\n");
+        // if (trkcands.size() > 0 && trkcands.get(0) != null) {
+        //     System.out.println("\n\n DCKF TRACK:");
+        //     RecoBankReader.printSample(trkcands.get(0));
+        //     System.out.println("\n\n");
+        // }
+        // else System.out.println("\n\n DCKF TRACK IS NULL.\n\n");
 
+        if (trkcands.size() > 0) {
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);
@@ -369,12 +371,12 @@ public class DCHBEngine extends DCEngine {
                 trkcands);
 
 // ==- DCHB2 ENDS -================================================================================-
-        if (trkcands.size() > 0 && trkcands.get(0) != null) {
-            System.out.println("\n\n DCHB2 TRACK:");
-            RecoBankReader.printSample(trkcands.get(0));
-            System.out.println("\n\n");
-        }
-        else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
+        // if (trkcands.size() > 0 && trkcands.get(0) != null) {
+        //     System.out.println("\n\n DCHB2 TRACK:");
+        //     RecoBankReader.printSample(trkcands.get(0));
+        //     System.out.println("\n\n");
+        // }
+        // else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
 
         return true;
     }

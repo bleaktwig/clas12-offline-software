@@ -519,12 +519,6 @@ public class RecoBankWriter {
                 bank.setFloat("_IntegralBdl",   i, (float) candList.get(i).get_IntegralBdl());
                 bank.setFloat("_pathLength",    i, (float) candList.get(i).get_PathLength());
                 bank.setFloat("_P",             i, (float) candList.get(i).get_P());
-                bank.setFloat("_Vtx0_x",        i, (float) candList.get(i).get_Vtx0().x());
-                bank.setFloat("_Vtx0_y",        i, (float) candList.get(i).get_Vtx0().y());
-                bank.setFloat("_Vtx0_z",        i, (float) candList.get(i).get_Vtx0().z());
-                bank.setFloat("_pAtOrig_TiltedCS_x",     i, (float) candList.get(i).get_pAtOrig().x());
-                bank.setFloat("_pAtOrig_TiltedCS_y",     i, (float) candList.get(i).get_pAtOrig().y());
-                bank.setFloat("_pAtOrig_TiltedCS_z",     i, (float) candList.get(i).get_pAtOrig().z());
                 bank.setByte ("fit_Successful", i, (byte) (candList.get(i).fit_Successful ? 1 : 0));
                 bank.setShort("_missingSuperlayer", i, (short) candList.get(i).get_MissingSuperlayer());
                 bank.setShort("_fitConvergenceStatus", i, (short) candList.get(i).get_FitConvergenceStatus());

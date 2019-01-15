@@ -70,65 +70,46 @@ public class KFitter {
 
     public void runFitter(int sector) {
         this.chi2 = 0;
-        this.NDF = mv.ndf;
-        int svzLength = sv.Z.length;
+        this.NDF  = mv.ndf;
 
-//        IntStream.range(1,totNumIter ).parallel().forEach(i -> {
         for (int i = 1; i <= totNumIter; i++) {
             this.chi2kf = 0;
             if (i > 1) {
-                //get new state vec at 1st measurement after propagating back from the last filtered state
+                // Get new state vec at 1st measurement after propagating back from the last filtered state
                 sv.transport(sector,
-                        svzLength - 1,
-                        0,
-                        sv.trackTraj.get(svzLength - 1),
-                        sv.trackCov.get(svzLength- 1));
+                             sv.Z.length - 1,
+                             0,
+                             sv.trackTraj.get(sv.Z.length - 1),
+                             sv.trackCov.get(sv.Z.length - 1));
             }
-            for (int k = 0; k < svzLength - 1; k++) {
-                sv.transport(sector, k, k + 1,
-                        sv.trackTraj.get(k),
-                        sv.trackCov.get(k));
-                    this.filter(k + 1);
+            for (int k = 0; k < sv.Z.length - 1; k++) {
+                sv.transport(sector, k, k + 1, sv.trackTraj.get(k), sv.trackCov.get(k));
+                this.filter(k + 1);
             }
             if (i > 1) {
-                //this.calcFinalChisq();
-                //if(this.chi2>1000000) {
-                //    i = totNumIter;
-                //    this.setFitFailed=true;
-                //}
-
-//                double deltaChi2 = Math.abs(this.chi2kf - newChisq);
                 if (this.chi2kf < newChisq) {
-                    if(this.finalStateVec!=null) {
-                        if( Math.abs(sv.trackTraj.get(svzLength - 1).Q-this.finalStateVec.Q)<5.e-4 &&
-                                Math.abs(sv.trackTraj.get(svzLength - 1).x-this.finalStateVec.x)<1.e-4 &&
-                                Math.abs(sv.trackTraj.get(svzLength - 1).y-this.finalStateVec.y)<1.e-4 &&
-                                Math.abs(sv.trackTraj.get(svzLength - 1).tx-this.finalStateVec.tx)<1.e-6 &&
-                                Math.abs(sv.trackTraj.get(svzLength - 1).ty-this.finalStateVec.ty)<1.e-6) {
+                    if (this.finalStateVec != null) {
+                        if (Math.abs(sv.trackTraj.get(sv.Z.length-1).Q - this.finalStateVec.Q) < 5.e-4
+                                && Math.abs(sv.trackTraj.get(sv.Z.length-1).x  - this.finalStateVec.x)  < 1.e-4
+                                && Math.abs(sv.trackTraj.get(sv.Z.length-1).y  - this.finalStateVec.y)  < 1.e-4
+                                && Math.abs(sv.trackTraj.get(sv.Z.length-1).tx - this.finalStateVec.tx) < 1.e-6
+                                && Math.abs(sv.trackTraj.get(sv.Z.length-1).ty - this.finalStateVec.ty) < 1.e-6) {
                             i = totNumIter;
                         }
                     }
-                    this.finalStateVec = sv.trackTraj.get(svzLength - 1);
-                    this.finalCovMat = sv.trackCov.get(svzLength - 1);
-
-//                    if (deltaChi2 < 0.001) {
-//                        this.ConvStatus = 0;
-//                        i = totNumIter;
-//                    }
-
+                    this.finalStateVec = sv.trackTraj.get(sv.Z.length - 1);
+                    this.finalCovMat   = sv.trackCov.get(sv.Z.length - 1);
                     newChisq = this.chi2kf;
                 } else {
                     this.ConvStatus = 1;
                 }
             }
         }
-//        });
-        if(totNumIter==1) {
-            this.finalStateVec = sv.trackTraj.get(svzLength - 1);
-            this.finalCovMat = sv.trackCov.get(svzLength - 1);
+        if (totNumIter == 1) {
+            this.finalStateVec = sv.trackTraj.get(sv.Z.length - 1);
+            this.finalCovMat = sv.trackCov.get(sv.Z.length - 1);
         }
         this.calcFinalChisq(sector);
-
     }
 
     private void filter(int k) {

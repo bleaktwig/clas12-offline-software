@@ -429,12 +429,6 @@ public class RecoBankReader {
         track.set_IntegralBdl((double) bank.getFloat("_IntegralBdl", idx));
         track.set_PathLength((double) bank.getFloat("_pathLength", idx));
         track.set_P((double) bank.getFloat("_P", idx));
-        track.set_Vtx0(new Point3D((double) bank.getFloat("_Vtx0_x", idx),
-                                   (double) bank.getFloat("_Vtx0_y", idx),
-                                   (double) bank.getFloat("_Vtx0_z", idx)));
-        track.set_Vtx0(new Point3D((double) bank.getFloat("_pAtOrig_TiltedCS_x", idx),
-                                   (double) bank.getFloat("_pAtOrig_TiltedCS_y", idx),
-                                   (double) bank.getFloat("_pAtOrig_TiltedCS_z", idx)));
 
         track.fit_Successful = bank.getByte("fit_Successful", idx) == 1 ? true : false;
         track.set_MissingSuperlayer(bank.getShort("_missingSuperlayer", idx));

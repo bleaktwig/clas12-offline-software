@@ -55,7 +55,7 @@ public class DCHB2Engine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent > 1) return true;
+        if (currentEvent != 127) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -217,12 +217,13 @@ public class DCHB2Engine extends DCEngine {
         // rbw.fillAllHBBanks(event, rbw, hits, clusters, segments, crosses, trkcands);
         rbw.fillAllHBBanksFinal(event, rbw, hits, clusters, segments, crosses, trkcands);
 
-        if (trkcands.size() > 0 && trkcands.get(0) != null) {
-            System.out.println("\n\n DCHB2 TRACK:");
-            RecoBankReader.printSample(trkcands.get(0));
-            System.out.println("\n\n");
-        }
-        else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
+// ==- PRINT TRACKS -==============================================================================-
+        // if (trkcands.size() > 0 && trkcands.get(0) != null) {
+        //     System.out.println("\n\n DCHB2 TRACK:");
+        //     RecoBankReader.printSample(trkcands.get(0));
+        //     System.out.println("\n\n");
+        // }
+        // else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
 
         return true;
     }
