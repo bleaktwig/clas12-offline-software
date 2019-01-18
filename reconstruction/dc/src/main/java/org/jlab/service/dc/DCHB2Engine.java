@@ -55,7 +55,7 @@ public class DCHB2Engine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent != 127) return true;
+        // if (currentEvent != 127) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;

@@ -24,13 +24,13 @@ public class ClusterFitter {
      *
      */
     private LineFitPars FitPars;
-    private List<ArrayList<Double>> FitArray = new ArrayList<ArrayList<Double>>(); 
+    private List<ArrayList<Double>> FitArray = new ArrayList<ArrayList<Double>>();
     private List<Double> x = new ArrayList<Double>();
     private List<Double> y = new ArrayList<Double>();
     private List<Double> ex = new ArrayList<Double>();
     private List<Double> ey = new ArrayList<Double>();
     private double stereo = FastMath.cos(Math.toRadians(6.));
-    
+
     private String CoordinateSystem; // LC= local, TSC = tilted Sector
     public ClusterFitter() {
         // TODO Auto-generated constructor stub
@@ -41,14 +41,14 @@ public class ClusterFitter {
         Collections.sort(clus);
         for(int i =0; i<FitArray.size(); i++)
             FitArray.get(i).clear();
-        
+
         //double[][] fitArray = new double[4][clus.size()];
         //double[] x = new double[clus.size()];
         //double[] y = new double[clus.size()];
         //double[] ex = new double[clus.size()];
         //double[] ey = new double[clus.size()];
-        
-        
+
+
         for (int i = 0; i < clus.size(); i++) {
             if (system.equals("LC")) {
                 CoordinateSystem = "LC"; // local coordinate grid Delta_z = 1
@@ -63,7 +63,7 @@ public class ClusterFitter {
                 ex.add(i, (double) 0);
                 y.add(i, clus.get(i).get_X());
                 //ey[i]= clus.get(i).get_DocaErr(); //CODEFIX1
-                ey.add(i, clus.get(i).get_DocaErr() / stereo); 
+                ey.add(i, clus.get(i).get_DocaErr() / stereo);
             }
 
         }
@@ -71,39 +71,32 @@ public class ClusterFitter {
         FitArray.add((ArrayList<Double>) ex);
         FitArray.add((ArrayList<Double>) y);
         FitArray.add((ArrayList<Double>) ey);
-        
+
     }
     /**
-     * 
+     *
      * @param clus fitted cluster
      * @param SaveFitPars boolean to save the fit parameters
      */
     public void Fit(FittedCluster clus, boolean SaveFitPars) {
-        if (FitArray != null) {
-
-            LineFitter linefit = new LineFitter();
-            boolean linefitstatusOK = linefit.fitStatus(FitArray.get(0), FitArray.get(2), FitArray.get(1), FitArray.get(3), FitArray.get(0).size());
-
-            if (linefitstatusOK) //  Get the results of the fits
-            {
-                FitPars = linefit.getFit();
-            } else {
-                FitPars=null;
-            }
-            if (SaveFitPars) {
-                this.SetClusterFitParameters(clus);
-            }
-        } else {
-        }
+        if (FitArray == null) return;
+        LineFitter linefit = new LineFitter();
+        boolean linefitstatusOK = linefit.fitStatus(FitArray.get(0), FitArray.get(2),
+                                                    FitArray.get(1), FitArray.get(3),
+                                                    FitArray.get(0).size());
+        //  Get the results of the fits
+        if (linefitstatusOK) FitPars = linefit.getFit();
+        else                 FitPars = null;
+        if (SaveFitPars) this.SetClusterFitParameters(clus);
     }
 
     /**
-     * 
+     *
      * @param clus fitted cluster
      */
     public void SetClusterFitParameters(FittedCluster clus) {
         if (FitPars != null) {
-            
+
             clus.set_clusterLineFitSlope(FitPars.slope());
             clus.set_clusterLineFitSlopeErr(FitPars.slopeErr());
             clus.set_clusterLineFitIntercept(FitPars.intercept());
@@ -118,7 +111,7 @@ public class ClusterFitter {
     }
 
     /**
-     * 
+     *
      * @param x0 local x in the tilted sector coordinate system (in cm)
      * @param clus fitted cluster
      */
@@ -147,10 +140,10 @@ public class ClusterFitter {
     }
 
     /**
-     * 
+     *
      * @param clus fitted cluster
-     * @param calcTimeResidual boolean to compute the time residuals (in cm) 
-     * @param resetLRAmbig boolean to reset the LR ambiguity 
+     * @param calcTimeResidual boolean to compute the time residuals (in cm)
+     * @param resetLRAmbig boolean to reset the LR ambiguity
      * @param DcDetector DC detector geometry
      */
     public void SetResidualDerivedParams(FittedCluster clus, boolean calcTimeResidual, boolean resetLRAmbig, DCGeant4Factory DcDetector) {
@@ -204,7 +197,7 @@ public class ClusterFitter {
             }
             if (resetLRAmbig) {
                 if ((CoordinateSystem.equals("LC") && Math.abs(residual) < 0.01) || (CoordinateSystem.equals("LTS")
-                        && clus.get(i).get_Doca() / clus.get(i).get_CellSize() < 0.4)) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment 
+                        && clus.get(i).get_Doca() / clus.get(i).get_CellSize() < 0.4)) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment
                     clus.get(i).set_LeftRightAmb(0);
                 }
             }
@@ -229,7 +222,7 @@ public class ClusterFitter {
     }
 
     /**
-     * 
+     *
      * @param clusters fitted cluster
      * @param system coordinate system in which the fit is performed
      * @return the fitted cluster with the best fit chi2
@@ -264,7 +257,7 @@ public class ClusterFitter {
             }
         }
         //SetSegmentLineParameters(bestClusx0, BestCluster) ;
-        
+
         return BestCluster;
 
     }
@@ -293,25 +286,25 @@ public class ClusterFitter {
     }
 
     /**
-     * 
+     *
      * @param clusCand fitted cluster
-     * @return wire pattern in the cluster 
+     * @return wire pattern in the cluster
      */
     private boolean isBrickWall(FittedCluster clusCand) {
         boolean isBW = true;
         int sumWireNum = 0;
         if(clusCand.size()!=6)
             isBW=false;
-        
+
         for(FittedHit hit : clusCand) {
             sumWireNum+=hit.get_Wire();
         }
         for(FittedHit hit : clusCand) {
             if(hit.get_Wire()*clusCand.size()!=sumWireNum)
                 isBW = false;
-        }    
+        }
         return isBW;
     }
 
-    
+
 }

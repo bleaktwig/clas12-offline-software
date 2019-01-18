@@ -110,7 +110,6 @@ public class RecoBankWriter {
             bank.setFloat("TProp",        i, (float) hitList.get(i).getTProp());
             bank.setFloat("TFlight",      i, (float) hitList.get(i).getTFlight());
 
-            // v TODO: NEW CODE, CHECK THOROUGHLY
             if (!TB) {
                 bank.setFloat("cellSize", i, (float) hitList.get(i).get_CellSize());
                 bank.setFloat("XMP", i, (float) hitList.get(i).get_XMP());
@@ -138,7 +137,6 @@ public class RecoBankWriter {
                 bank.setFloat("trkResid", i, (float) hitList.get(i).get_TrkResid());
                 bank.setFloat("deltaTimeBeta", i, (float) hitList.get(i).get_DeltaTimeBeta());
             }
-            // TODO: UP TO HERE
 
             if (!TB) {
                 bank.setShort("status", i, (short) 0);
@@ -256,7 +254,6 @@ public class RecoBankWriter {
                 bank.setShort("Hit" + j + "_ID", i, (short) hitIdxArray.get(j - 1).intValue());
             }
 
-            // v TODO: NEW CODE, CHECK THOROUGHLY
             if (!TB) {
                 bank.setFloat("fitSlIntCov",  i, (float) clusList.get(i).get_clusterLineFitSlIntCov());
                 bank.setFloat("chisqProb",    i, (float) clusList.get(i).get_Chisq());
@@ -291,7 +288,6 @@ public class RecoBankWriter {
                 }
                 else bank.setByte("clusterStatus00", i, (byte) -1);
             }
-            // TODO: UP TO HERE
         }
 
         return bank;
@@ -371,7 +367,6 @@ public class RecoBankWriter {
             //     bank.setShort(hitStrg, i, (short) hitIdxArray[j]);
             // }
 
-            // v TODO: NEW CODE, TEST THOROUGHLY
             if (!TB) {
                 bank.setByte("isOnTrack", i, (byte) (segList.get(i).isOnTrack ? 1 : 0));
                 bank.setFloat("resiSum", i, (float) segList.get(i).get_ResiSum());
@@ -386,7 +381,6 @@ public class RecoBankWriter {
                 bank.setFloat("fitPlane_ny", i, (float) segList.get(i).get_fitPlane().normal().y());
                 bank.setFloat("fitPlane_nz", i, (float) segList.get(i).get_fitPlane().normal().z());
             }
-            // TODO: UP TO HERE
         }
 
         return bank;
@@ -440,7 +434,6 @@ public class RecoBankWriter {
             else     bank.setShort("status", idx, (short) (cross.get_Segment1().get_Status() +
                                                            cross.get_Segment2().get_Status()));
 
-            // v TODO: CHECK THIS VARIABLE v
             if (!TB) bank.setInt("recalc", idx, (int) cross.recalc);
 
             idx++;
@@ -514,7 +507,6 @@ public class RecoBankWriter {
             bank.setFloat("chi2",       i, (float) candList.get(i).get_FitChi2());
             bank.setShort("ndf",        i, (short) candList.get(i).get_FitNDF());
 
-            // TODO: v CHECK THESE VARIABLES v
             if (!TB) {
                 bank.setFloat("_IntegralBdl",   i, (float) candList.get(i).get_IntegralBdl());
                 bank.setFloat("_pathLength",    i, (float) candList.get(i).get_PathLength());
@@ -535,7 +527,6 @@ public class RecoBankWriter {
                         bank.setShort("svid" + it, i, (short) candList.get(i).get_Trajectory().get(it).getId());
                 }
             }
-            // TODO: UP UNTIL HERE
 
             if (!TB) {
                 bank.setShort("Cross1_ID",  i, (short) candList.get(i).get(0).get_Id());

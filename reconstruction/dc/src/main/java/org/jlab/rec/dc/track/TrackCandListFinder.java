@@ -391,9 +391,8 @@ public class TrackCandListFinder {
                     // initialize the state vector corresponding to the last measurement site
                     StateVec fn = new StateVec();
 
-// TODO: ==v kFit.finalStateVec is being set here v============================================== //
                     kFit.runFitter(cand.get(0).get_Sector());
-// TODO: ==^ kFit.finalStateVec is being set here ^============================================== //
+
                     if (kFit.finalStateVec == null) continue;
 
                     if (this.trking.equalsIgnoreCase("HitBased")) {
@@ -423,7 +422,7 @@ public class TrackCandListFinder {
                         //set the track parameters if the filter does not fail
                         cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
                         cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
-                        // TODO: !!setTrackPars IS BEING CALLED HERE!!
+
                         this.setTrackPars(cand, traj,
                                           trjFind, fn,
                                           kFit.finalStateVec.z,
@@ -514,7 +513,6 @@ public class TrackCandListFinder {
                 cand.set_Q(-1); // assume it's a muon
                 cand.set_pAtOrig(trkDir);
                 cand.set_Vtx0(trkVtx);
-                System.out.println("[track#"+cand.get_Id()+" tclf01] setting Vtx0 to " + cand.get_Vtx0());
                 cand.set_PreRegion1CrossPoint(new Point3D(trkR1X.x() - trkDir.x(),
                         trkR1X.y() - trkDir.y(), trkR1X.z() - trkDir.z()));
                 cand.set_PostRegion3CrossPoint(new Point3D(trkR3X.x() + trkDir.x(),
@@ -566,10 +564,6 @@ public class TrackCandListFinder {
                              StateVec stateVec, double z,
                              DCGeant4Factory getDcDetector,
                              Swim dcSwim) {
-
-        System.out.println("\nstateVec: x: " + stateVec.x()
-                         + "\n          y: " + stateVec.y()
-                         + "\nz          : " + z);
 
         double pz = cand.get_P() / Math.sqrt(stateVec.tanThetaX() * stateVec.tanThetaX() +
                 stateVec.tanThetaY() * stateVec.tanThetaY() + 1);
@@ -653,17 +647,7 @@ public class TrackCandListFinder {
 
         double x_n = Math.cos(theta_n);
         double y_n = Math.sin(theta_n);
-// ==v TODO: DELETE THIS v=========================================================================-
-        System.out.println("\nSwim internal state: _x0: " + dcSwim.get_x0()
-                         + "\n                     _y0: " + dcSwim.get_y0()
-                         + "\n                     _z0: " + dcSwim.get_z0());
-// ==^ TODO: DELETE THIS ^=========================================================================-
         double[] Vt = dcSwim.SwimToPlaneBoundary(0, new Vector3D(x_n, y_n, 0), -1);
-// ==v TODO: DELETE THIS v=========================================================================-
-        System.out.println("\nVt: [0]: " + Vt[0]
-                         + "\n    [1]: " + Vt[1]
-                         + "\n    [2]: " + Vt[2]);
-// ==^ TODO: DELETE THIS ^=========================================================================-
         if(Vt==null)
             return;
 
@@ -695,8 +679,6 @@ public class TrackCandListFinder {
         cand.set_TotPathLen(totPathLen);
 
         cand.set_Vtx0(new Point3D(xOrFix, yOrFix, zOrFix));
-        // TODO: v DELETE THIS v
-        // System.out.println("[track#"+cand.get_Id()+" tclf02] setting Vtx0 to " + cand.get_Vtx0());
         cand.set_pAtOrig(new Vector3D(pxOrFix, pyOrFix, pzOrFix));
 
         double[] VecAtHtccSurf = dcSwim.SwimToSphere(175);

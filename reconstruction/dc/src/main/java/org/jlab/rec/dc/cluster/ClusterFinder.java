@@ -3,7 +3,6 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Iterator;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.io.evio.EvioDataBank;
@@ -32,9 +31,7 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class ClusterFinder {
 
-    public ClusterFinder() {
-
-    }
+    public ClusterFinder() {}
 
     // cluster finding algorithm
     // the loop is done over sector and superlayers
@@ -91,7 +88,6 @@ public class ClusterFinder {
             }
         }
         this.setHitArray(hitArray);
-
     }
 
     /**
@@ -130,7 +126,6 @@ public class ClusterFinder {
                             if (HitArray[ssl][wi][la] != null) {
 
                                 hits.add(HitArray[ssl][wi][la]);
-                                //System.out.println(" adding hit "+HitArray[ssl][wi][la].printInfo()+" to cid "+cid);
                             }
                         }
                         wi++;
@@ -142,7 +137,6 @@ public class ClusterFinder {
 
                         // cluster constructor DCCluster(hit.sector,hit.superlayer, cid)
                         Cluster this_cluster = new Cluster((int) (ssl / nsect) + 1, (int) (ssl % nsect) + 1, cid++);
-                        //System.out.println(" created cluster "+this_cluster.printInfo());
                         this_cluster.addAll(hits);
 
                         clumps.add(this_cluster);
@@ -189,7 +183,6 @@ public class ClusterFinder {
         for (Cluster clus : clusters) {
             if(clus.size()<Constants.DC_MIN_NLAYERS)
                 continue;
-            //System.out.println(" I passed this cluster "+clus.printInfo());
             FittedCluster fClus = new FittedCluster(clus);
             //FittedCluster fClus = ct.IsolatedHitsPruner(fclus);
             // Flag out-of-timers
@@ -204,10 +197,6 @@ public class ClusterFinder {
             selectedClusList.add(fClus);
         }
 
-        //System.out.println(" Clusters Step 2");
-        // for(FittedCluster c : selectedClusList)
-        //	for(FittedHit h : c)
-        //		System.out.println(h.printInfo());
         // create list of fitted clusters
         List<FittedCluster> fittedClusList = new ArrayList<FittedCluster>();
         List<FittedCluster> refittedClusList = new ArrayList<FittedCluster>();
@@ -250,10 +239,6 @@ public class ClusterFinder {
 
         }
 
-        //System.out.println(" Clusters Step 4");
-        //for(FittedCluster c : refittedClusList)
-        //	for(FittedHit h : c)
-        //		System.out.println(h.printInfo());
         return refittedClusList;
 
     }
@@ -316,116 +301,89 @@ public class ClusterFinder {
         return clusters;
     }
 
-    public List<FittedCluster> FindTimeBasedClusters(List<FittedHit> fhits, ClusterFitter cf, ClusterCleanerUtilities ct, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+    public List<FittedCluster> FindTimeBasedClusters(List<FittedHit> fhits,
+                                                     ClusterFitter cf,
+                                                     ClusterCleanerUtilities ct,
+                                                     IndexedTable tab,
+                                                     DCGeant4Factory DcDetector,
+                                                     TimeToDistanceEstimator tde) {
 
         List<FittedCluster> clusters = new ArrayList<FittedCluster>();
 
         List<FittedCluster> rclusters = RecomposeClusters(fhits, tab, DcDetector, tde);
-        //System.out.println(" Clusters TimeBased Step 1");
-         //    for(FittedCluster c : rclusters)
-         //   	for(FittedHit h : c)
-         //   		System.out.println(h.printInfo());
 
-        // TODO: For some reason, sometimes clusters with the same ID are being found here.
         for (FittedCluster clus : rclusters) {
-            // clean them up
-            //if(Constants.isSimulation) {  // at this stage only remove secondaries in MC
+            // Clean the clusters
             FittedCluster cleanClus = ct.SecondariesRemover(clus, cf, tab, DcDetector, tde);
             clus = cleanClus;
-            //}
+            if (clus == null) continue;
 
-            if (clus == null) {
-                continue;
-            }
-
-           // 	System.out.println(" Clusters TimeBased Step 2ndaries rem");
-           // 	for(FittedHit h : clus)
-           // 		System.out.println(h.printInfo());
             FittedCluster LRresolvClus = ct.LRAmbiguityResolver(clus, cf, tab, DcDetector, tde);
             clus = LRresolvClus;
-            if (clus == null) {
-                continue;
-            }
+            if (clus == null) continue;
 
-            //	System.out.println(" Clusters TimeBased Step LR res");
-           // 	for(FittedHit h : clus)
-             //   	System.out.println(h.printInfo());
-            // resolves segments where there are only single hits in layers thereby resulting in a two-fold LR ambiguity
-            // hence there are 2 solutions to the segments
             int[] SumLn = new int[6];
-            for (FittedHit fhit : clus) {
-                SumLn[fhit.get_Layer() - 1]++;
-            }
+            for (FittedHit fhit : clus) SumLn[fhit.get_Layer() - 1]++;
+
             boolean tryOtherClus = true;
-            for (int l = 0; l < 6; l++) {
-                if (SumLn[l] > 1) {
-                    tryOtherClus = false;
-                }
-            }
+            for (int l = 0; l < 6; l++) if (SumLn[l] > 1) tryOtherClus = false;
 
             if (tryOtherClus) {
-                FittedCluster Clus2 = new FittedCluster(clus.getBaseCluster());
+                FittedCluster clus2 = new FittedCluster(clus.getBaseCluster());
                 for (FittedHit hit : clus) {
-
                     if (hit.get_LeftRightAmb() != 0) {
-                        FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
-                                hit.get_TDC(), hit.get_Id());
-                        newhit.set_Doca(hit.get_Doca());
-                        newhit.set_DocaErr(hit.get_DocaErr());
-                        newhit.setT0(hit.getT0());
-                        newhit.set_Beta(hit.get_Beta());
-                        newhit.setB(hit.getB());
+                        // Copy the hit with a few changes
+                        FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(),
+                                                         hit.get_Layer(),  hit.get_Wire(),
+                                                         hit.get_TDC(),    hit.get_Id());
+
+                        newhit.set_Doca         (hit.get_Doca());
+                        newhit.set_DocaErr      (hit.get_DocaErr());
+                        newhit.setT0            (hit.getT0());
+                        newhit.set_Beta         (hit.get_Beta());
+                        newhit.setB             (hit.getB());
                         newhit.set_DeltaTimeBeta(hit.get_DeltaTimeBeta());
-                        newhit.setTStart(hit.getTStart());
-                        newhit.setTProp(hit.getTProp());
-                        newhit.setTFlight(hit.getTFlight());
-                        newhit.set_Time(hit.get_Time());
-                        newhit.set_Id(hit.get_Id());
-                        newhit.set_TrkgStatus(hit.get_TrkgStatus());
-                        newhit.set_LeftRightAmb(-hit.get_LeftRightAmb());
+                        newhit.setTStart        (hit.getTStart());
+                        newhit.setTProp         (hit.getTProp());
+                        newhit.setTFlight       (hit.getTFlight());
+                        newhit.set_Time         (hit.get_Time());
+                        newhit.set_Id           (hit.get_Id());
+                        newhit.set_TrkgStatus   (hit.get_TrkgStatus());
+                        newhit.set_LeftRightAmb (-hit.get_LeftRightAmb());
+
                         newhit.calc_CellSize(DcDetector);
-                        newhit.updateHitPositionWithTime(1, hit.getB(), tab, DcDetector, tde); // assume the track angle is // to the layer
+                        // assume the track angle is parallel to the layer
+                        newhit.updateHitPositionWithTime(1, hit.getB(), tab, DcDetector, tde);
                         newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
                         newhit.set_AssociatedHBTrackID(hit.get_AssociatedHBTrackID());
-                        Clus2.add(newhit);
+                        clus2.add(newhit);
                     }
-
                 }
-                cf.SetFitArray(Clus2, "TSC");
-                cf.Fit(Clus2, true);
+                cf.SetFitArray(clus2, "TSC");
+                cf.Fit(clus2, true);
 
-                if (Math.abs(clus.get_Chisq() - Clus2.get_Chisq()) < 1) {
-                    clusters.add(Clus2);
+                if (Math.abs(clus.get_Chisq() - clus2.get_Chisq()) < 1) {
+
+                    clusters.add(clus2);
                 }
             }
             clusters.add(clus);
         }
 
-        // TODO: Temporal solution to the repeated clusters problem
-        for (int ii = 1; ii < clusters.size(); ++ii) {
-            for (int jj = 0; jj < ii; ++jj) {
-                if (ii == jj) continue;
-                if (clusters.get(ii).get_Id() == clusters.get(jj).get_Id()) clusters.get(jj).set_Id(-1);
-            }
-        }
-
-        for (Iterator<FittedCluster> iter = clusters.listIterator(); iter.hasNext(); ) {
-            FittedCluster clus = iter.next();
-            if (clus.get_Id() == -1) iter.remove();
-        }
 
         for (FittedCluster clus : clusters) {
 
             cf.SetFitArray(clus, "TSC");
             cf.Fit(clus, true);
 
-            double cosTrkAngle = 1. / Math.sqrt(1. + clus.get_clusterLineFitSlope() * clus.get_clusterLineFitSlope());
+            double cosTrkAngle = 1. / Math.sqrt(1. +
+                    clus.get_clusterLineFitSlope() * clus.get_clusterLineFitSlope());
 
-            // update the hits
+            // Update the hits
             for (FittedHit fhit : clus) {
                 fhit.updateHitPositionWithTime(cosTrkAngle, fhit.getB(), tab, DcDetector, tde);
             }
-            // iterate till convergence of trkAngle
+            // Iterate till trkAngle converges
             double Chi2Diff = 1;
             double prevChi2 = 999999999;
             double cosTrkAngleFinal = 0;
@@ -434,8 +392,9 @@ public class ClusterFinder {
                 cf.Fit(clus, true);
                 Chi2Diff = prevChi2 - clus.get_Chisq();
                 if (Chi2Diff > 0) {
-                    cosTrkAngle = 1. / Math.sqrt(1. + clus.get_clusterLineFitSlope() * clus.get_clusterLineFitSlope());
-                    // update the hits
+                    cosTrkAngle = 1. / Math.sqrt(1. +
+                            clus.get_clusterLineFitSlope() * clus.get_clusterLineFitSlope());
+                    // Update the hits
                     for (FittedHit fhit : clus) {
                         fhit.updateHitPositionWithTime(cosTrkAngle, fhit.getB(), tab, DcDetector, tde);
                     }
@@ -462,7 +421,6 @@ public class ClusterFinder {
         }
 
         return clusters;
-
     }
 
     /**
@@ -502,7 +460,6 @@ public class ClusterFinder {
             List<FittedCluster> selectedClusList = new ArrayList<FittedCluster>();
 
             for (Cluster clus : clusters) {
-                //System.out.println(" I passed this cluster "+clus.printInfo());
                 FittedCluster fclus = new FittedCluster(clus);
                 selectedClusList.add(fclus);
 

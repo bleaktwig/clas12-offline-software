@@ -76,7 +76,7 @@ public class DCKFEngine extends ReconstructionEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent != 127) return true;
+        // if (currentEvent != 127) return true;
 
         // === INITIAL CHECKUP =========================================================
         if (!event.hasBank("RUN::config")) return true;
@@ -113,10 +113,6 @@ public class DCKFEngine extends ReconstructionEngine {
         for (int s = 0; s < seBank.rows(); ++s) segments.add(rbr.getSegment(seBank, clusters, s));
         for (int c = 0; c < crBank.rows(); ++c) crosses.add (rbr.getCross  (crBank, segments, c));
 
-        // TODO: after all is up and running I should check what data from the
-        //       crosses/segments/clusters/hits I can ignore so that I minimize
-        //       what RecoBankReader has to read and accelerate the whole ordeal
-
         // === CREATE CROSSLIST FROM CROSSES ===========================================
         CrossListFinder crossLister = new CrossListFinder();
 
@@ -136,9 +132,6 @@ public class DCKFEngine extends ReconstructionEngine {
 
         // === WRITE TO THE BANKS ======================================================
         if (trkcands.size() > 0) {
-            // TODO: Depending on how much this method takes in relation to how much writing the
-            //       tracks to the bank takes, it might be more efficient to just write everything
-            //       and to remove overlapping tracks in DCHB2.
             trkCandFinder.removeOverlappingTracks(trkcands);
         }
 

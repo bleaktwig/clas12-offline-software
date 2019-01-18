@@ -56,7 +56,7 @@ public class DCTBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent != 127) return true;
+        // if (currentEvent != 127) return true;
 
         //setRunConditionsParameters( event) ;
         if(!event.hasBank("RUN::config")) {
@@ -139,17 +139,10 @@ public class DCTBEngine extends DCEngine {
             return true;
         }
 
-        System.out.println("\n\nCluster list size: " + clusters.size() + "\n\n");
-        for (FittedCluster cluster : clusters) {
-            System.out.println("Cluster id: " + cluster.get_Id());
-        }
-
         //3) find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();
 
         List<FittedCluster> pclusters = segFinder.selectTimeBasedSegments(clusters);
-
-        System.out.println("\n\nPCluster list size: " + pclusters.size() + "\n\n");
 
         segments =  segFinder.get_Segments(pclusters, event, dcDetector, false);
 
@@ -164,8 +157,6 @@ public class DCTBEngine extends DCEngine {
             rbc.fillAllTBBanks( event, rbc, fhits, clusters, null, null, null);
             return true;
         }
-
-        System.out.println("\n\nSegment list size: " + segments.size() + "\n\n");
 
         for(Segment seg : segments) {
             for(FittedHit hit : seg.get_fittedCluster()) {
@@ -201,7 +192,6 @@ public class DCTBEngine extends DCEngine {
             HBtrk.set_Q(trkbank.getByte("q", i));
             HBtrk.set_pAtOrig(new Vector3D(trkbank.getFloat("p0_x", i), trkbank.getFloat("p0_y", i), trkbank.getFloat("p0_z", i)));
             HBtrk.set_Vtx0(new Point3D(trkbank.getFloat("Vtx0_x", i), trkbank.getFloat("Vtx0_y", i), trkbank.getFloat("Vtx0_z", i)));
-            System.out.println("[track#"+HBtrk.get_Id()+" DCTB00] setting Vtx0 to " + HBtrk.get_Vtx0());
             HBtrk.set_FitChi2(trkbank.getFloat("chi2", i));
             Matrix initCMatrix = new Matrix(new double[][]{
             {trkcovbank.getFloat("C11", i), trkcovbank.getFloat("C12", i), trkcovbank.getFloat("C13", i), trkcovbank.getFloat("C14", i), trkcovbank.getFloat("C15", i)},
@@ -224,13 +214,13 @@ public class DCTBEngine extends DCEngine {
         }
 
 // ==- PRINT TRACKS -===============================================================================
-        if (TrackArray.length > 0 && TrackArray[0] != null) {
-            System.out.println("\n\n DCTB TRACK:");
-            TrackArray[0].printDetailedInfo();
-            // RecoBankReader.printSample(TrackArray[0]);
-            System.out.println("\n\n");
-        }
-        else System.out.println("\n\n DCTB TRACK IS NULL.\n\n");
+        // if (TrackArray.length > 0 && TrackArray[0] != null) {
+        //     System.out.println("\n\n DCTB TRACK:");
+        //     TrackArray[0].printDetailedInfo();
+        //     // RecoBankReader.printSample(TrackArray[0]);
+        //     System.out.println("\n\n");
+        // }
+        // else System.out.println("\n\n DCTB TRACK IS NULL.\n\n");
 // ==- ----- ------ -===============================================================================
 
         //6) find the list of  track candidates
@@ -319,7 +309,6 @@ public class DCTBEngine extends DCEngine {
             }
         }
 
-// ==- PRINT TRACK COUNT -==========================================================================
         if(trkcands.isEmpty()) {
             rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
             return true;

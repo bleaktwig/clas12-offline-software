@@ -34,6 +34,48 @@ public class KFitter {
     public int NDF = 0;
     public int ConvStatus = 1;
 
+    public void printAttributes() {
+        System.out.println("\n\nKalman filter attributes:"
+                         + "\n  setFitFailed : " + this.setFitFailed
+                         + "\n  totNumIter   : " + this.totNumIter
+                         + "\n  newChisq     : " + this.newChisq
+                         + "\n  chi2         : " + this.chi2
+                         + "\n  chi2kf       : " + this.chi2kf
+                         + "\n  NDF          : " + this.NDF
+                         + "\n  ConvStatus   : " + this.ConvStatus);
+        if (sv.StateVec == null) System.out.println("  sv : null");
+        else {
+            System.out.println("  sv : k         : " + sv.StateVec.k
+                           + "\n       z         : " + sv.StateVec.z
+                           + "\n       x         : " + sv.StateVec.x
+                           + "\n       y         : " + sv.StateVec.y
+                           + "\n       tx        : " + sv.StateVec.tx
+                           + "\n       ty        : " + sv.StateVec.ty
+                           + "\n       Q         : " + sv.StateVec.Q
+                           + "\n       B         : " + sv.StateVec.B
+                           + "\n       deltaPath : " + sv.StateVec.deltaPath);
+        }
+        if (mv.measurements == null) System.out.println("  mv : null");
+        else            System.out.println("  mv : size: " + mv.measurements.size());
+        for (int i = 0; i < mv.measurements.size() && i < 4; ++i) {
+            System.out.println("    measurement #" + mv.measurements.get(i).k + ":"
+                           + "\n      z          : " + mv.measurements.get(i).z
+                           + "\n      x          : " + mv.measurements.get(i).x
+                           + "\n      unc        : " + mv.measurements.get(i).unc
+                           + "\n      tilt       : " + mv.measurements.get(i).tilt
+                           + "\n      error      : " + mv.measurements.get(i).error
+                           + "\n      wireLen    : " + mv.measurements.get(i).wireLen
+                           + "\n      WireMaxSag : " + mv.measurements.get(i).wireMaxSag);
+        }
+        if (finalStateVec == null) System.out.println("  finalStateVec : null");
+        else                       System.out.println("  finalStateVec : exists");
+        if (finalCovMat == null) System.out.println("  finalCovMat : null");
+        else                     System.out.println("  finalCovMat : exists");
+        if (kfStateVecsAlongTrajectory == null) System.out.println("  kfStateVecsAlongTrajectory : null");
+        else System.out.println("  kfStateVecsAlongTrajectory : size: " + kfStateVecsAlongTrajectory.size());
+        System.out.println("\n");
+    }
+
     public KFitter(Track trk, DCGeant4Factory DcDetector,
                    boolean TimeBasedUsingHBtrack,
                    Swim swimmer) {

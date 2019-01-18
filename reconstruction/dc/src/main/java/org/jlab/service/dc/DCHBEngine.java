@@ -68,7 +68,7 @@ public class DCHBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        if (currentEvent != 127) return true;
+        // if (currentEvent != 127) return true;
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
@@ -371,12 +371,12 @@ public class DCHBEngine extends DCEngine {
                 trkcands);
 
 // ==- DCHB2 ENDS -================================================================================-
-        // if (trkcands.size() > 0 && trkcands.get(0) != null) {
-        //     System.out.println("\n\n DCHB2 TRACK:");
-        //     RecoBankReader.printSample(trkcands.get(0));
-        //     System.out.println("\n\n");
-        // }
-        // else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
+        if (trkcands.size() > 0 && trkcands.get(0) != null) {
+            System.out.println("\n\n DCHB2 TRACK:");
+            RecoBankReader.printSample(trkcands.get(0));
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
 
         return true;
     }

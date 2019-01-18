@@ -23,7 +23,7 @@ import org.jlab.rec.dc.track.Track;
  */
 public class RecoBankReader {
 
-    // TODO: Write variation methods to be called by the DCKF engine that only return the required
+    // TODO: Write different methods to be called by the DCKF engine that only return the required
     //       data to run the CrossListFinder and the TrackCandListFinder methods to avoid pulling
     //       more data than what's explicitly required.
 
@@ -115,7 +115,8 @@ public class RecoBankReader {
         hit.setTProp               ((double) bank.getFloat("TProp",     idx));
         hit.setTFlight             ((double) bank.getFloat("TFlight",   idx));
 
-        // TODO: v CHECK NEW STUFF v
+
+
         hit.set_CellSize              ((double) bank.getFloat("cellSize", idx));
         hit.set_XMP                   ((double) bank.getFloat("XMP", idx));
         hit.set_Residual              ((double) bank.getFloat("residual", idx));
@@ -141,7 +142,6 @@ public class RecoBankReader {
         hit.set_WireMaxSag            ((double) bank.getFloat("wireMaxSag", idx));
         hit.set_TrkResid              ((double) bank.getFloat("trkResid", idx));
         hit.set_DeltaTimeBeta         ((double) bank.getFloat("deltaTimeBeta", idx));
-        // TODO: new stuff is read up to here.
 
         return hit;
     }
@@ -195,7 +195,6 @@ public class RecoBankReader {
         cluster.set_fitProb                   ((double) bank.getFloat("fitChisqProb", idx));
         cluster.set_Chisq                     ((double) bank.getFloat("chisqProb",    idx));
 
-        // v TODO: NEW CODE, PROBABLY NOT AFFECTING ANYTHING. TRY COMMENTING IT ALL.
         cluster.set_clusLine(new Line3D((double) bank.getFloat("clusLine1X", idx),
                                         (double) bank.getFloat("clusLine1Y", idx),
                                         (double) bank.getFloat("clusLine1Z", idx),
@@ -222,13 +221,6 @@ public class RecoBankReader {
             }
             cluster.set_Status(status);
         }
-        // TODO: UP TO HERE
-
-        /* WARNING:
-        CLUSTER DATA IN BANK CURRENTLY UNUSED:
-        bank.setShort("status", i, (short) status);
-        bank.setFloat("avgWire", i, (float) cluslist.get(i).getAvgwire());
-        */
 
         return cluster;
     }
@@ -260,7 +252,7 @@ public class RecoBankReader {
             return null;
         }
 
-        Segment segment = new Segment(fCluster); // TODO: Check what is given to the segment in this line!!
+        Segment segment = new Segment(fCluster);
 
         double[] endPoints = {(double) bank.getFloat("SegEndPoint1X", idx),
                               (double) bank.getFloat("SegEndPoint1Z", idx),
@@ -269,7 +261,6 @@ public class RecoBankReader {
 
         segment.set_SegmentEndPoints(endPoints);
 
-        // v TODO: NEW CODE, TEST THOROUGHLY
         segment.isOnTrack = bank.getByte("isOnTrack", idx) == 1 ? true : false;
         segment.set_ResiSum((double) bank.getFloat("resiSum", idx));
         segment.set_TimeSum((double) bank.getFloat("timeSum", idx));
@@ -282,16 +273,6 @@ public class RecoBankReader {
                                          (double) bank.getFloat("fitPlane_nx", idx),
                                          (double) bank.getFloat("fitPlane_ny", idx),
                                          (double) bank.getFloat("fitPlane_nz", idx)));
-        // TODO: UP TO HERE
-
-        // segment.get_fittedCluster()
-        //        .set_clusterLineFitSlope((double) bank.getFloat("fitSlope", idx));
-        // segment.get_fittedCluster()
-        //        .set_clusterLineFitSlopeErr((double) bank.getFloat("fitSlopeErr", idx));
-        // segment.get_fittedCluster()
-        //        .set_clusterLineFitInterceptErr((double) bank.getFloat("fitInterc", idx));
-        // segment.get_fittedCluster()
-        //        .set_clusterLineFitInterceptErr((double) bank.getFloat("fitIntercErr", idx));
 
         return segment;
     }
@@ -369,7 +350,6 @@ public class RecoBankReader {
         track.set_Sector((int) bank.getByte ("sector", idx));
         track.set_Q     ((int) bank.getByte ("q",      idx));
 
-        // TODO: The status is changed when being written into the bank, see if this affects anything.
         track.set_Status((int) bank.getShort("status", idx));
 
         for (int i = 1; i < 4; i++) {
@@ -425,7 +405,6 @@ public class RecoBankReader {
         track.set_FitChi2             ((double) bank.getFloat("chi2", idx));
         track.set_FitNDF              ((int)    bank.getShort("ndf", idx));
 
-        // TODO: v CHECK THESE VARIABLES v
         track.set_IntegralBdl((double) bank.getFloat("_IntegralBdl", idx));
         track.set_PathLength((double) bank.getFloat("_pathLength", idx));
         track.set_P((double) bank.getFloat("_P", idx));
@@ -436,8 +415,7 @@ public class RecoBankReader {
         track.b[0] = bank.getFloat("b_0", idx);
         track.b[1] = bank.getFloat("b_1", idx);
         track.b[2] = bank.getFloat("b_2", idx);
-        track.set_TrackingInfoString("HitBased"); // DCTB uses another class to read from banks.
-        // TODO: UP UNTIL HERE
+        track.set_TrackingInfoString("HitBased");
 
         return track;
     }

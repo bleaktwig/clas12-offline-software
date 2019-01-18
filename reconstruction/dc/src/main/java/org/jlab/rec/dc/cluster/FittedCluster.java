@@ -243,6 +243,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
             }
         }
         else info += "\n  Status: null";
+        info += "\n  Size: " + this.size();
         info += "\n--------------------------------------------\n";
 
         return info;
