@@ -69,6 +69,8 @@ public class DCHBEngine extends DCEngine {
         eventCounter++;
 
         // if (currentEvent != 127) return true;
+        if (currentEvent % 20 == 0) System.out.println("EVENT #" + currentEvent);
+        // TODO: CHECK OUT WHAT'S HAPPENING IN EVENTS WHERE NO EXCEPTIONS ARISE, LIKE 13 AND 14
 
 //        long startTime = 0;
         //setRunConditionsParameters( event) ;
@@ -148,6 +150,7 @@ public class DCHBEngine extends DCEngine {
         if (hits.isEmpty()) {
             return true;
         }
+        // System.out.println(hits.get(0).getDetailedInfo());
         /* 11 */
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
@@ -229,8 +232,7 @@ public class DCHBEngine extends DCEngine {
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
                 dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim);
+                Swimmer.getTorScale());
         /* 19 */
 
         // track found
@@ -323,8 +325,7 @@ public class DCHBEngine extends DCEngine {
                 dcSwim);
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
                 dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim);
+                Swimmer.getTorScale());
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
@@ -371,12 +372,12 @@ public class DCHBEngine extends DCEngine {
                 trkcands);
 
 // ==- DCHB2 ENDS -================================================================================-
-        if (trkcands.size() > 0 && trkcands.get(0) != null) {
-            System.out.println("\n\n DCHB2 TRACK:");
-            RecoBankReader.printSample(trkcands.get(0));
-            System.out.println("\n\n");
-        }
-        else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
+        // if (trkcands.size() > 0 && trkcands.get(0) != null) {
+        //     System.out.println("\n\n DCHB2 TRACK:");
+        //     RecoBankReader.printSample(trkcands.get(0));
+        //     System.out.println("\n\n");
+        // }
+        // else System.out.println("\n\n DCHB2 TRACK IS NULL.\n\n");
 
         return true;
     }

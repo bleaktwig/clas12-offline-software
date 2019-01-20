@@ -15,6 +15,7 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
+import org.jlab.rec.dc.banks.RecoBankReader;
 import org.jlab.rec.dc.timetodistance.TableLoader;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.hit.FittedHit;
@@ -35,7 +36,6 @@ public class DCHB1Engine extends DCEngine {
     private AtomicInteger Run = new AtomicInteger(0);
     private double triggerPhase;
     private int newRun = 0;
-
     private int eventCounter = 0;
 
     public DCHB1Engine() {
@@ -57,7 +57,7 @@ public class DCHB1Engine extends DCEngine {
         eventCounter++;
 
 
-        // if (currentEvent != 127) return true;
+        if (currentEvent != 127) return true;
 
         // setRunConditionsParameters(event);
         if (!event.hasBank("RUN::config")) return true;
@@ -115,6 +115,7 @@ public class DCHB1Engine extends DCEngine {
 
         List<Hit> hits = hitRead.get_DCHits();
         if (hits.isEmpty()) return true;
+        System.out.println(hits.get(0).getDetailedInfo());
 
         // Find the clusters
         ClusterFinder clusFinder = new ClusterFinder();
@@ -122,6 +123,7 @@ public class DCHB1Engine extends DCEngine {
         if (clusters.isEmpty()) return true;
         List<FittedHit> fhits = rbw.createRawHitList(hits);
         rbw.updateHitsListWithClusterInfo(fhits, clusters);
+
 
         // Form the segments from the clusters
         SegmentFinder segFinder = new SegmentFinder();
@@ -155,12 +157,12 @@ public class DCHB1Engine extends DCEngine {
         rbw.fillAllHBBanks(event, rbw, fhits, clusters, segments, crosses, null);
 
 // ==- PRINT CROSS -===============================================================================-
-        // if (crosses.size() > 0 && crosses.get(0) != null) {
-        //     System.out.println("\n\n DCHB1 CROSS:");
-        //     RecoBankReader.printSample(crosses.get(0));
-        //     System.out.println("\n\n");
-        // }
-        // else System.out.println("\n\n DCHB1 CROSS IS NULL.\n\n");
+        if (crosses.size() > 0 && crosses.get(0) != null) {
+            System.out.println("\n\n DCHB1 CROSS:");
+            RecoBankReader.printSample(crosses.get(0));
+            System.out.println("\n\n");
+        }
+        else System.out.println("\n\n DCHB1 CROSS IS NULL.\n\n");
 
         return true;
     }

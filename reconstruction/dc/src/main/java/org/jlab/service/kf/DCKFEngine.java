@@ -127,8 +127,7 @@ public class DCKFEngine extends ReconstructionEngine {
         TrackCandListFinder trkCandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkCandFinder.getTrackCands(crosslist,
                                                            dcDetector,
-                                                           Swimmer.getTorScale(),
-                                                           dcSwim);
+                                                           Swimmer.getTorScale());
 
         // === WRITE TO THE BANKS ======================================================
         if (trkcands.size() > 0) {

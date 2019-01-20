@@ -584,7 +584,6 @@ public class FittedHit extends Hit implements Comparable<Hit> {
                            "\n    B                             : " + this.getB() +
                            "\n    Doca (_Doca)                  : " + this.get_Doca() +
                            "\n    Doca (_TimeToDistance)        : " + this.get_TimeToDistance() +
-                           "\n    Doca Error                    : " + this.get_DocaErr() +
                            "\n    _lX                           : " + this.get_lX() +
                            "\n    _lY                           : " + this.get_lY() +
                            "\n    Time Residual                 : " + this.get_TimeResidual() +
