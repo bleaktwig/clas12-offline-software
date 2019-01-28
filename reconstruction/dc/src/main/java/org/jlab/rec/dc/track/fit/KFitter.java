@@ -76,15 +76,11 @@ public class KFitter {
         System.out.println("\n");
     }
 
-    public KFitter(Track trk, DCGeant4Factory DcDetector,
-                   boolean TimeBasedUsingHBtrack,
+    public KFitter(Track trk, DCGeant4Factory DcDetector, boolean TimeBasedUsingHBtrack,
                    Swim swimmer) {
         sv = new StateVecs(swimmer);
-        if (TimeBasedUsingHBtrack) {
-            this.initFromHB(trk, DcDetector);
-        } else {
-            this.init(trk, DcDetector);
-        }
+        if (TimeBasedUsingHBtrack) this.initFromHB(trk, DcDetector);
+        else                       this.init(trk, DcDetector);
     }
 
     private void initFromHB(Track trk, DCGeant4Factory DcDetector) {

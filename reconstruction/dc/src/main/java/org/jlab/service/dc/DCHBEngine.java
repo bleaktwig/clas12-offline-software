@@ -68,12 +68,11 @@ public class DCHBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
-        // if (currentEvent != 127) return true;
-        if (currentEvent % 20 == 0) System.out.println("EVENT #" + currentEvent);
-        // TODO: CHECK OUT WHAT'S HAPPENING IN EVENTS WHERE NO EXCEPTIONS ARISE, LIKE 13 AND 14
+        // if (currentEvent != 29/* && currentEvent != 71*/) return true;
+        // if (currentEvent > 20) return true;
+        // System.out.println("EVENT #" + currentEvent);
+        // if (currentEvent % 20 == 0) System.out.println("EVENT #" + currentEvent);
 
-//        long startTime = 0;
-        //setRunConditionsParameters( event) ;
         if (!event.hasBank("RUN::config")) {
             return true;
         }
@@ -91,7 +90,6 @@ public class DCHBEngine extends DCEngine {
        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
            if (timeStamp == -1)
                return true;
- //          if (debug.get()) startTime = System.currentTimeMillis();
            IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
            double period = tabJ.getDoubleValue("period", 0, 0, 0);
            int phase = tabJ.getIntValue("phase", 0, 0, 0);
@@ -106,8 +104,6 @@ public class DCHBEngine extends DCEngine {
            if (event.hasBank("MC::Particle") && this.getEngineConfigString("wireDistort")==null) {
                Constants.setWIREDIST(0);
            }
-
- //          if (debug.get()) System.out.println("NEW RUN INIT = " + (System.currentTimeMillis() - startTime));
        }
 
         /* 1 */
@@ -231,25 +227,29 @@ public class DCHBEngine extends DCEngine {
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
-                dcDetector,
-                Swimmer.getTorScale());
-        /* 19 */
+                                                           dcDetector,
+                                                           Swimmer.getTorScale(),
+                                                           dcSwim);
 
+        /* 19 */
         // track found
-        int trkId = 1;
+        // TODO: If the order of the track candidates in trkcands changes, removeOverlappingTracks
+        //       returns a different amount of tracks.
         if (trkcands.size() > 0) {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
         }
 
 // ==- DCKF ENDS -=================================================================================-
-        // if (trkcands.size() > 0 && trkcands.get(0) != null) {
-        //     System.out.println("\n\n DCKF TRACK:");
-        //     RecoBankReader.printSample(trkcands.get(0));
-        //     System.out.println("\n\n");
+        // if (trkcands.size() > 0) {
+        //     System.out.println("TRACKS AFTER REMOVAL: ");
+        //     for (Track track : trkcands) {
+        //         System.out.println(track.get_Id() + " : " + track.get_FitChi2());
+        //     }
+        //     System.out.printf("\n");
         // }
-        // else System.out.println("\n\n DCKF TRACK IS NULL.\n\n");
 
+        int trkId = 1;
         if (trkcands.size() > 0) {
             for (Track trk : trkcands) {
                 // reset the id
@@ -325,7 +325,8 @@ public class DCHBEngine extends DCEngine {
                 dcSwim);
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
                 dcDetector,
-                Swimmer.getTorScale());
+                Swimmer.getTorScale(),
+                dcSwim);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {

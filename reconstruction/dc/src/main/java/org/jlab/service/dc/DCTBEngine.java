@@ -56,6 +56,8 @@ public class DCTBEngine extends DCEngine {
         int currentEvent = eventCounter;
         eventCounter++;
 
+        double dcInitTime = System.currentTimeMillis();
+
         // if (currentEvent != 127) return true;
 
         //setRunConditionsParameters( event) ;
@@ -226,6 +228,7 @@ public class DCTBEngine extends DCEngine {
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
         TrajectoryFinder trjFind = new TrajectoryFinder();
+        double kfInitTime = System.currentTimeMillis();
         for(int i = 0; i < TrackArray.length; i++) {
             if(TrackArray[i]==null || TrackArray[i].get_ListOfHBSegments()==null || TrackArray[i].get_ListOfHBSegments().size()<4)
                 continue;
@@ -249,7 +252,7 @@ public class DCTBEngine extends DCEngine {
                 TrackArray[i].set_P(1./Math.abs(kFit.finalStateVec.Q));
                 TrackArray[i].set_Q((int)Math.signum(kFit.finalStateVec.Q));
                 trkcandFinder.setTrackPars(TrackArray[i], new Trajectory(), trjFind, fn,
-                        kFit.finalStateVec.z, dcDetector, dcSwim);
+                        kFit.finalStateVec.z, dcSwim);
                 // candidate parameters are set from the state vector
                 TrackArray[i].set_FitChi2(kFit.chi2);
                 TrackArray[i].set_FitNDF(kFit.NDF);
@@ -262,6 +265,7 @@ public class DCTBEngine extends DCEngine {
                 trkcands.add(TrackArray[i]);
             }
         }
+        double kfTime = System.currentTimeMillis() - kfInitTime;
 
 
         for(int i = 0; i < crosses.size(); i++) {
@@ -314,6 +318,9 @@ public class DCTBEngine extends DCEngine {
             return true;
         }
         rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
+
+        double dcTime = System.currentTimeMillis() - dcInitTime;
+        // System.out.println(100 * kfTime / dcTime);
 
         return true;
     }

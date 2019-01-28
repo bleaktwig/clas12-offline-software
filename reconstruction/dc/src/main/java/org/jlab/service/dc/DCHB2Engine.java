@@ -190,7 +190,8 @@ public class DCHB2Engine extends DCEngine {
                 dcSwim);
         List<Track> mistrkcands = trkCandFinder.getTrackCands(pcrosslist,
                 dcDetector,
-                Swimmer.getTorScale());
+                Swimmer.getTorScale(),
+                dcSwim);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {

@@ -3,6 +3,7 @@ package org.jlab.rec.dc.track;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
+import java.util.Collections;
 import org.jlab.clas.clas.math.FastMath;
 
 //import org.apache.commons.math3.util.FastMath;
@@ -185,55 +186,75 @@ public class TrackCandListFinder {
         return q;
     }
 
+    // TODO: This function will pick which version of the getTrackCands algorithm should be used.
+    /**
+     * Selects which algorithm for obtaining the track candidates should be used
+     */
+    public List<Track> getTrackCands(CrossList crossLists, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
+        return getTrackCandsCPUPar(crossLists, DcDetector, TORSCALE);
+    }
+
     /**
      * @param crossList the input list of crosses
      * @return a list of track candidates in the DC
      */
-    public List<Track> getTrackCands(CrossList crossLists, DCGeant4Factory DcDetector, double TORSCALE) {
+    private List<Track> getTrackCandsSeq(CrossList crossLists, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
 
         List<Track> cands = new ArrayList<>();
-        if (crossLists.size() == 0) {
-            return cands;
+        if (crossLists.size() == 0) return cands;
+
+        for (List<Cross> crossList : crossLists) {
+            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim);
+            if (cand != null) {
+                cand.set_Id(cands.size() + 1);
+                cands.add(cand);
+            }
         }
 
-        // crossLists.parallelStream().forEach((crossList) -> {
-        for (List<Cross> crossList : crossLists) {
-            Swim dcSwim = new Swim();
-            getTrackCand(cands, crossList, DcDetector, TORSCALE, dcSwim);
-        }
-        // });
-        //this.setAssociatedIDs(cands);
         return cands;
     }
 
-    private void getTrackCand(List<Track> cands, List<Cross> crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
-        if (crossList.size() != 3) {
-            // System.out.println("["+pID+".00] crossList.size != 3! Exiting...");
-            return;
-        }
-        // System.out.println("["+pID+".00] crossList.size == 3");
+    /**
+     * @param crossList the input list of crosses
+     * @return a list of track candidates in the DC
+     */
+    private List<Track> getTrackCandsCPUPar(CrossList crossLists, DCGeant4Factory DcDetector, double TORSCALE) {
+
+        List<Track> cands = new ArrayList<>();
+        if (crossLists.size() == 0) return cands;
+
+        crossLists.parallelStream().forEach((crossList) -> {
+            Swim dcSwim = new Swim();
+            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim);
+            if (cand != null) cands.add(cand);
+        });
+
+        // TODO: This sorting is currently needed due to the strange behaviour of removeOverlappingTracks.
+        Collections.sort(cands);
+        for (int ii = 0; ii < cands.size(); ++ii) cands.get(ii).set_Id(ii);
+
+        return cands;
+    }
+
+    private Track getTrackCand(List<Cross> crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
+        if (crossList.size() != 3) return null;
 
         // Initialize
         Track cand = new Track();
         TrajectoryFinder trjFind = new TrajectoryFinder();
-        Trajectory traj = trjFind.findTrajectory(crossList, DcDetector, dcSwim);
-        if (traj == null) {
-            // System.out.println("["+pID+".01] traj == null! Exiting...");
-            return;
-        }
-        // System.out.println("["+pID+".01] traj != null");
+        Trajectory traj = trjFind.findTrajectory(crossList, DcDetector, dcSwim); // NOTE: Nothing in DcDetector is changed.
+        if (traj == null) return null;
 
         // Look for straight tracks
         if (Math.abs(TORSCALE) < 0.001) {
-            // System.out.println("["+pID+".02] I FOUND A STRAIGHT TRACK");
-            // TODO: WARNING: SINCE THE TEST FILE DOESN'T HAVE STRAIGHT TRACKS, THIS CODE IS UNTESTED
+            // TODO: WARNING: Since the testing evio file doesn't contain any straight tracks, this code is untested.
             cand.addAll(crossList);
             cand.set_Sector(crossList.get(0).get_Sector());
 
             // No field --> fit straight track
             this.getStraightTrack(cand);
 
-            if (cand.get_pAtOrig() == null) return;
+            if (cand.get_pAtOrig() == null) return null;
 
             StateVec VecAtReg1MiddlePlane =
                     new StateVec(cand.get(0).get_Point().x(), cand.get(0).get_Point().y(),
@@ -243,24 +264,24 @@ public class TrackCandListFinder {
             cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
             // Initialize the fitter with the candidate track
-            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim); // NOTE: Nothing in DcDetector is changed.
             kFit.totNumIter = 1;
 
             kFit.runFitter(cand.get(0).get_Sector());
 
-            if (kFit.finalStateVec == null) return;
+            if (kFit.finalStateVec == null) return null;
 
             // Initialize the state vector corresponding to the last measurement site
             StateVec fn = new StateVec();
 
-            if (kFit.setFitFailed || kFit.finalStateVec == null) return;
+            if (kFit.setFitFailed || kFit.finalStateVec == null) return null;
             // Set the state vector at the last measurement site
             fn.set(kFit.finalStateVec.x, kFit.finalStateVec.y, kFit.finalStateVec.tx, kFit.finalStateVec.ty);
 
             // Set the track parameters if the filter does not fail
             cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
             cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
-            this.setTrackPars(cand, traj, trjFind, fn, kFit.finalStateVec.z, DcDetector, dcSwim);
+            this.setTrackPars(cand, traj, trjFind, fn, kFit.finalStateVec.z, dcSwim);
 
             // Set candidate parameters from the state vector
             cand.set_FitChi2(kFit.chi2);
@@ -270,7 +291,7 @@ public class TrackCandListFinder {
             cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
         }
         else {
-            if (crossList.size() != 3 || !this.PassNSuperlayerTracking(crossList, cand)) return;
+            if (crossList.size() != 3 || !this.PassNSuperlayerTracking(crossList, cand)) return null;
 
             cand.addAll(crossList);
             cand.set_Sector(crossList.get(0).get_Sector());
@@ -281,7 +302,7 @@ public class TrackCandListFinder {
             cand.set_IntegralBdl(traj.get_IntegralBdl());
 
             // Require 3 crosses to make a track (allows for 1 pseudo-cross)
-            if (cand.size() != 3) return;
+            if (cand.size() != 3) return null;
 
             double x1 = crossList.get(0).get_Point().x();
             double y1 = crossList.get(0).get_Point().y();
@@ -358,10 +379,8 @@ public class TrackCandListFinder {
                 iBdl = pars[1];
             }
 
-            if (chi2 > 2500) return;
-
             // Compute delta theta using the non-pseudo segments in region 1 and 3
-            if (iBdl == 0) return;
+            if (chi2 > 2500 || iBdl == 0) return null;
 
             // Momentum estimate if Bdl is non zero and the track has curvature
             double p = calcInitTrkP(ux, uy, uz, thX, thY, theta1, theta3, iBdl, TORSCALE);
@@ -381,14 +400,14 @@ public class TrackCandListFinder {
             cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
             // Initialize the fitter with the candidate track
-            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim); // NOTE: Nothing in DcDetector is changed.
 
             // Initialize the state vector corresponding to the last measurement site
             StateVec fn = new StateVec();
 
             kFit.runFitter(cand.get(0).get_Sector());
 
-            if (kFit.finalStateVec == null) return;
+            if (kFit.finalStateVec == null) return null;
 
             if (this.trking.equalsIgnoreCase("HitBased")) {
                 double HBc2 = getHitBasedFitChi2ToCrosses(
@@ -399,7 +418,7 @@ public class TrackCandListFinder {
 
                 if (HBc2 > 1000) kFit.setFitFailed = true;
             }
-            if (kFit.setFitFailed) return;
+            if (kFit.setFitFailed) return null;
 
             // Set the state vector at the last measurement site
             fn.set(kFit.finalStateVec.x,
@@ -411,22 +430,18 @@ public class TrackCandListFinder {
             cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
             cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
 
-            this.setTrackPars(cand, traj,
-                              trjFind, fn,
-                              kFit.finalStateVec.z,
-                              DcDetector, dcSwim);
+            this.setTrackPars(cand, traj, trjFind, fn, kFit.finalStateVec.z, dcSwim);
 
             // Candidate parameters are set from the state vector
             cand.set_FitChi2(kFit.chi2);
             cand.set_FitNDF(kFit.NDF);
             cand.set_FitConvergenceStatus(kFit.ConvStatus);
-            cand.set_Id(cands.size() + 1);
             cand.set_CovMat(kFit.finalCovMat.covMat);
             cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
-            
-            // Add candidate to list of tracks
-            cands.add(cand);
+
         }
+        // Add the candidate to list of tracks
+        return cand;
     }
 
     /**
@@ -546,13 +561,11 @@ public class TrackCandListFinder {
                              Trajectory traj,
                              TrajectoryFinder trjFind,
                              StateVec stateVec, double z,
-                             DCGeant4Factory getDcDetector,
                              Swim dcSwim) {
 
         double pz = cand.get_P() / Math.sqrt(stateVec.tanThetaX() * stateVec.tanThetaX() +
                 stateVec.tanThetaY() * stateVec.tanThetaY() + 1);
 
-        //System.out.println("Setting track params for ");stateVec.printInfo();
         dcSwim.SetSwimParameters(stateVec.x(), stateVec.y(), z,
                 pz * stateVec.tanThetaX(), pz * stateVec.tanThetaY(), pz,
                 cand.get_Q());
@@ -682,77 +695,102 @@ public class TrackCandListFinder {
     }
 
     /**
-     * @param trkcands the list of track candidates
-     *                 Removes the list of tracks that overlap with the track selected based on best chi2
+     * Checks if a list contains a track.
+     * @param trkList the list of selected tracks
+     * @param sTrk    the selected track
+     * @return        a boolean indicating if the track is in the list
      */
-    public void removeOverlappingTracks(List<Track> trkcands) {
-        List<Track> selectedTracks = new ArrayList<Track>();
-        List<Track> list = new ArrayList<Track>();
-        int size = trkcands.size();
-        for (int i = 0; i < size; i++) {
-            list.clear();
-            this.getOverlapLists(trkcands.get(i), trkcands, list);
-            trkcands.removeAll(list);
-            size -= list.size();
-            Track selectedTrk = this.FindBestTrack(list);
-            if (selectedTrk == null)
-                continue;
-            //if(this.ListContainsTrack(selectedTracks, selectedTrk)==false)
-            selectedTracks.add(selectedTrk);
+    private boolean listContainsTrack(List<Track> trkList, Track sTrk) {
+        for (Track trk : trkList) {
+            if (trk == null) continue;
+            if (trk.get_Id() == sTrk.get_Id()) return true;
         }
-        //trkcands.removeAll(trkcands);
-        trkcands.addAll(selectedTracks);
+        return false;
     }
 
     /**
-     * @param selectedTracks the list of selected tracks
-     * @param selectedTrk    the selected track
-     * @return a boolean indicating if the track is in the list
-     */
-    private boolean ListContainsTrack(List<Track> selectedTracks, Track selectedTrk) {
-        boolean isInList = false;
-        for (Track trk : selectedTracks) {
-            if (trk == null)
-                continue;
-            if (trk.get_Id() == selectedTrk.get_Id())
-                isInList = true;
-        }
-        return isInList;
-    }
-
-    /**
+     * Obtains a list of all the tracks overlapping with a given one.
      * @param track    the track
      * @param trkcands the list of candidates
      * @param list     the list of selected tracks
      */
-    private void getOverlapLists(Track track, List<Track> trkcands, List<Track> list) {
+    private void getOverlappingLists(Track track, List<Track> trkcands, List<Track> list) {
         for (int i = 0; i < trkcands.size(); i++) {
-            if ((track.get(0).get_Id() != -1 && track.get(0).get_Id() == trkcands.get(i).get(0).get_Id()) ||
-                    (track.get(1).get_Id() != -1 && track.get(1).get_Id() == trkcands.get(i).get(1).get_Id()) ||
-                    (track.get(2).get_Id() != -1 && track.get(2).get_Id() == trkcands.get(i).get(2).get_Id())) {
+            if ((track.get(0).get_Id() != -1 && track.get(0).get_Id() == trkcands.get(i).get(0).get_Id())
+                    || (track.get(1).get_Id() != -1 && track.get(1).get_Id() == trkcands.get(i).get(1).get_Id())
+                    || (track.get(2).get_Id() != -1 && track.get(2).get_Id() == trkcands.get(i).get(2).get_Id())) {
                 list.add(trkcands.get(i));
-
             }
         }
     }
 
     /**
+     * Finds the track with the least chi2 in a list of tracks.
      * @param trkList the list of tracks
      * @return the track with the best chi2 from the list
      */
-    private Track FindBestTrack(List<Track> trkList) {
+    private Track findBestTrack(List<Track> trkList) {
         double bestChi2 = 9999999;
-        Track bestTrk = null;
+        Track bestTrk   = null;
 
         for (int i = 0; i < trkList.size(); i++) {
             if (trkList.get(i).get_FitChi2() < bestChi2) {
                 bestChi2 = trkList.get(i).get_FitChi2();
-                bestTrk = trkList.get(i);
+                bestTrk  = trkList.get(i);
             }
         }
         return bestTrk;
     }
 
+    /**
+     * Removes overlapping tracks, leaving only the ones with the least chi2.
+     * @param trkcands the list of track candidates
+     */
+    public void removeOverlappingTracks(List<Track> trkcands) {
+        List<Track> selectedTracks = new ArrayList<Track>();
+        List<Track> list = new ArrayList<Track>();
+        int size = trkcands.size();
+
+        int listId = 0;
+
+        for (int i = 0; i < size; i++) {
+            list.clear();
+            this.getOverlappingLists(trkcands.get(i), trkcands, list);
+
+            // System.out.printf("list #" + listId + " tracks:\n");
+            // for (Track track : list) {
+            //     System.out.printf("  Track #" + track.get_Id() + " crosses: ");
+            //     for (Cross cross : track) System.out.printf("%d ", cross.get_Id());
+            //     System.out.printf("\n");
+            // }
+
+            trkcands.removeAll(list);
+            size -= list.size();
+            Track selectedTrk = this.findBestTrack(list);
+            if (selectedTrk == null) continue;
+
+            selectedTracks.add(selectedTrk);
+            listId++;
+        }
+
+        trkcands.addAll(selectedTracks);
+    }
+
+    public void removeOverlappingTracks2(List<Track> trkCands) {
+        List<Track> selectedTrks = new ArrayList<Track>();
+        List<Track> tmpTrks      = new ArrayList<Track>();
+
+        while (trkCands.size() != 0) {
+            tmpTrks.clear();
+            this.getOverlappingLists(trkCands.get(0), trkCands, tmpTrks);
+            trkCands.removeAll(tmpTrks);
+
+            Track selectedTrk = this.findBestTrack(tmpTrks);
+            if (selectedTrk != null) selectedTrks.add(selectedTrk);
+        }
+
+        trkCands.addAll(selectedTrks);
+    }
 
     public void matchHits(List<StateVec> stateVecAtPlanesList, Track trk,
                           DCGeant4Factory DcDetector, Swim dcSwim) {
@@ -826,5 +864,4 @@ public class TrackCandListFinder {
 
         return Math.signum(ycen);
     }
-
 }
