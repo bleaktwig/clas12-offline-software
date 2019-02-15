@@ -2,9 +2,10 @@ package org.jlab.rec.dc.track;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 import org.jlab.clas.clas.math.FastMath;
 
-//import org.apache.commons.math3.util.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Point3D;
@@ -33,25 +34,18 @@ public class TrackCandListFinder {
     private boolean debug = false;
     long startTime, startTime2 = 0;
 
-    /**
-     * the tracking status = HitBased or TimeBased
-     */
+    /** the tracking status = "HitBased" or "TimeBased". */
     private String trking;
 
-    /**
-     * @param stat the tracking status Hit-based or Time-based
-     */
-    public TrackCandListFinder(String stat) {
-        trking = stat;
-    }
+    /** @param stat the tracking status Hit-based or Time-based. */
+    public TrackCandListFinder(String stat) {trking = stat;}
 
     /**
      * @param crossesInTrk the list of crosses on track
-     * @return the number of superlayers used in the fit
+     * @return             the number of superlayers used in the fit
      */
     private boolean PassNSuperlayerTracking(List<Cross> crossesInTrk, Track cand) {
-        boolean pass = true;
-        int NbMissingSl = 0; // find the missing superlayers from the pseudo-crosses
+        int NbMissingSl = 0; // Find the missing superlayers from the pseudo-crosses
         for (Cross c : crossesInTrk) {
             if (c.isPseudoCross) {
                 if ((c.get_Segment1().get_Id() == -1) || (c.get_Segment2().get_Id() == -1)) {
@@ -68,67 +62,58 @@ public class TrackCandListFinder {
                     cand.set_Status(1);
             }
         }
-        // if more superlayers are missing than the required number in the analysis - skip the track
-        if (NbMissingSl > 6 - Constants.NSUPERLAYERTRACKING) {
-            pass = false;
-        }
-        return pass;
+
+        // If more superlayers are missing than the required number in the analysis - skip the track
+        if (NbMissingSl > 6 - Constants.NSUPERLAYERTRACKING) return false;
+        else                                                 return true;
     }
 
-    private double getHitBasedFitChi2ToCrosses(int sector, double x1, double y1, double z1,
-                                               double x2, double y2, double z2, double x3,
-                                               double y3, double z3, double p, int q, double x,
-                                               double y, double z, double tanThX, double tanThY, Swim dcSwim) {
+    private double getHitBasedFitChi2ToCrosses(int sector,
+                                               double x1, double y1, double z1,
+                                               double x2, double y2, double z2,
+                                               double x3, double y3, double z3,
+                                               double p, int q, double x, double y, double z,
+                                               double tanThX, double tanThY, Swim dcSwim) {
+
         double pz = p / Math.sqrt(tanThX * tanThX + tanThY * tanThY + 1);
 
-        dcSwim.SetSwimParameters(x, y, z,
-                -pz * tanThX, -pz * tanThY, -pz,
-                -q);
-        double chi2 = 0; // assume err =1 on points 
+        double chi2 = 0; // Assume err = 1 on points
+
+        dcSwim.SetSwimParameters(x, y, z, -pz * tanThX, -pz * tanThY, -pz, -q);
         double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
-        if(R==null)
-            return Double.POSITIVE_INFINITY;
-        
+        if (R == null) return Double.POSITIVE_INFINITY;
         chi2 += (R[0] - x3) * (R[0] - x3) + (R[1] - y3) * (R[1] - y3);
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                -q);
+
+        dcSwim.SetSwimParameters(R[0], R[1], R[2], R[3], R[4], R[5], -q);
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
-        if(R==null)
-            return Double.POSITIVE_INFINITY;
-        
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                -q);
+        if (R == null) return Double.POSITIVE_INFINITY;
         chi2 += (R[0] - x2) * (R[0] - x2) + (R[1] - y2) * (R[1] - y2);
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                -q);
+
+        dcSwim.SetSwimParameters(R[0], R[1], R[2], R[3], R[4], R[5], -q);
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z1);
-        if(R==null)
-            return Double.POSITIVE_INFINITY;
-        
+        if (R == null) return Double.POSITIVE_INFINITY;
         chi2 += (R[0] - x1) * (R[0] - x1) + (R[1] - y1) * (R[1] - y1);
 
         return chi2;
     }
 
-    private double[] getTrackInitFit(int sector, double x1, double y1, double z1,
-                                     double x2, double y2, double z2, double x3, double y3, double z3,
-                                     double ux, double uy, double uz, double thX, double thY,
-                                     double theta1, double theta3,
+    private double[] getTrackInitFit(int sector,
+                                     double x1, double y1, double z1,
+                                     double x2, double y2, double z2,
+                                     double x3, double y3, double z3,
+                                     double ux, double uy, double uz,
+                                     double thX, double thY, double theta1, double theta3,
                                      double iBdl, double TORSCALE, Swim dcSwim) {
+
         if (theta1 < -998 || theta3 < -998) {
             return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
         }
         double[] pars = new double[2];
 
-        double chi2 = 0; // assume err =1 on points 
+        double chi2 = 0; // Assume err =1 on points
         double intBdl = 0;
 
-        double p = calcInitTrkP(ux, uy, uz, thX, thY,
-                theta1, theta3,
-                iBdl, TORSCALE);
+        double p = calcInitTrkP(ux, uy, uz, thX, thY, theta1, theta3, iBdl, TORSCALE);
         double p_x = ux * p;
         double p_y = uy * p;
         double p_z = uz * p;
@@ -137,18 +122,13 @@ public class TrackCandListFinder {
 
         dcSwim.SetSwimParameters(x1, y1, z1, p_x, p_y, p_z, q);
         double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
-        if(R==null)
-            return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
-        
+        if (R == null) return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
         chi2 += (R[0] - x2) * (R[0] - x2) + (R[1] - y2) * (R[1] - y2);
         intBdl += R[7];
-        dcSwim.SetSwimParameters(R[0], R[1], R[2],
-                R[3], R[4], R[5],
-                q);
+
+        dcSwim.SetSwimParameters(R[0], R[1], R[2], R[3], R[4], R[5], q);
         R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
-        if(R==null)
-            return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
-        
+        if (R == null) return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
         chi2 += (R[0] - x3) * (R[0] - x3) + (R[1] - y3) * (R[1] - y3);
         intBdl += R[7];
 
@@ -158,329 +138,292 @@ public class TrackCandListFinder {
         return pars;
     }
 
-    private double calcInitTrkP(double ux, double uy, double uz, double thX, double thY,
-                                double theta1, double theta3,
+    private double calcInitTrkP(double ux, double uy, double uz,
+                                double thX, double thY, double theta1, double theta3,
                                 double iBdl, double TORSCALE) {
-        double deltaTheta = theta3 - theta1;
-        if (deltaTheta == 0)
-            return Double.POSITIVE_INFINITY;
 
-        // momentum estimate if Bdl is non zero and the track has curvature    
+        double deltaTheta = theta3 - theta1;
+        if (deltaTheta == 0) return Double.POSITIVE_INFINITY;
+
+        // Momentum estimate if Bdl is non zero and the track has curvature
         double pxz = Math.abs(Constants.LIGHTVEL * iBdl / deltaTheta);
         double py = Math.sqrt((thX * thX + thY * thY + 1) / (thX * thX + 1) - 1) * pxz;
-
         double p = Math.sqrt(pxz * pxz + py * py);
+
         return p;
     }
 
-    private int calcInitTrkQ(double theta1, double theta3,
-                             double TORSCALE) {
+    private int calcInitTrkQ(double theta1, double theta3, double TORSCALE) {
         double deltaTheta = theta3 - theta1;
 
-        //positive charges bend outward for nominal GEMC field configuration
+        // Positive charges bend outward for nominal GEMC field configuration
         int q = (int) Math.signum(deltaTheta);
-        q *= (int) -1 * Math.signum(TORSCALE); // flip the charge according to the field scale
+        q *= (int) -1 * Math.signum(TORSCALE); // Flip the charge according to the field scale
 
         return q;
     }
 
     /**
-     * @param crossList the input list of crosses
-     * @return a list of track candidates in the DC
+     * Selects which version of the track candidates finder algorithm should be used.
+     * @param crossLists the input list of crosses
+     * @return           a list of track candidates in the DC
      */
-    public List<Track> getTrackCands(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
+    public List<Track> getTrackCands(CrossList crossLists, DCGeant4Factory DcDetector,
+                                     double TORSCALE, Swim dcSwim, boolean parallel) {
+        if (!parallel) return getTrackCandsSeq(crossLists, DcDetector, TORSCALE, dcSwim);
+        else           return getTrackCandsCPUPar(crossLists, DcDetector, TORSCALE);
+    }
 
-        if (debug) startTime2 = System.currentTimeMillis();
-
+    /** Gets the track candidates in a traditional, sequential manner. */
+    private List<Track> getTrackCandsSeq(CrossList crossLists, DCGeant4Factory DcDetector,
+                                         double TORSCALE, Swim dcSwim) {
         List<Track> cands = new ArrayList<>();
-        if (crossList.size() == 0) {
-            return cands;
-        }
+        if (crossLists.size() == 0) return cands;
 
-        for (List<Cross> aCrossList : crossList) {
-            //initialize
-            Track cand = new Track();
-            TrajectoryFinder trjFind = new TrajectoryFinder();
-
-            if (debug) startTime = System.currentTimeMillis();
-            Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
-            if (debug) System.out.println("Trajectory finding = " + (System.currentTimeMillis() - startTime));
-
-            if (traj == null)
-                continue;
-
-            //look for straight tracks    
-            if (aCrossList.size() == 3 && Math.abs(TORSCALE) < 0.001) {
-                cand.addAll(aCrossList);
-                cand.set_Sector(aCrossList.get(0).get_Sector());
-                //no field --> fit straight track
-                this.getStraightTrack(cand);
-                if (cand.get_pAtOrig() != null) {
-                    cand.set_Id(cands.size() + 1);
-                    // the state vector at the region 1 cross
-                    StateVec VecAtReg1MiddlePlane = new StateVec(cand.get(0).get_Point().x(),
-                            cand.get(0).get_Point().y(),
-                            cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
-                            cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
-                    cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
-                    // initialize the fitter with the candidate track
-                    KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
-                    kFit.totNumIter = 1;
-
-                    if (debug) startTime = System.currentTimeMillis();
-                    kFit.runFitter(cand.get(0).get_Sector());
-                    if (debug) System.out.println("Kalman fitter = " + (System.currentTimeMillis() - startTime));
-
-
-                    if (kFit.finalStateVec == null)
-                        continue;
-
-                    // initialize the state vector corresponding to the last measurement site
-                    StateVec fn = new StateVec();
-
-                    //System.out.println(" fit failed due to chi2 "+kFit.setFitFailed+" p "+1./Math.abs(kFit.finalStateVec.Q));
-                    if (!kFit.setFitFailed && kFit.finalStateVec != null) {
-                        // set the state vector at the last measurement site
-                        fn.set(kFit.finalStateVec.x, kFit.finalStateVec.y, kFit.finalStateVec.tx, kFit.finalStateVec.ty);
-                        //set the track parameters if the filter does not fail
-                        cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
-                        cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
-                        this.setTrackPars(cand, traj, trjFind, fn, kFit.finalStateVec.z, DcDetector, dcSwim);
-                        // candidate parameters are set from the state vector
-                        cand.set_FitChi2(kFit.chi2);
-                        cand.set_FitNDF(kFit.NDF);
-                        cand.set_FitConvergenceStatus(kFit.ConvStatus);
-                        cand.set_Id(cands.size() + 1);
-                        cand.set_CovMat(kFit.finalCovMat.covMat);
-                        cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
-                        // add candidate to list of tracks
-                        cands.add(cand);
-                    }
-                    //this.matchHits(traj.get_Trajectory(), cand, DcDetector);
-                    cands.add(cand);
-                }
-            } else {
-                // linked helices
-//                traj = trjFind.findTrajectory(crossesInTrk, DcDetector, dcSwim);
-//                if(traj == null)
-//                    continue;
-
-                if (aCrossList.size() == 3 && this.PassNSuperlayerTracking(aCrossList, cand)) {
-                    cand.addAll(aCrossList);
-                    cand.set_Sector(aCrossList.get(0).get_Sector());
-
-                    // set the candidate trajectory using the parametrization of the track trajectory
-                    // and estimate intefral Bdl along that path
-                    cand.set_Trajectory(traj.get_Trajectory());
-                    cand.set_IntegralBdl(traj.get_IntegralBdl());
-
-                    //require 3 crosses to make a track (allows for 1 pseudo-cross)
-                    if (cand.size() == 3) {
-                        //System.out.println("---- cand in sector "+crossesInTrk.get(0).get_Sector());
-                        //System.out.println(crossesInTrk.get(0).printInfo());
-                        //System.out.println(crossesInTrk.get(1).printInfo());
-                        //System.out.println(crossesInTrk.get(2).printInfo());
-                        //System.out.println("---------------");
-                        double x1 = aCrossList.get(0).get_Point().x();
-                        double y1 = aCrossList.get(0).get_Point().y();
-                        double z1 = aCrossList.get(0).get_Point().z();
-                        double x2 = aCrossList.get(1).get_Point().x();
-                        double y2 = aCrossList.get(1).get_Point().y();
-                        double z2 = aCrossList.get(1).get_Point().z();
-                        double x3 = aCrossList.get(2).get_Point().x();
-                        double y3 = aCrossList.get(2).get_Point().y();
-                        double z3 = aCrossList.get(2).get_Point().z();
-                        double ux = aCrossList.get(0).get_Dir().x();
-                        double uy = aCrossList.get(0).get_Dir().y();
-                        double uz = aCrossList.get(0).get_Dir().z();
-                        double thX = ux / uz;
-                        double thY = uy / uz;
-                        double theta3s2 = Math.atan(cand.get(2).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
-                        double theta1s2 = Math.atan(cand.get(0).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
-                        double theta3s1 = Math.atan(cand.get(2).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
-                        double theta1s1 = Math.atan(cand.get(0).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
-
-                        if (cand.get(0).get_Segment2().get_Id() == -1)
-                            theta1s2 = theta1s1; //do not use
-                        //theta1s2=-999; //do not use
-                        if (cand.get(0).get_Segment1().get_Id() == -1)
-                            theta1s1 = theta1s2;
-                        //theta1s1=-999;
-                        if (cand.get(2).get_Segment2().get_Id() == -1)
-                            theta3s2 = theta3s1;
-                        //theta3s2=-999;
-                        if (cand.get(2).get_Segment1().get_Id() == -1)
-                            theta3s1 = theta3s2;
-                        //theta3s1=-999;
-                        double theta3 = 0;
-                        double theta1 = 0;
-
-                        double chisq = Double.POSITIVE_INFINITY;
-                        double chi2;
-                        double iBdl = traj.get_IntegralBdl();
-                        double[] pars;
-
-                        if (debug) startTime = System.currentTimeMillis();
-                        pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
-                                ux, uy, uz, thX, thY,
-                                theta1s1, theta3s1,
-                                traj.get_IntegralBdl(), TORSCALE, dcSwim);
-                        chi2 = pars[0];
-                        if (chi2 < chisq) {
-                            chisq = chi2;
-                            theta1 = theta1s1;
-                            theta3 = theta3s1;
-                            iBdl = pars[1];
-                        }
-                        if (debug) System.out.println("TrackInitFit-1 = " + (System.currentTimeMillis() - startTime));
-
-                        if (debug) startTime = System.currentTimeMillis();
-                        pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
-                                ux, uy, uz, thX, thY,
-                                theta1s1, theta3s2,
-                                traj.get_IntegralBdl(), TORSCALE, dcSwim);
-                        chi2 = pars[0];
-                        if (chi2 < chisq) {
-                            chisq = chi2;
-                            theta1 = theta1s1;
-                            theta3 = theta3s2;
-                            iBdl = pars[1];
-                        }
-                        if (debug) System.out.println("TrackInitFit-2 = " + (System.currentTimeMillis() - startTime));
-
-                        if (debug) startTime = System.currentTimeMillis();
-                        pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
-                                ux, uy, uz, thX, thY,
-                                theta1s2, theta3s1,
-                                traj.get_IntegralBdl(), TORSCALE, dcSwim);
-                        chi2 = pars[0];
-                        if (chi2 < chisq) {
-                            chisq = chi2;
-                            theta1 = theta1s2;
-                            theta3 = theta3s1;
-                            iBdl = pars[1];
-                        }
-                        if (debug) System.out.println("TrackInitFit-3 = " + (System.currentTimeMillis() - startTime));
-
-                        if (debug) startTime = System.currentTimeMillis();
-                        pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
-                                ux, uy, uz, thX, thY,
-                                theta1s2, theta3s2,
-                                traj.get_IntegralBdl(), TORSCALE, dcSwim);
-                        chi2 = pars[0];
-                        if (chi2 < chisq) {
-                            theta1 = theta1s2;
-                            theta3 = theta3s2;
-                            iBdl = pars[1];
-                        }
-                        if (debug) System.out.println("TrackInitFit-4 = " + (System.currentTimeMillis() - startTime));
-
-                        if (chi2 > 2500)
-                            continue;
-
-                        // compute delta theta using the non-pseudo segments in region 1 and 3
-
-                        // get integral Bdl from the swimmer trajectory
-                        //double iBdl = traj.get_IntegralBdl(); 
-
-                        if (iBdl != 0) {
-                            // momentum estimate if Bdl is non zero and the track has curvature  
-                            double p = calcInitTrkP(ux, uy, uz, thX, thY,
-                                    theta1, theta3,
-                                    iBdl, TORSCALE);
-                            if (debug) startTime = System.currentTimeMillis();
-                            int q = this.calcInitTrkQ(theta1, theta3, TORSCALE);
-                            if (debug) System.out.println("calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
-
-                            if (p > 11) {
-                                p = 11;
-                            }
-                            //if(p>Constants.MAXTRKMOM || p< Constants.MINTRKMOM)
-                            //  continue;
-
-                            cand.set_Q(q);
-                            // momentum correction using the swam trajectory iBdl
-                            cand.set_P(p);
-
-                            // the state vector at the region 1 cross
-                            StateVec VecAtReg1MiddlePlane = new StateVec(cand.get(0).get_Point().x(),
-                                    cand.get(0).get_Point().y(),
-                                    cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
-                                    cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
-                            cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
-                            // initialize the fitter with the candidate track
-
-                            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
-//                            if(this.trking.equalsIgnoreCase("TimeBased"))
-//                                kFit.totNumIter=30;
-
-                            // initialize the state vector corresponding to the last measurement site
-                            StateVec fn = new StateVec();
-
-                            if (debug) startTime = System.currentTimeMillis();
-                            kFit.runFitter(cand.get(0).get_Sector());
-                            if (debug)
-                                System.out.println("Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
-
-                            if (kFit.finalStateVec == null)
-                                continue;
-
-                            if (this.trking.equalsIgnoreCase("HitBased")) {
-
-                                if (debug) startTime = System.currentTimeMillis();
-                                double HBc2 = getHitBasedFitChi2ToCrosses(cand.get(0).get_Sector(),
-                                        x1, y1, z1, x2, y2, z2, x3, y3, z3,
-                                        1. / Math.abs(kFit.finalStateVec.Q),
-                                        (int) Math.signum(kFit.finalStateVec.Q),
-                                        kFit.finalStateVec.x,
-                                        kFit.finalStateVec.y,
-                                        kFit.finalStateVec.z,
-                                        kFit.finalStateVec.tx,
-                                        kFit.finalStateVec.ty,
-                                        dcSwim);
-                                if (debug)
-                                    System.out.println("getHitBasedFitChi2ToCrosses = " +
-                                            (System.currentTimeMillis() - startTime));
-
-                                //System.out.println(cand.get(0).get_Sector()+" HB fit to crosses c2 "+HBc2);
-                                if (HBc2 > 1000) {
-                                    kFit.setFitFailed = true;
-                                }
-                            }
-                            //System.out.println(" fit failed due to chi2 "+kFit.setFitFailed+" p "+1./Math.abs(kFit.finalStateVec.Q));
-                            if (!kFit.setFitFailed && kFit.finalStateVec != null) {
-                                // set the state vector at the last measurement site
-                                fn.set(kFit.finalStateVec.x,
-                                        kFit.finalStateVec.y,
-                                        kFit.finalStateVec.tx,
-                                        kFit.finalStateVec.ty);
-                                //set the track parameters if the filter does not fail
-                                cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
-                                cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
-                                this.setTrackPars(cand, traj,
-                                        trjFind, fn,
-                                        kFit.finalStateVec.z,
-                                        DcDetector, dcSwim);
-                                // candidate parameters are set from the state vector
-                                cand.set_FitChi2(kFit.chi2);
-                                cand.set_FitNDF(kFit.NDF);
-                                cand.set_FitConvergenceStatus(kFit.ConvStatus);
-                                cand.set_Id(cands.size() + 1);
-                                cand.set_CovMat(kFit.finalCovMat.covMat);
-                                cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
-                                // add candidate to list of tracks
-                                cands.add(cand);
-
-                            }
-                        }
-                    }
-                }
+        for (List<Cross> crossList : crossLists) {
+            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim);
+            if (cand != null) {
+                cand.set_Id(cands.size() + 1);
+                cands.add(cand);
             }
         }
-        //this.setAssociatedIDs(cands);
-        if (debug) System.out.println("TrackCandidate finding = " +
-                (System.currentTimeMillis() - startTime2) + "\n");
+
         return cands;
+    }
+
+    /** Gets the track candidates creating a thread for each candidate. */
+    private List<Track> getTrackCandsCPUPar(CrossList crossLists, DCGeant4Factory DcDetector,
+                                            double TORSCALE) {
+
+        List<Track> cands = new ArrayList<>();
+        if (crossLists.size() == 0) return cands;
+
+        crossLists.parallelStream().forEach((crossList) -> {
+            Swim dcSwim = new Swim();
+            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim);
+            if (cand != null) cands.add(cand);
+        });
+
+        // TODO: This sorting is only needed due to the strange criteria for overlapping tracks.
+        Collections.sort(cands);
+        for (int ii = 0; ii < cands.size(); ++ii) cands.get(ii).set_Id(ii);
+
+        return cands;
+    }
+
+    /** Gets a singular track candidate from a list of three crosses. */
+    private Track getTrackCand(List<Cross> crossList, DCGeant4Factory DcDetector,
+                               double TORSCALE, Swim dcSwim) {
+
+        if (crossList.size() != 3) return null;
+
+        // Initialize
+        Track cand = new Track();
+        TrajectoryFinder trjFind = new TrajectoryFinder();
+        Trajectory traj = trjFind.findTrajectory(crossList, DcDetector, dcSwim);
+        if (traj == null) return null;
+
+        // Look for a straight track
+        if (Math.abs(TORSCALE) < 0.001) {
+            cand.addAll(crossList);
+            cand.set_Sector(crossList.get(0).get_Sector());
+
+            // No field --> fit straight track
+            this.getStraightTrack(cand);
+
+            if (cand.get_pAtOrig() == null) return null;
+
+            StateVec VecAtReg1MiddlePlane =
+                    new StateVec(cand.get(0).get_Point().x(), cand.get(0).get_Point().y(),
+                                 cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
+                                 cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
+
+            cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
+
+            // Initialize the fitter with the candidate track
+            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+            kFit.totNumIter = 1;
+
+            kFit.runFitter(cand.get(0).get_Sector());
+
+            if (kFit.finalStateVec == null) return null;
+
+            // Initialize the state vector corresponding to the last measurement site
+            StateVec fn = new StateVec();
+
+            if (kFit.setFitFailed || kFit.finalStateVec == null) return null;
+
+            // Set the state vector at the last measurement site
+            fn.set(kFit.finalStateVec.x,  kFit.finalStateVec.y,
+                   kFit.finalStateVec.tx, kFit.finalStateVec.ty);
+
+            // Set the track parameters if the filter does not fail
+            cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
+            cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
+            this.setTrackPars(cand, traj, trjFind, fn, kFit.finalStateVec.z, DcDetector, dcSwim);
+
+            // Set candidate parameters from the state vector
+            cand.set_FitChi2(kFit.chi2);
+            cand.set_FitNDF(kFit.NDF);
+            cand.set_FitConvergenceStatus(kFit.ConvStatus);
+            cand.set_CovMat(kFit.finalCovMat.covMat);
+            cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
+        }
+
+        // Look for a curved track
+        else {
+            if (!this.PassNSuperlayerTracking(crossList, cand)) return null;
+
+            cand.addAll(crossList);
+            cand.set_Sector(crossList.get(0).get_Sector());
+
+            // Set the candidate trajectory using the parametrization of the track trajectory and
+            //     estimate integral Bdl along that path
+            cand.set_Trajectory(traj.get_Trajectory());
+            cand.set_IntegralBdl(traj.get_IntegralBdl());
+
+            // Require 3 crosses to make a track (allows for 1 pseudo-cross)
+            if (cand.size() != 3) return null;
+
+            double x1 = crossList.get(0).get_Point().x();
+            double y1 = crossList.get(0).get_Point().y();
+            double z1 = crossList.get(0).get_Point().z();
+            double x2 = crossList.get(1).get_Point().x();
+            double y2 = crossList.get(1).get_Point().y();
+            double z2 = crossList.get(1).get_Point().z();
+            double x3 = crossList.get(2).get_Point().x();
+            double y3 = crossList.get(2).get_Point().y();
+            double z3 = crossList.get(2).get_Point().z();
+            double ux = crossList.get(0).get_Dir().x();
+            double uy = crossList.get(0).get_Dir().y();
+            double uz = crossList.get(0).get_Dir().z();
+            double thX = ux / uz;
+            double thY = uy / uz;
+            double theta3s2 = Math.atan(cand.get(2).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
+            double theta1s2 = Math.atan(cand.get(0).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
+            double theta3s1 = Math.atan(cand.get(2).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
+            double theta1s1 = Math.atan(cand.get(0).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
+
+            if (cand.get(0).get_Segment2().get_Id() == -1) theta1s2 = theta1s1;
+            if (cand.get(0).get_Segment1().get_Id() == -1) theta1s1 = theta1s2;
+            if (cand.get(2).get_Segment2().get_Id() == -1) theta3s2 = theta3s1;
+            if (cand.get(2).get_Segment1().get_Id() == -1) theta3s1 = theta3s2;
+
+            double theta3 = 0;
+            double theta1 = 0;
+
+            double chisq = Double.POSITIVE_INFINITY;
+            double chi2;
+            double iBdl = traj.get_IntegralBdl();
+            double[] pars;
+
+            pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                                   ux, uy, uz, thX, thY, theta1s1, theta3s1,
+                                   traj.get_IntegralBdl(), TORSCALE, dcSwim);
+            chi2 = pars[0];
+            if (chi2 < chisq) {
+                chisq = chi2;
+                theta1 = theta1s1;
+                theta3 = theta3s1;
+                iBdl = pars[1];
+            }
+
+            pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                                   ux, uy, uz, thX, thY, theta1s1, theta3s2,
+                                   traj.get_IntegralBdl(), TORSCALE, dcSwim);
+            chi2 = pars[0];
+            if (chi2 < chisq) {
+                chisq = chi2;
+                theta1 = theta1s1;
+                theta3 = theta3s2;
+                iBdl = pars[1];
+            }
+
+            pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                                   ux, uy, uz, thX, thY, theta1s2, theta3s1,
+                                   traj.get_IntegralBdl(), TORSCALE, dcSwim);
+            chi2 = pars[0];
+            if (chi2 < chisq) {
+                chisq = chi2;
+                theta1 = theta1s2;
+                theta3 = theta3s1;
+                iBdl = pars[1];
+            }
+
+            pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                                   ux, uy, uz, thX, thY, theta1s2, theta3s2,
+                                   traj.get_IntegralBdl(), TORSCALE, dcSwim);
+            chi2 = pars[0];
+            if (chi2 < chisq) {
+                theta1 = theta1s2;
+                theta3 = theta3s2;
+                iBdl = pars[1];
+            }
+
+            // Compute delta theta using the non-pseudo segments in region 1 and 3
+            if (chi2 > 2500 || iBdl == 0) return null;
+
+            // Momentum estimate if Bdl is non zero and the track has curvature
+            double p = calcInitTrkP(ux, uy, uz, thX, thY, theta1, theta3, iBdl, TORSCALE);
+            int q = this.calcInitTrkQ(theta1, theta3, TORSCALE);
+
+            if (p > 11) p = 11;
+
+            cand.set_Q(q);
+            // Momentum correction using the swam trajectory iBdl
+            cand.set_P(p);
+
+            // The state vector at the region 1 cross
+            StateVec VecAtReg1MiddlePlane =
+                    new StateVec(cand.get(0).get_Point().x(), cand.get(0).get_Point().y(),
+                                 cand.get(0).get_Dir().x() /  cand.get(0).get_Dir().z(),
+                                 cand.get(0).get_Dir().y() /  cand.get(0).get_Dir().z());
+            cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
+
+            // Initialize the fitter with the candidate track
+            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+
+            // Initialize the state vector corresponding to the last measurement site
+            StateVec fn = new StateVec();
+
+            kFit.runFitter(cand.get(0).get_Sector());
+
+            if (kFit.finalStateVec == null) return null;
+
+            if (this.trking.equalsIgnoreCase("HitBased")) {
+                double HBc2 = getHitBasedFitChi2ToCrosses(
+                        cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                        1. / Math.abs(kFit.finalStateVec.Q), (int) Math.signum(kFit.finalStateVec.Q),
+                        kFit.finalStateVec.x,  kFit.finalStateVec.y,  kFit.finalStateVec.z,
+                        kFit.finalStateVec.tx, kFit.finalStateVec.ty, dcSwim);
+
+                if (HBc2 > 1000) kFit.setFitFailed = true;
+            }
+            if (kFit.setFitFailed) return null;
+
+            // Set the state vector at the last measurement site
+            fn.set(kFit.finalStateVec.x,
+                    kFit.finalStateVec.y,
+                    kFit.finalStateVec.tx,
+                    kFit.finalStateVec.ty);
+
+            // Set the track parameters if the filter does not fail
+            cand.set_P(1. / Math.abs(kFit.finalStateVec.Q));
+            cand.set_Q((int) Math.signum(kFit.finalStateVec.Q));
+
+            this.setTrackPars(cand, traj, trjFind, fn, kFit.finalStateVec.z, DcDetector, dcSwim);
+
+            // Candidate parameters are set from the state vector
+            cand.set_FitChi2(kFit.chi2);
+            cand.set_FitNDF(kFit.NDF);
+            cand.set_FitConvergenceStatus(kFit.ConvStatus);
+            cand.set_CovMat(kFit.finalCovMat.covMat);
+            cand.set_Trajectory(kFit.kfStateVecsAlongTrajectory);
+
+        }
+
+        // Add the candidate to list of tracks
+        return cand;
     }
 
     /**
@@ -614,7 +557,7 @@ public class TrackCandListFinder {
         double[] VecAtTarOut = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), 592);
         if(VecAtTarOut==null)
             return;
-        
+
         double xOuter = VecAtTarOut[0];
         double yOuter = VecAtTarOut[1];
         double zOuter = VecAtTarOut[2];
@@ -654,7 +597,7 @@ public class TrackCandListFinder {
         double pyOr = -VecAtTarIn[4];
         double pzOr = -VecAtTarIn[5];
 
-        //if(traj!=null && trjFind!=null) { 
+        //if(traj!=null && trjFind!=null) {
         //        traj.set_Trajectory(trjFind.getStateVecsAlongTrajectory(xOr, yOr, zOr, pxOr/pzOr, pyOr/pzOr, cand.get_P(),cand.get_Q(), getDcDetector));
         //        cand.set_Trajectory(traj.get_Trajectory());
         //}
@@ -685,10 +628,10 @@ public class TrackCandListFinder {
         double x_n = Math.cos(theta_n);
         double y_n = Math.sin(theta_n);
         double[] Vt = dcSwim.SwimToPlaneBoundary(0, new Vector3D(x_n, y_n, 0), -1);
-        
+
         if(Vt==null)
             return;
-        
+
         int status = 99999;
 
         int LR = 0;
@@ -820,9 +763,9 @@ public class TrackCandListFinder {
                 stateVecAtPlanesList.get(0).getZ());
         if (ToFirstMeas == null)
             return;
-        
+
         //double PathToFirstMeas =ToFirstMeas[6];
-        
+
         for (StateVec st : stateVecAtPlanesList) {
             if (st == null)
                 return;

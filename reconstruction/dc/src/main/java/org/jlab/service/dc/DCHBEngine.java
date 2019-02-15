@@ -226,9 +226,10 @@ public class DCHBEngine extends DCEngine {
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
-                dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim);
+                                                           dcDetector,
+                                                           Swimmer.getTorScale(),
+                                                           dcSwim,
+                                                           true);
         /* 19 */
 
         // track found
@@ -309,9 +310,10 @@ public class DCHBEngine extends DCEngine {
                 null,
                 dcSwim);
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
-                dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim);
+                                                              dcDetector,
+                                                              Swimmer.getTorScale(),
+                                                              dcSwim,
+                                                              true);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
@@ -398,7 +400,7 @@ public class DCHBEngine extends DCEngine {
             en2.processDataEvent(event);
             writer.writeEvent(event);
             System.out.println("PROCESSED  EVENT " + event.getBank("RUN::config").getInt("event", 0));
-            
+
             if(counter>40)
                 break;
         }
