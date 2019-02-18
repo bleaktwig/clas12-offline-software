@@ -372,12 +372,15 @@ public class Track extends Trajectory implements Comparable<Track>{
     public int compareTo(Track arg) {
         if (this.size() != 3 || arg.size() != 3) return 0;
 
+        if (this.get(0) == null || arg.get(0) == null) return 0;
         if (this.get(0).get_Id() > arg.get(0).get_Id()) return 1;
         if (this.get(0).get_Id() < arg.get(0).get_Id()) return -1;
 
+        if (this.get(1) == null || arg.get(1) == null) return 0;
         if (this.get(1).get_Id() > arg.get(1).get_Id()) return 1;
         if (this.get(1).get_Id() < arg.get(1).get_Id()) return -1;
 
+        if (this.get(2) == null || arg.get(2) == null) return 0;
         if (this.get(2).get_Id() > arg.get(2).get_Id()) return 1;
         if (this.get(2).get_Id() < arg.get(2).get_Id()) return -1;
 
