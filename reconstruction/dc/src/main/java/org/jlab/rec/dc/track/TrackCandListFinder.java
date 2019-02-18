@@ -680,95 +680,114 @@ public class TrackCandListFinder {
     }
 
     /**
-     * @param trkcands the list of track candidates
-     *                 Removes the list of tracks that overlap with the track selected based on best chi2
+     * Checks if a list contains a track. Used by removeOverlappingTracks.
+     * @param trkList the list of selected tracks
+     * @param sTrk    the selected track
+     * @return        a boolean indicating if the track is in the list
      */
-    public void removeOverlappingTracks(List<Track> trkcands) {
-        List<Track> selectedTracks = new ArrayList<Track>();
-        List<Track> list = new ArrayList<Track>();
-        int size = trkcands.size();
-        for (int i = 0; i < size; i++) {
-            list.clear();
-            this.getOverlapLists(trkcands.get(i), trkcands, list);
-            trkcands.removeAll(list);
-            size -= list.size();
-            Track selectedTrk = this.FindBestTrack(list);
-            if (selectedTrk == null)
-                continue;
-            //if(this.ListContainsTrack(selectedTracks, selectedTrk)==false)
-            selectedTracks.add(selectedTrk);
+    private boolean listContainsTrack(List<Track> trkList, Track sTrk) {
+        for (Track trk : trkList) {
+            if (trk == null) continue;
+            if (trk.get_Id() == sTrk.get_Id()) return true;
         }
-        //trkcands.removeAll(trkcands);
-        trkcands.addAll(selectedTracks);
+        return false;
     }
 
     /**
-     * @param selectedTracks the list of selected tracks
-     * @param selectedTrk    the selected track
-     * @return a boolean indicating if the track is in the list
-     */
-    private boolean ListContainsTrack(List<Track> selectedTracks, Track selectedTrk) {
-        boolean isInList = false;
-        for (Track trk : selectedTracks) {
-            if (trk == null)
-                continue;
-            if (trk.get_Id() == selectedTrk.get_Id())
-                isInList = true;
-        }
-        return isInList;
-    }
-
-    /**
+     * Obtains a list of all the tracks overlapping with a given one. Used by
+     * removeOverlappingTracks.
      * @param track    the track
      * @param trkcands the list of candidates
      * @param list     the list of selected tracks
      */
-    private void getOverlapLists(Track track, List<Track> trkcands, List<Track> list) {
+    private void getOverlappingLists(Track track, List<Track> trkcands, List<Track> list) {
         for (int i = 0; i < trkcands.size(); i++) {
-            if ((track.get(0).get_Id() != -1 && track.get(0).get_Id() == trkcands.get(i).get(0).get_Id()) ||
-                    (track.get(1).get_Id() != -1 && track.get(1).get_Id() == trkcands.get(i).get(1).get_Id()) ||
-                    (track.get(2).get_Id() != -1 && track.get(2).get_Id() == trkcands.get(i).get(2).get_Id())) {
+            if ((track.get(0).get_Id() != -1 && track.get(0).get_Id() == trkcands.get(i).get(0).get_Id())
+                    || (track.get(1).get_Id() != -1 && track.get(1).get_Id() == trkcands.get(i).get(1).get_Id())
+                    || (track.get(2).get_Id() != -1 && track.get(2).get_Id() == trkcands.get(i).get(2).get_Id())) {
                 list.add(trkcands.get(i));
-
             }
         }
     }
 
     /**
+     * Finds the track with the least chi2 in a list of tracks. Used be removeOverlappingTracks.
      * @param trkList the list of tracks
      * @return the track with the best chi2 from the list
      */
-    private Track FindBestTrack(List<Track> trkList) {
+    private Track findBestTrack(List<Track> trkList) {
         double bestChi2 = 9999999;
-        Track bestTrk = null;
+        Track bestTrk   = null;
 
         for (int i = 0; i < trkList.size(); i++) {
             if (trkList.get(i).get_FitChi2() < bestChi2) {
                 bestChi2 = trkList.get(i).get_FitChi2();
-                bestTrk = trkList.get(i);
+                bestTrk  = trkList.get(i);
             }
         }
         return bestTrk;
     }
 
+    /**
+     * Removes overlapping tracks, leaving only the ones with the least chi2.
+     * @param trkCands the list of track candidates
+     */
+    public void removeOverlappingTracks(List<Track> trkCands) {
+        List<Track> selectedTrks = new ArrayList<Track>();
+        List<Track> tmpTrks      = new ArrayList<Track>();
+        int size = trkCands.size();
 
-    public void matchHits(List<StateVec> stateVecAtPlanesList, Track trk, DCGeant4Factory DcDetector, Swim dcSwim) {
+        for (int i = 0; i < size; i++) {
+            tmpTrks.clear();
+            this.getOverlappingLists(trkCands.get(i), trkCands, tmpTrks);
 
-        if (stateVecAtPlanesList == null)
+            trkCands.removeAll(tmpTrks);
+            size -= tmpTrks.size();
+
+            Track selectedTrk = this.findBestTrack(tmpTrks);
+            if (selectedTrk != null) selectedTrks.add(selectedTrk);
+        }
+
+        trkCands.addAll(selectedTrks);
+    }
+
+    // public void removeOverlappingTracks(List<Track> trkCands) {
+    //     List<Track> selectedTrks = new ArrayList<Track>();
+    //     List<Track> tmpTrks      = new ArrayList<Track>();
+    //
+    //     while (trkCands.size() != 0) {
+    //         tmpTrks.clear();
+    //         this.getOverlappingLists(trkCands.get(0), trkCands, tmpTrks);
+    //         trkCands.removeAll(tmpTrks);
+    //
+    //         Track selectedTrk = this.findBestTrack(tmpTrks);
+    //         if (selectedTrk != null) selectedTrks.add(selectedTrk);
+    //     }
+    //
+    //     trkCands.addAll(selectedTrks);
+    // }
+
+    public void matchHits(List<StateVec> stateVecAtPlanesList, Track trk,
+                          DCGeant4Factory DcDetector, Swim dcSwim) {
+
+        if (stateVecAtPlanesList == null) {
             return;
-        dcSwim.SetSwimParameters(trk.get_Vtx0().x(),
-                trk.get_Vtx0().y(), trk.get_Vtx0().z(), trk.get_pAtOrig().x(),
-                trk.get_pAtOrig().y(), trk.get_pAtOrig().z(), trk.get_Q());
+        }
+
+        dcSwim.SetSwimParameters(trk.get_Vtx0().x(),    trk.get_Vtx0().y(),    trk.get_Vtx0().z(),
+                                 trk.get_pAtOrig().x(), trk.get_pAtOrig().y(), trk.get_pAtOrig().z(),
+                                 trk.get_Q());
+
         double[] ToFirstMeas = dcSwim.SwimToPlaneTiltSecSys(trk.get(0).get_Sector(),
-                stateVecAtPlanesList.get(0).getZ());
-        if (ToFirstMeas == null)
+                                                            stateVecAtPlanesList.get(0).getZ());
+
+        if (ToFirstMeas == null) {
             return;
-
-        //double PathToFirstMeas =ToFirstMeas[6];
-
+        }
         for (StateVec st : stateVecAtPlanesList) {
-            if (st == null)
+            if (st == null) {
                 return;
+            }
 
             for (Cross c : trk) {
                 for (FittedHit h1 : c.get_Segment1()) {
@@ -820,5 +839,4 @@ public class TrackCandListFinder {
 
         return Math.signum(ycen);
     }
-
 }
