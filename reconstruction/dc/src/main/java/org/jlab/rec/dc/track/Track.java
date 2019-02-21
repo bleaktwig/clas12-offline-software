@@ -370,6 +370,7 @@ public class Track extends Trajectory implements Comparable<Track>{
      */
     @Override
     public int compareTo(Track arg) {
+        if (this == null || arg == null) return 0;
         if (this.size() != 3 || arg.size() != 3) return 0;
 
         if (this.get(0) == null || arg.get(0) == null) return 0;

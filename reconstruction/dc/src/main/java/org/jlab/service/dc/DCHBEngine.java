@@ -229,7 +229,7 @@ public class DCHBEngine extends DCEngine {
                                                            dcDetector,
                                                            Swimmer.getTorScale(),
                                                            dcSwim,
-                                                           true);
+                                                           false);
         /* 19 */
 
         // track found
@@ -313,7 +313,7 @@ public class DCHBEngine extends DCEngine {
                                                               dcDetector,
                                                               Swimmer.getTorScale(),
                                                               dcSwim,
-                                                              true);
+                                                              false);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
