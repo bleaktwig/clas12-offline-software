@@ -19,10 +19,8 @@ public class LineFitPars {
 	private int      _ndf;       // fit NDF
 
 	// constructor
-	public LineFitPars(double slope,       double interc,
-					   double slopeErr,    double intercErr,
-					   double SlIntCov,    double chi2,
-					   double[] pointchi2, int ndf) {
+	public LineFitPars(double slope, double interc, double slopeErr, double intercErr,
+			double SlIntCov, double chi2, double[] pointchi2, int ndf) {
 
 		_slope     = slope;
 		_interc    = interc;

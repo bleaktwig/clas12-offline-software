@@ -39,9 +39,8 @@ public class TrajectoryFinder {
      * @param candCrossList the list of crosses
      * @return              a trajectory object
      */
-    public Trajectory findTrajectory(List<Cross> candCrossList,
-									 DCGeant4Factory DcDetector,
-									 Swim dcSwim) {
+    public Trajectory findTrajectory(List<Cross> candCrossList, DCGeant4Factory DcDetector,
+			Swim dcSwim) {
 
 		Trajectory traj = new Trajectory();
         if (candCrossList.isEmpty()) return traj;

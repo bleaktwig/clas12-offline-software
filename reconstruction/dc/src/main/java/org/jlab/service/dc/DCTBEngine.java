@@ -126,7 +126,7 @@ public class DCTBEngine extends DCEngine {
                  .getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"), dcDetector, tde);
 
         if (clusters.isEmpty()) {
-            rbc.fillAllBanks(event, rbc, hits, null, null, null, null, true);
+            rbc.fillAllTBBanks(event, rbc, hits, null, null, null, null);
             return true;
         }
 
@@ -145,7 +145,7 @@ public class DCTBEngine extends DCEngine {
                     fhits.add(hit);
                 }
             }
-            rbc.fillAllBanks(event, rbc, fhits, clusters, null, null, null, true);
+            rbc.fillAllTBBanks(event, rbc, fhits, clusters, null, null, null);
             return true;
         }
 
@@ -301,10 +301,10 @@ public class DCTBEngine extends DCEngine {
         if (trkcands.isEmpty()) {
             // No candidates found, stop here and save the hits, the clusters, the segments and the
             //     crosses.
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, null, true);
+            rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, null);
         }
         else {
-            rbc.fillAllBanks(event, rbc, fhits, clusters, segments, crosses, trkcands, true);
+            rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
         }
         return true;
     }

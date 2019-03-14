@@ -100,9 +100,6 @@ public class Hit implements Comparable<Hit> {
     public double calcLocY(int layer, int wire) {
         // In old mc, layer 1 is closer to the beam than layer 2, while in hardware it's the
         //     opposite.
-        // double brickwallPattern = GeometryLoader.getDcDetector().getWireMidpoint(0, 1, 1).x -
-        //                           GeometryLoader.getDcDetector().getWireMidpoint(0, 0, 1).x;
-        // double brickwallSign = Math.signum(brickwallPattern);
         double brickwallSign = -1;
 
         // center of the cell asfcn wire num

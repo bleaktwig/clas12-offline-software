@@ -141,13 +141,6 @@ public class KFitter {
             return;
         }
 
-        // if (sv.TrackTraj.get(k) == null ||
-        //     sv.trackCov.get(k).covMat == null ||
-        //     k >= sv.Z.length) {
-        //
-        //     return;
-        // }
-
         double[] K = new double[5];
         double V   = Math.abs(mv.measurements.get(k).unc);
         double[] H = mv.H(sv.trackTraj.get(k).y,

@@ -373,13 +373,13 @@ public class StateVecs {
      */
     public class StateVec {
 
-        final  int k;       // index
-        public double z;    // z (fixed measurement planes)
-        public double x;    // track x in the tilted sector coordinate system at z
-        public double y;    // track y in the tilted sector coordinate system at z
-        public double tx;   // track px/pz in the tilted sector coordinate system at z
-        public double ty;   // track py/pz in the tilted sector coordinate system at z
-        public double Q;    // track q/p
+        final  int k;     // index
+        public double z;  // z (fixed measurement planes)
+        public double x;  // track x in the tilted sector coordinate system at z
+        public double y;  // track y in the tilted sector coordinate system at z
+        public double tx; // track px/pz in the tilted sector coordinate system at z
+        public double ty; // track py/pz in the tilted sector coordinate system at z
+        public double Q;  // track q/p
         double B;
         double deltaPath;
 

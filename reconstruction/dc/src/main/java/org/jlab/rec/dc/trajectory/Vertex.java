@@ -99,10 +99,8 @@ public class Vertex {
      * @param yb     beam axis y
      * @return       reconstructed vertex
      */
-    public double[] VertexParams(double x, double y, double z,
-                                 double px, double py, double pz,
-                                 double Q, double Bfield,
-                                 double xb, double yb ) {
+    public double[] VertexParams(double x, double y, double z, double px, double py, double pz,
+            double Q, double Bfield, double xb, double yb ) {
 
         double[] value = new double[7];
 

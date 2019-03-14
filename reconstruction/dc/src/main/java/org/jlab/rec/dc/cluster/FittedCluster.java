@@ -3,7 +3,6 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 
 import org.jlab.geom.prim.Line3D;
-
 import org.jlab.rec.dc.hit.FittedHit;
 
 /**

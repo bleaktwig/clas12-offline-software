@@ -1,7 +1,6 @@
 package org.jlab.rec.dc.cluster;
 
 import java.util.ArrayList;
-
 import org.jlab.rec.dc.hit.Hit;
 
 /**

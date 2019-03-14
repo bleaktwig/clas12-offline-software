@@ -3,15 +3,14 @@ package org.jlab.rec.dc.banks;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
 import cnuphys.snr.clas12.Clas12NoiseResult;
 import org.jlab.clas.swimtools.Swimmer;
-import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
-
+import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
@@ -68,15 +67,9 @@ public class HitReader {
      * @param DcDetector    NOTE: Missing description
      * @param triggerPhase  NOTE: Missing description
      */
-    public void fetchDCHits(DataEvent event,
-                            Clas12NoiseAnalysis noiseAnalysis,
-                            NoiseReductionParameters parameters,
-                            Clas12NoiseResult results,
-                            IndexedTable tab,
-                            IndexedTable tab2,
-                            IndexedTable tab3,
-                            DCGeant4Factory DcDetector,
-                            double triggerPhase) {
+    public void fetchDCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,
+            NoiseReductionParameters parameters, Clas12NoiseResult results, IndexedTable tab,
+            IndexedTable tab2, IndexedTable tab3, DCGeant4Factory DcDetector, double triggerPhase) {
 
         if (!event.hasBank("DC::tdc")) {
             _DCHits = new ArrayList<>();
@@ -138,12 +131,7 @@ public class HitReader {
                     passHit = false;
                 }
             }
-            if (passHit &&
-                    wire[i] != -1 &&
-                    !results.noise[i] &&
-                    useMChit[i] != -1 &&
-                    superlayerNum[i] != 0) {
-
+            if (passHit && wire[i] != -1 && !results.noise[i] && useMChit[i] != -1 && superlayerNum[i] != 0) {
                 double timeCutMin = 0;
                 double timeCutMax = 0;
                 double timeCutLC = 0;
@@ -174,40 +162,29 @@ public class HitReader {
                 }
                 boolean passTimingCut = false;
 
-                if (region == 1 &&
-                        smearedTime[i] > timeCutMin &&
-                        smearedTime[i] < timeCutMax) {
+                if (region == 1 && smearedTime[i] > timeCutMin && smearedTime[i] < timeCutMax)
                     passTimingCut = true;
-                }
                 if (region == 2) {
                     double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
-                    if (wire[i] >= 56) {
-                        if (smearedTime[i] > timeCutMin &&
-                                smearedTime[i] < timeCutMax +
-                                                 timeCutLC * (double) (112 - wire[i]/56) * Bscale) {
-                            passTimingCut = true;
-                        }
+                    if (wire[i] >= 56 && smearedTime[i] > timeCutMin  && smearedTime[i] < timeCutMax
+                            + timeCutLC * (double) (112 - wire[i]/56) * Bscale) {
+                        passTimingCut = true;
                     }
-                    else {
-                        if (smearedTime[i] > timeCutMin &&
-                                smearedTime[i] < timeCutMax +
-                                                 timeCutLC * (double) (56 - wire[i]/56) * Bscale) {
-                            passTimingCut = true;
-                        }
+                    else if (smearedTime[i] > timeCutMin && smearedTime[i] < timeCutMax
+                            + timeCutLC * (double) (56 - wire[i]/56) * Bscale) {
+                        passTimingCut = true;
                     }
                 }
-                if (region == 3 &&
-                        smearedTime[i] > timeCutMin &&
-                        smearedTime[i] < timeCutMax) {
+                if (region == 3 && smearedTime[i] > timeCutMin && smearedTime[i] < timeCutMax) {
                     passTimingCut = true;
                 }
 
                 // cut on spurious hits
                 if (passTimingCut) {
-                    Hit hit = new Hit(sector[i], superlayerNum[i], layerNum[i],
-                                      wire[i], tdc[i], (i + 1));
+                    Hit hit = new Hit(sector[i], superlayerNum[i], layerNum[i], wire[i], tdc[i], (i + 1));
                     hit.set_Id(i + 1);
                     hit.calc_CellSize(DcDetector);
+
                     // Math.sqrt(12) = 3.4641016151377544
                     double posError = hit.get_CellSize() / 3.4641016151377544;
                     hit.set_DocaErr(posError);
@@ -229,13 +206,9 @@ public class HitReader {
      * @param DcDetector NOTE: Missing description
      * @param tde        NOTE: Missing description
      */
-    public void readHBHits(DataEvent event,
-                           IndexedTable constants0,
-                           IndexedTable constants1,
-                           double[][][][] T0,
-                           double[][][][] T0ERR,
-                           DCGeant4Factory DcDetector,
-                           TimeToDistanceEstimator tde) {
+    public void readHBHits(DataEvent event, IndexedTable constants0, IndexedTable constants1,
+            double[][][][] T0, double[][][][] T0ERR, DCGeant4Factory DcDetector,
+            TimeToDistanceEstimator tde) {
 
         if (!event.hasBank("HitBasedTrkg::HBHits")) {
             _HBHits = new ArrayList<>();
@@ -301,8 +274,7 @@ public class HitReader {
                 }
             }
 
-            FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i],
-                                          wire[i], tdc[i], id[i]);
+            FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], tdc[i], id[i]);
             hit.set_Id(id[i]);
             hit.setB(B[i]);
             hit.setT0(T_0);
@@ -350,15 +322,10 @@ public class HitReader {
      * @param T0         NOTE: Missing description
      * @param T0ERR      NOTE: Missing description
      */
-    public void readTBHits(DataEvent event,
-                           IndexedTable constants0,
-                           IndexedTable constants1,
-                           TimeToDistanceEstimator tde,
-                           double[][][][] T0,
-                           double[][][][] T0ERR) {
+    public void readTBHits(DataEvent event, IndexedTable constants0, IndexedTable constants1,
+            TimeToDistanceEstimator tde, double[][][][] T0, double[][][][] T0ERR) {
 
-        if (!event.hasBank("TimeBasedTrkg::TBHits") ||
-                !event.hasBank("RECHB::Event")) {
+        if (!event.hasBank("TimeBasedTrkg::TBHits") || !event.hasBank("RECHB::Event")) {
             _TBHits = new ArrayList<>();
             return;
         }
@@ -522,8 +489,8 @@ public class HitReader {
     }
 
     // Map of Cable ID (1, ..., 6) in terms of Layer number (1, ..., 6) and localWire #(1, ..., 16).
+    // [nLayer][nLocWire] => nLocWire=16, 7 groups of 16 wires in each layer
     private final int[][] CableID = {
-            // [nLayer][nLocWire] => nLocWire=16, 7 groups of 16 wires in each layer
             {1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6}, // Layer 1
             {1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6}, // Layer 2
             {1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6}, // Layer 3

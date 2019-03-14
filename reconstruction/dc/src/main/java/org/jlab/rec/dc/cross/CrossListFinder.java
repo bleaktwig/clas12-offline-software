@@ -41,12 +41,8 @@ public class CrossListFinder  {
      * @param swimmer     NOTE: Lacks description
      * @return the list of crosses determined to be consistent with belonging to a track in the DC
      */
-    public CrossList candCrossLists(List<Cross> dccrosslist,
-                                    boolean TimeBased,
-                                    IndexedTable tab,
-                                    DCGeant4Factory DcDetector,
-                                    TimeToDistanceEstimator tde,
-                                    Swim swimmer) {
+    public CrossList candCrossLists(List<Cross> dccrosslist, boolean TimeBased, IndexedTable tab,
+            DCGeant4Factory DcDetector, TimeToDistanceEstimator tde, Swim swimmer) {
         trkCnds.clear();
 
         if (dccrosslist.size() <= 0) return new CrossList();
@@ -219,10 +215,8 @@ public class CrossListFinder  {
     }
 
     // NOTE: Lacks JavaDoc Description
-    private void recalcParsSegment(Segment _Segment,
-                                   IndexedTable tab,
-                                   DCGeant4Factory DcDetector,
-                                   TimeToDistanceEstimator tde) {
+    private void recalcParsSegment(Segment _Segment, IndexedTable tab, DCGeant4Factory DcDetector,
+            TimeToDistanceEstimator tde) {
         // Refit
         double cosTrkAngle = 1. / Math.sqrt(1. +
                 _Segment.get_fittedCluster().get_clusterLineFitSlope() *
@@ -274,11 +268,8 @@ public class CrossListFinder  {
      * @param swimmer    NOTE: Lacks description
      * Updates the B-field information of the hits in the cross segments.
      */
-    private void updateBFittedHits(Cross c,
-                                   IndexedTable tab,
-                                   DCGeant4Factory DcDetector,
-                                   TimeToDistanceEstimator tde,
-                                   Swim swimmer) {
+    private void updateBFittedHits(Cross c, IndexedTable tab, DCGeant4Factory DcDetector,
+            TimeToDistanceEstimator tde, Swim swimmer) {
 
         for (int i = 0; i < c.get_Segment1().size(); i++) {
             Point3D ref = c.get_Segment1().get(i).getCrossDirIntersWire();

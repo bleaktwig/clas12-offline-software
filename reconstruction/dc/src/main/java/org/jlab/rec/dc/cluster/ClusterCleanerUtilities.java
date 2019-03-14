@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
-
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
+import org.jlab.utils.groups.IndexedTable;
 
-// NOTE: Maybe changing the Math methods here to FastMath would be practical?
+// NOTE: Maybe changing the Math methods here to FastMath would be a good idea?
 // NOTE: Lacks JavaDoc description
 public class ClusterCleanerUtilities {
 
@@ -20,7 +19,7 @@ public class ClusterCleanerUtilities {
 
     public ClusterCleanerUtilities() {
         List<ArrayList<Hit>> sortdHits = new ArrayList<ArrayList<Hit>>();
-        for(int l = 0; l < 6; l++) sortdHits.add(new ArrayList<Hit>());
+        for (int l = 0; l < 6; l++) sortdHits.add(new ArrayList<Hit>());
         sortedHits = sortdHits;
     }
 
@@ -314,11 +313,8 @@ public class ClusterCleanerUtilities {
      * @param tde        NOTE: parameter lacks description
      * @return           NOTE: return data lacks description
      */
-    public FittedCluster LRAmbiguityResolver(FittedCluster fClus,
-                                             ClusterFitter cf,
-                                             IndexedTable tab,
-                                             DCGeant4Factory DcDetector,
-                                             TimeToDistanceEstimator tde) {
+    public FittedCluster LRAmbiguityResolver(FittedCluster fClus, ClusterFitter cf,
+            IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
         int index = 0;
         for(FittedHit hit: fClus) {
             if (hit.get_Doca() < 0.4 * hit.get_CellSize()) hit.set_LeftRightAmb(0);
@@ -342,15 +338,14 @@ public class ClusterCleanerUtilities {
         }
 
         // Make combinatorials
-        FittedCluster tnLRc = new FittedCluster(fClus.getBaseCluster());        // totNotLRClus
-        FittedCluster pnLRc = new FittedCluster(fClus.getBaseCluster());        // posNotLRClus
-        FittedCluster nnLRc = new FittedCluster(fClus.getBaseCluster());        // negNotLRClus
+        FittedCluster tnLRc = new FittedCluster(fClus.getBaseCluster()); // totNotLRClus
+        FittedCluster pnLRc = new FittedCluster(fClus.getBaseCluster()); // posNotLRClus
+        FittedCluster nnLRc = new FittedCluster(fClus.getBaseCluster()); // negNotLRClus
 
         for (FittedHit hit : notLRClus) {
 
             FittedHit newhitPos = new FittedHit(hit.get_Sector(), hit.get_Superlayer(),
-                                                hit.get_Layer(),  hit.get_Wire(),
-                                                hit.get_TDC(),    hit.get_Id());
+                    hit.get_Layer(), hit.get_Wire(), hit.get_TDC(), hit.get_Id());
             newhitPos.set_Doca(hit.get_Doca());
             newhitPos.set_DocaErr(hit.get_DocaErr());
             newhitPos.setT0(hit.getT0());
@@ -372,8 +367,7 @@ public class ClusterCleanerUtilities {
             newhitPos.set_AssociatedHBTrackID(hit.get_AssociatedHBTrackID());
 
             FittedHit newhitNeg = new FittedHit(hit.get_Sector(), hit.get_Superlayer(),
-                                                hit.get_Layer(),  hit.get_Wire(),
-                                                hit.get_TDC(),    hit.get_Id());
+                    hit.get_Layer(), hit.get_Wire(), hit.get_TDC(), hit.get_Id());
             newhitNeg.set_Doca(hit.get_Doca());
             newhitNeg.set_DocaErr(hit.get_DocaErr());
             newhitNeg.setT0(hit.getT0());

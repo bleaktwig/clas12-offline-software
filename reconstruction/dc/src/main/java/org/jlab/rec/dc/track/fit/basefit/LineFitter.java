@@ -14,9 +14,8 @@ public class LineFitter {
 	private LineFitPars _linefitresult;
 
 	// fit status
-	public boolean fitStatus(List<Double> x,       List<Double> y,
-							 List<Double> sigma_x, List<Double> sigma_y,
-							 int nbpoints) {
+	public boolean fitStatus(List<Double> x, List<Double> y, List<Double> sigma_x,
+			List<Double> sigma_y, int nbpoints) {
 		// must have enough points to do the fit
 		if (nbpoints < 2) {
 			return false;

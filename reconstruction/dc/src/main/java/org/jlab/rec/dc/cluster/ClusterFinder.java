@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
-
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 
 /**
  * A hit pruning algorithm to reject noise that gives a pattern of hits that are continguous in the
@@ -130,10 +129,8 @@ public class ClusterFinder {
      * @param DcDetector DC Detector geometry
      * @return           resulting fitted cluster of hits
      */
-    public List<FittedCluster> FindHitBasedClusters(List<Hit> allhits,
-                                                    ClusterCleanerUtilities ct,
-                                                    ClusterFitter cf,
-                                                    DCGeant4Factory DcDetector) {
+    public List<FittedCluster> FindHitBasedClusters(List<Hit> allhits, ClusterCleanerUtilities ct,
+            ClusterFitter cf, DCGeant4Factory DcDetector) {
 
         // Fill array of hit
         this.fillHitArray(allhits, 0);

@@ -1,9 +1,7 @@
 package org.jlab.rec.dc.cross;
 
 import java.util.ArrayList;
-// TODO: Uncomment
-// import org.jlab.clas.clas.math.FastMath;
-import org.apache.commons.math3.util.FastMath;
+import org.jlab.clas.clas.math.FastMath;
 
 import org.jlab.geom.prim.Point3D;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;

@@ -43,11 +43,8 @@ public class SegmentTrajectory {
      * @param DcDetector DC detector geometry
      * @return           the wire
      */
-    public int getWireOnTrajectory(int sector,
-                                   int superlayer,
-                                   int layer,
-                                   double trkX,
-                                   DCGeant4Factory DcDetector) {
+    public int getWireOnTrajectory(int sector, int superlayer, int layer, double trkX,
+            DCGeant4Factory DcDetector) {
 
         double x1 = DcDetector.getWireMidpoint(sector-1, superlayer-1, layer-1, 1).x;
         double x0 = DcDetector.getWireMidpoint(sector-1, superlayer-1, layer-1, 0).x;

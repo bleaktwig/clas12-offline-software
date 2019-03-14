@@ -21,7 +21,6 @@ public class TableLoader {
     public static double[][][][][] DISTFROMTIME
             = new double[  6   ][ 6  ][  8  ][  6   ][nBinsT];
     //                  [sector][slyr][alpha][Bfield][time][bins]
-    // NOTE: Something seems very wrong with the comment on the previous line...
     static boolean T2DLOADED  = false;
     static boolean T0LOADED   = false;
     static int minBinIdxB     = 0;
@@ -177,10 +176,8 @@ public class TableLoader {
      * @param tab    NOTE: Missing description
      * @return time (ns)
      */
-    public static synchronized double calc_Time(double x,      double dmax,
-                                                double tmax,   double alpha,
-                                                double bfield, int s, int r,
-                                                IndexedTable tab) {
+    public static synchronized double calc_Time(double x, double dmax, double tmax, double alpha,
+            double bfield, int s, int r, IndexedTable tab) {
 
         // Assume a functional form (time=x/v0+a*(x/dmax)**n+b*(x/dmax)**m) for time as a function
         // of x for theta = 30 deg.

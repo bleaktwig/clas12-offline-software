@@ -20,55 +20,52 @@ import org.jlab.rec.dc.trajectory.StateVec;
  */
 public class FittedHit extends Hit implements Comparable<Hit> {
 
-    private double _X;                // The hit's x-position at the mid-plane (y = 0) in the tilted
-                                      //     sector's coordinate system.
-    private double _XMP;              // X at the MidPlane in sector coordinates system.
-    private double _Z;                // The hit's z-position at the mid-plane (y = 0) in the tilted
-                                      //     sector's coordinate system.
-    private double _lX;			      // X in local coordinate system used in hit-based fit to
-                                      //     cluster line, used in the cluster-finding algorithm to
-                                      //     fit the hit-based wire positions, from 1 to 6.
-    private double _lY;			      // Y in local coordinate system used in hit-based fit to
-                                      //     cluster line, used in the cluster-finding algorithm to
-                                      //     fit the hit-based wire positions.
-    private double _Residual;		  // Cluster line to the wire position's residual, or the
-                                      // residual from the fit to the wire positions in the
-                                      // superlayer.
+    private double _X; // The hit's x-position at the mid-plane (y = 0) in the tilted sector's
+                       //     coordinate system.
+    private double _XMP; // X at the MidPlane in sector coordinates system.
+    private double _Z; // The hit's z-position at the mid-plane (y = 0) in the tilted sector's
+                       //     coordinate system.
+    private double _lX; // X in local coordinate system used in hit-based fit to cluster line, used
+                        //     in the cluster-finding algorithm to fit the hit-based wire positions,
+                        //     from 1 to 6.
+    private double _lY; // Y in local coordinate system used in hit-based fit to cluster line, used
+                        //     in the cluster-finding algorithm to fit the hit-based wire positions.
+    private double _Residual; // Cluster line to the wire position's residual, or the residual from 
+                              //     the fit to the wire positions in the superlayer.
     private double _TimeResidual = 0; // Cluster line to the wire position's time-residual, or
                                       //     |fit| - |y| from the fit to the wire positions in the
                                       //     superlayer.
-    private int _LeftRightAmb;		  // Left-Right Ambiguity value. An integer representative of
-                                      //     estimate of the left-right ambiguity obtained from
-                                      //     pattern recognition:
-                                      //     -1: the track went to the left of the wire.
-                                      //      0: the left-right ambiguity could not be resolved.
-                                      //     +1: the track went to the right of the wire.
-    private double _QualityFac;       // A quality factor representative of the quality of the fit
-                                      //     to the hit.
-    private int _TrkgStatus = -1;	  // An integer representative of the pattern recognition and
-                                      //     subsequent KF fit for the hit.
-                                      //     -1: the hit has not yet been fit and is the input of
-                                      //         hit-based tracking, having a well-defined time-to-
-                                      //         distance value.
-                                      //      0: the hit has been successfully involved in hit-based
-                                      //         tracking and has a wel-defined time-to-distance.
-                                      //     +1: the hit has been succesfully involved in track
-                                      //         fitting.
+    private int _LeftRightAmb; // Left-Right Ambiguity value. An integer representative of estimate
+                               // of the left-right ambiguity obtained from pattern recognition:
+                               //     -1: the track went to the left of the wire.
+                               //      0: the left-right ambiguity could not be resolved.
+                               //     +1: the track went to the right of the wire.
+    private double _QualityFac; // A quality factor representative of the quality of the fit to the
+                                //     hit.
+    private int _TrkgStatus = -1; // An integer representative of the pattern recognition and
+                                  //     subsequent KF fit for the hit.
+                                  //     -1: the hit has not yet been fit and is the input of
+                                  //         hit-based tracking, having a well-defined time-to-
+                                  //         distance value.
+                                  //      0: the hit has been successfully involved in hit-based
+                                  //         tracking and has a wel-defined time-to-distance.
+                                  //     +1: the hit has been succesfully involved in track
+                                  //         fitting.
 
-    private double _ClusFitDoca = -1;   // Doca to cluster fit line in cm.
-    private double _TrkFitDoca = -1;    // Doca to track trajectory at hit layer plane in cm.
+    private double _ClusFitDoca = -1; // Doca to cluster fit line in cm.
+    private double _TrkFitDoca = -1; // Doca to track trajectory at hit layer plane in cm.
     private double _TimeToDistance = 0; // the calculated distance in cm from the time in ns.
-    private double _Beta = 1.0;         // NOTE: Needs description
+    private double _Beta = 1.0; // NOTE: Needs description
 
     private StateVec _AssociatedStateVec; // State vector (x, y, tx, ty, q/p) associated with the
                                           //     hit.
 
-    private double _Doca;	 // Reconstructed doca, for now it is using the linear parametrization
-                             //     that is in gemc. Measured in cm.
-    // private double _DocaErr; // Error on doca.
-    private double _B;		 // B-field intensity at hit location along wire, measured in T.
-    private int _Id;         // The ID corresponds to the hit index in the EvIO column.
-    public int _lr;          // NOTE: Needs description
+    private double _Doca; // Reconstructed doca, for now it is using the linear parametrization
+                          //     that is in gemc. Measured in cm.
+
+    private double _B; // B-field intensity at hit location along wire, measured in T.
+    private int _Id; // The ID corresponds to the hit index in the EvIO column.
+    public int _lr; // NOTE: Needs description
 
     public boolean RemoveFlag = false;
     private int _AssociatedClusterID = -1; // ID of the cluster associated to the fitted hit.
@@ -152,10 +149,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
      * @param tab         NOTE: Missing description
      * @param tde         NOTE: Missing description
      */
-    public void set_TimeToDistance(double cosTrkAngle,
-                                   double B,
-                                   IndexedTable tab,
-                                   TimeToDistanceEstimator tde) {
+    public void set_TimeToDistance(double cosTrkAngle, double B, IndexedTable tab,
+            TimeToDistanceEstimator tde) {
 
         double distance = 0;
         int slIdx  = this.get_Superlayer() - 1;
@@ -419,11 +414,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
      * @param DcDetector  DC detector geometry
      * @param tde         NOTE: Missing description
      */
-    public void updateHitPositionWithTime(double cosTrkAngle,
-                                          double B,
-                                          IndexedTable tab,
-                                          DCGeant4Factory DcDetector,
-                                          TimeToDistanceEstimator tde) {
+    public void updateHitPositionWithTime(double cosTrkAngle, double B, IndexedTable tab,
+            DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
 
         if (this.get_Time() > 0) this.set_TimeToDistance(cosTrkAngle, B, tab, tde);
 
