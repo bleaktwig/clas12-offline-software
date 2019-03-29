@@ -106,7 +106,6 @@ public class DCHBEngine extends DCEngine {
         HitReader hitRead = new HitReader();
 
         hitRead.fetchDCHits(event, noiseAnalysis, parameters, results,
-                super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 super.getConstantsManager().getConstants(newRun, Constants.TDCTCUTS),
                 super.getConstantsManager().getConstants(newRun, Constants.WIRESTAT),
                 dcDetector, triggerPhase);

@@ -26,50 +26,80 @@ import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 public class HitReader {
 
     private List<Hit> _DCHits;
-
     private List<FittedHit> _HBHits; // Hit-based tracking hit information
     private List<FittedHit> _TBHits; // Time-based tracking hit information
 
-    public List<Hit> get_DCHits() {
-        return _DCHits;
+    // Map of Cable ID (1, ..., 6) in terms of Layer number (1, ..., 6) and localWire #(1, ..., 16).
+    // [nLayer][nLocWire] => nLocWire=16, 7 groups of 16 wires in each layer
+    private final int[][] CableID = {
+            {1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6}, // Layer 1
+            {1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6}, // Layer 2
+            {1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6}, // Layer 3
+            {1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6}, // Layer 4
+            {1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6}, // Layer 5
+            {1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6}, // Layer 6
+            // ===> 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+            // (Local wire ID: 0 for 1st, 16th, 32th, 48th, 64th, 80th, 96th wires)
+    };
+
+    public List<Hit> get_DCHits() {return _DCHits;}
+    private void set_DCHits(List<Hit> _DCHits) {this._DCHits = _DCHits;}
+
+    public List<FittedHit> get_HBHits() {return _HBHits;}
+    private void set_HBHits(List<FittedHit> _HBHits) {this._HBHits = _HBHits;}
+
+    public List<FittedHit> get_TBHits() {return _TBHits;}
+    private void set_TBHits(List<FittedHit> _TBHits) {this._TBHits = _TBHits;}
+
+    private int getSlotID1to7(int wire1to112) {
+        return ((wire1to112 - 1) / 16) + 1;
     }
 
-    private void set_DCHits(List<Hit> _DCHits) {
-        this._DCHits = _DCHits;
-    }
-
-    public List<FittedHit> get_HBHits() {
-        return _HBHits;
-    }
-
-    private void set_HBHits(List<FittedHit> _HBHits) {
-        this._HBHits = _HBHits;
-    }
-
-    public List<FittedHit> get_TBHits() {
-        return _TBHits;
-    }
-
-    private void set_TBHits(List<FittedHit> _TBHits) {
-        this._TBHits = _TBHits;
+    // 96 channels are grouped into 6 groups of 16 channels and each group joins with a connector
+    //     and a corresponding cable (with IDs 1, 2, 3, 4 & 6).
+    private int getCableID1to6(int layer1to6, int wire1to112) {
+        return this.CableID[layer1to6 - 1][((wire1to112 - 1) % 16 + 1) - 1];
     }
 
     /**
-     * Reads the hits using clas-io methods to get the EvioBank for the DC and fill the values to
-     * instantiate the DChit and MChit classes. This methods fills the DChit list of hits.
+     * NOTE: Missing description
+     * @param sector     NOTE: Missing description
+     * @param superlayer NOTE: Missing description
+     * @param layer      NOTE: Missing description
+     * @param wire       NOTE: Missing description
+     * @param T0         NOTE: Missing description
+     * @param T0ERR      NOTE: Missing description
+     * @return           NOTE: Missing description
+     */
+    private double[] get_T0(int sector, int superlayer, int layer, int wire,
+                            double[][][][] T0, double[][][][] T0ERR) {
+
+        int slot  = this.getSlotID1to7(wire);
+        int cable = this.getCableID1to6(layer, wire);
+
+        return new double[] {T0   [sector - 1][superlayer - 1][slot - 1][cable - 1],
+                             T0ERR[sector - 1][superlayer - 1][slot - 1][cable - 1]};
+    }
+
+    /**
+     * Fills the DChit list of hits. This method reads the hits using clas-io methods to get the
+     * EvioBank for the DC and fills the values to instantiate the DChit and MChit classes.
      * @param event         Data event
      * @param noiseAnalysis NOTE: Missing description
      * @param parameters    NOTE: Missing description
      * @param results       NOTE: Missing description
-     * @param tab           NOTE: Missing description
      * @param tab2          NOTE: Missing description
      * @param tab3          NOTE: Missing description
      * @param DcDetector    NOTE: Missing description
      * @param triggerPhase  NOTE: Missing description
      */
-    public void fetchDCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,
-            NoiseReductionParameters parameters, Clas12NoiseResult results, IndexedTable tab,
-            IndexedTable tab2, IndexedTable tab3, DCGeant4Factory DcDetector, double triggerPhase) {
+    public void fetchDCHits(DataEvent event,
+                            Clas12NoiseAnalysis noiseAnalysis,
+                            NoiseReductionParameters parameters,
+                            Clas12NoiseResult results,
+                            IndexedTable tab2, IndexedTable tab3,
+                            DCGeant4Factory DcDetector,
+                            double triggerPhase) {
 
         if (!event.hasBank("DC::tdc")) {
             _DCHits = new ArrayList<>();
@@ -77,43 +107,24 @@ public class HitReader {
         }
 
         DataBank bankDGTZ = event.getBank("DC::tdc");
-        int rows = bankDGTZ.rows();
-        int[] sector   = new int[rows];
-        int[] layer    = new int[rows];
-        int[] wire     = new int[rows];
-        int[] tdc      = new int[rows];
-        int[] useMChit = new int[rows];
+        int size = bankDGTZ.rows();
 
-        for (int i = 0; i < rows; i++) {
-            sector[i] = bankDGTZ.getByte ("sector",    i);
-            layer[i]  = bankDGTZ.getByte ("layer",     i);
-            wire[i]   = bankDGTZ.getShort("component", i);
-            tdc[i]    = bankDGTZ.getInt  ("TDC",       i);
-        }
+        int[] sector   = new int[size];
+        int[] layer    = new int[size];
+        int[] wire     = new int[size];
+        int[] tdc      = new int[size];
+        int[] useMChit = new int[size];
 
-        if (event.hasBank("DC::doca")) {
-            DataBank bankD = event.getBank("DC::doca");
-            int bd_rows = bankD.rows();
-            for (int i = 0; i < bd_rows; i++) {
-                if (bankD.getFloat("stime", i) < 0) {
-                    useMChit[i] = -1;
-                }
-            }
-        }
+        readBankDGTZ(event, sector, layer, wire, tdc, useMChit);
 
-        int size = layer.length;
         int[]    layerNum      = new int[size];
         int[]    superlayerNum = new int[size];
         double[] smearedTime   = new double[size];
 
-        List<Hit> hits = new ArrayList<>();
-
         for (int i = 0; i < size; i++) {
             if (tdc.length > 0) {
                 smearedTime[i] = (double) tdc[i] - triggerPhase;
-                if (smearedTime[i] < 0) {
-                    smearedTime[i] = 1;
-                }
+                if (smearedTime[i] < 0) smearedTime[i] = 1;
             }
 
             superlayerNum[i] = (layer[i] - 1) / 6 + 1;
@@ -124,63 +135,18 @@ public class HitReader {
         noiseAnalysis.clear();
         noiseAnalysis.findNoise(sector, superlayerNum, layerNum, wire, results);
 
+        List<Hit> hits = new ArrayList<>();
+
         for (int i = 0; i < size; i++) {
-            boolean passHit = true;
-            if (tab3 != null) {
-                if (tab3.getIntValue("status", sector[i], layer[i], wire[i]) != 0) {
-                    passHit = false;
-                }
-            }
-            if (passHit && wire[i] != -1 && !results.noise[i] && useMChit[i] != -1 && superlayerNum[i] != 0) {
-                double timeCutMin = 0;
-                double timeCutMax = 0;
-                double timeCutLC = 0;
-
-                int region = ((superlayerNum[i] + 1) / 2);
-
-                switch (region) {
-                    case 1:
-                        timeCutMin = tab2.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tab2.getIntValue("MaxEdge", 0, region, 0);
-                        break;
-                    case 2:
-                        if (wire[i] <= 56) {
-                            timeCutLC  = tab2.getIntValue("LinearCoeff", 0, region, 1);
-                            timeCutMin = tab2.getIntValue("MinEdge", 0, region, 1);
-                            timeCutMax = tab2.getIntValue("MaxEdge", 0, region, 1);
-                        }
-                        else {
-                            timeCutLC  = tab2.getIntValue("LinearCoeff", 0, region, 56);
-                            timeCutMin = tab2.getIntValue("MinEdge", 0, region, 56);
-                            timeCutMax = tab2.getIntValue("MaxEdge", 0, region, 56);
-                        }
-                        break;
-                    case 3:
-                        timeCutMin = tab2.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tab2.getIntValue("MaxEdge", 0, region, 0);
-                        break;
-                }
-                boolean passTimingCut = false;
-
-                if (region == 1 && smearedTime[i] > timeCutMin && smearedTime[i] < timeCutMax)
-                    passTimingCut = true;
-                if (region == 2) {
-                    double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
-                    if (wire[i] >= 56 && smearedTime[i] > timeCutMin  && smearedTime[i] < timeCutMax
-                            + timeCutLC * (double) (112 - wire[i]/56) * Bscale) {
-                        passTimingCut = true;
-                    }
-                    else if (smearedTime[i] > timeCutMin && smearedTime[i] < timeCutMax
-                            + timeCutLC * (double) (56 - wire[i]/56) * Bscale) {
-                        passTimingCut = true;
-                    }
-                }
-                if (region == 3 && smearedTime[i] > timeCutMin && smearedTime[i] < timeCutMax) {
-                    passTimingCut = true;
-                }
+            if (tab3 != null && tab3.getIntValue("status", sector[i], layer[i], wire[i]) != 0)
+                continue;
+            if (wire[i] != -1 && !results.noise[i] && useMChit[i] != -1 && superlayerNum[i] != 0) {
+                int region = (superlayerNum[i] + 1)/2;
+                // timeCut: {timeCutMin, timeCutMax, timeCutLC}
+                double[] timeCut = getTimeCut(tab2, region, wire[i]);
 
                 // cut on spurious hits
-                if (passTimingCut) {
+                if (getPassTimingCut(region, wire[i], smearedTime[i], timeCut)) {
                     Hit hit = new Hit(sector[i], superlayerNum[i], layerNum[i], wire[i], tdc[i], (i + 1));
                     hit.set_Id(i + 1);
                     hit.calc_CellSize(DcDetector);
@@ -194,6 +160,76 @@ public class HitReader {
         }
 
         this.set_DCHits(hits);
+    }
+
+    private void readBankDGTZ(DataEvent event,
+                              int[] sector, int[] layer, int[] wire, int[] tdc, int[] useMChit) {
+
+        DataBank bankDGTZ = event.getBank("DC::tdc");
+        int dgtzRows = bankDGTZ.rows();
+
+        for (int i = 0; i < dgtzRows; i++) {
+            sector[i] = bankDGTZ.getByte ("sector",    i);
+            layer[i]  = bankDGTZ.getByte ("layer",     i);
+            wire[i]   = bankDGTZ.getShort("component", i);
+            tdc[i]    = bankDGTZ.getInt  ("TDC",       i);
+        }
+
+        if (event.hasBank("DC::doca")) {
+            DataBank bankD = event.getBank("DC::doca");
+            int dRows = bankD.rows();
+            for (int i = 0; i < dRows; i++) {
+                if (bankD.getFloat("stime", i) < 0) useMChit[i] = -1;
+            }
+        }
+    }
+    private double[] getTimeCut(IndexedTable tab, int region, int wire) {
+        double timeCutMin = 0;
+        double timeCutMax = 0;
+        double timeCutLC  = 0;
+
+        switch (region) {
+            case 1:
+                timeCutMin = tab.getIntValue("MinEdge", 0, region, 0);
+                timeCutMax = tab.getIntValue("MaxEdge", 0, region, 0);
+                break;
+            case 2:
+                if (wire <= 56) {
+                    timeCutLC  = tab.getIntValue("LinearCoeff", 0, region, 1);
+                    timeCutMin = tab.getIntValue("MinEdge", 0, region, 1);
+                    timeCutMax = tab.getIntValue("MaxEdge", 0, region, 1);
+                }
+                else {
+                    timeCutLC  = tab.getIntValue("LinearCoeff", 0, region, 56);
+                    timeCutMin = tab.getIntValue("MinEdge", 0, region, 56);
+                    timeCutMax = tab.getIntValue("MaxEdge", 0, region, 56);
+                }
+                break;
+            case 3:
+                timeCutMin = tab.getIntValue("MinEdge", 0, region, 0);
+                timeCutMax = tab.getIntValue("MaxEdge", 0, region, 0);
+                break;
+        }
+
+        return new double[] {timeCutMin, timeCutMax, timeCutLC};
+    }
+    private boolean getPassTimingCut(int region, int wire, double smearedTime, double[] timeCut) {
+        double timeCutMax;
+
+        if (region == 1 || region == 3)
+            timeCutMax = timeCut[1];
+        else if (region == 2) {
+            int maxWire;
+            if (wire >= 56) maxWire = 112;
+            else            maxWire = 56;
+            double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
+            timeCutMax = timeCut[1] + timeCut[2] * (double) (maxWire - wire/56) * Bscale;
+        }
+        else
+            return false;
+
+        if (smearedTime > timeCut[0] && smearedTime < timeCutMax) return true;
+        else                                                      return false;
     }
 
     /**
@@ -444,60 +480,4 @@ public class HitReader {
         if (_beta > 1.0) return 1.0;
         return _beta;
     }
-
-    /**
-     * NOTE: Missing description
-     * @param sector     NOTE: Missing description
-     * @param superlayer NOTE: Missing description
-     * @param layer      NOTE: Missing description
-     * @param wire       NOTE: Missing description
-     * @param T0         NOTE: Missing description
-     * @param T0ERR      NOTE: Missing description
-     * @return           NOTE: Missing description
-     */
-    private double[] get_T0(int sector,
-                            int superlayer,
-                            int layer,
-                            int wire,
-                            double[][][][] T0,
-                            double[][][][] T0ERR) {
-
-        double[] T0Corr = new double[2];
-
-        int cable = this.getCableID1to6(layer, wire);
-        int slot  = this.getSlotID1to7(wire);
-
-        //                [nSector   ][nSuperLayer   ][nSlots  ][nCables  ]
-        double t0  = T0   [sector - 1][superlayer - 1][slot - 1][cable - 1];
-        double t0E = T0ERR[sector - 1][superlayer - 1][slot - 1][cable - 1];
-
-        T0Corr[0] = t0;
-        T0Corr[1] = t0E;
-
-        return T0Corr;
-    }
-
-    private int getSlotID1to7(int wire1to112) {
-        return ((wire1to112 - 1) / 16) + 1;
-    }
-
-    // 96 channels are grouped into 6 groups of 16 channels and each group joins with a connector
-    //     and a corresponding cable (with IDs 1, 2, 3, 4 & 6).
-    private int getCableID1to6(int layer1to6, int wire1to112) {
-        int wire1to16 = ((wire1to112 - 1) % 16 + 1);
-        return this.CableID[layer1to6 - 1][wire1to16 - 1];
-    }
-
-    // Map of Cable ID (1, ..., 6) in terms of Layer number (1, ..., 6) and localWire #(1, ..., 16).
-    // [nLayer][nLocWire] => nLocWire=16, 7 groups of 16 wires in each layer
-    private final int[][] CableID = {
-            {1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6}, // Layer 1
-            {1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6}, // Layer 2
-            {1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6}, // Layer 3
-            {1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6}, // Layer 4
-            {1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6}, // Layer 5
-            {1, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6}, // Layer 6
-            // ===> 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-            // (Local wire ID: 0 for 1st, 16th, 32th, 48th, 64th, 80th, 96th wires)
-    };
 }

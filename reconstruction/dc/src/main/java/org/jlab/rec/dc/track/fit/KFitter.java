@@ -148,36 +148,19 @@ public class KFitter {
                      mv.measurements.get(k).wireMaxSag,
                      mv.measurements.get(k).wireLen);
 
-        double[][] HTGH =
-            new double[][]{
-                {H[0] * H[0] / V, H[0] * H[1] / V, 0, 0, 0},
-                {H[0] * H[1] / V, H[1] * H[1] / V, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0}
-            };
+        // Sherman-Morrisey formula applied to the filter. This is possible because the HTGH matrix
+        // used can be expressed as a column vector multiplied by a row vector (in this case, itself
+        // transposed).
+        Matrix Hvec  = new Matrix(new double[][] {{H[0]}, {H[1]}, {0}, {0}, {0}});
+        Matrix HvecT = Hvec.transpose();
+        Matrix C     = sv.trackCov.get(k).covMat;
 
-        Matrix Ci;
-
-        if (!this.isNonsingular(sv.trackCov.get(k).covMat)) return;
-        try {
-            Ci = sv.trackCov.get(k).covMat.inverse();
-        } catch (Exception e) {
-            return;
-        }
-
-        Matrix Ca;
-        try {
-            Ca = Ci.plus(new Matrix(HTGH));
-        } catch (Exception e) {
-            return;
-        }
-
-        if (Ca == null || !this.isNonsingular(Ca)) return;
-        Matrix CaInv = Ca.inverse();
-        if (CaInv == null) return;
-
-        sv.trackCov.get(k).covMat = CaInv;
+        double div = (new Matrix(new double[][] {{V}}).plus((HvecT.times(C)).times(Hvec))).get(0, 0);
+        Matrix result = ((C.times(Hvec)).times(HvecT)).times(C);
+        double[][] resultD = result.getArray();
+        for (int ii = 0; ii < resultD.length * resultD[0].length; ++ii)
+            resultD[ii/resultD[0].length][ii%resultD[0].length] /= div;
+        sv.trackCov.get(k).covMat = C.minus(new Matrix(resultD));
 
 
         for (int j = 0; j < 5; j++) {
