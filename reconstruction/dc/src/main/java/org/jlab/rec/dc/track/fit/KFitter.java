@@ -157,11 +157,12 @@ public class KFitter {
 
         double div = (new Matrix(new double[][] {{V}}).plus((HvecT.times(C)).times(Hvec))).get(0, 0);
         Matrix result = ((C.times(Hvec)).times(HvecT)).times(C);
-        double[][] resultD = result.getArray();
-        for (int ii = 0; ii < resultD.length * resultD[0].length; ++ii)
-            resultD[ii/resultD[0].length][ii%resultD[0].length] /= div;
-        sv.trackCov.get(k).covMat = C.minus(new Matrix(resultD));
-
+        for (int i = 0; i < 5; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                result.set(i, j, result.get(i, j)/div);
+            }
+        }
+        sv.trackCov.get(k).covMat = C.minus(result);
 
         for (int j = 0; j < 5; j++) {
             // the gain matrix
