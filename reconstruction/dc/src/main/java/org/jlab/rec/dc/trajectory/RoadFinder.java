@@ -298,6 +298,26 @@ public class RoadFinder  {
                 sum8 += y1/e2;
             }
 
+            // TODO: Hardcoding the inverse so it doesn't need to be calculated
+            // double aux1 = sum3*sum4 + sum2*sum5;
+            // double aux2 = sum3*sum3;
+            // double aux3 = sum2*sum4 - aux2;
+            // double aux4 = sum2*sum3 - sum1*sum4;
+            //
+            // double[] ret = {(sum3*sum5 - sum4*sum4)*sum6 + aux1*sum7 + aux3*sum8,
+            //                 aux1*sum6 + (sum1*sum5 - aux2)*sum7 + aux4*sum8,
+            //                 aux3*sum6 + aux4*sum7 + (sum1*sum3 - sum2*sum2)*sum8};
+            //
+            // double _chi2 = 0;
+            // for (int i = 0; i < x.length; ++i) {
+            //     double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
+            //     _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
+            // }
+            // this.chi2 = _chi2;
+            // this.NDF = x.length - 3;
+            //
+            // a = ret;
+
             A.set(0, 0, sum1);
             A.set(0, 1, sum2);
             A.set(0, 2, sum3);
