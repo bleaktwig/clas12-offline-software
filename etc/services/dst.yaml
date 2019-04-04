@@ -27,6 +27,8 @@ services:
 #  - class: org.jlab.service.cnd.CNDEngine
   - class: org.jlab.service.cnd.CNDCalibrationEngine
     name: CND
+  - class: org.jlab.service.band.BANDEngine
+    name: BAND
   - class: org.jlab.service.htcc.HTCCReconstructionService
     name: HTCC
   - class: org.jlab.service.ltcc.LTCCEngine

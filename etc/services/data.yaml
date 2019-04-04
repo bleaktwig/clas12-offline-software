@@ -27,6 +27,8 @@ services:
 #  - class: org.jlab.service.cnd.CNDEngine
   - class: org.jlab.service.cnd.CNDCalibrationEngine
     name: CND
+  - class: org.jlab.service.band.BANDEngine
+    name: BAND
   - class: org.jlab.service.htcc.HTCCReconstructionService
     name: HTCC
   - class: org.jlab.service.ltcc.LTCCEngine
@@ -61,8 +63,6 @@ configuration:
       wireDistortionsFlag: "true"
       geomDBVariation: may_2018_engineers
     DCTB:
-      geomDBVariation: may_2018_engineers
-    DCKF:
       geomDBVariation: may_2018_engineers
 
 mime-types:
