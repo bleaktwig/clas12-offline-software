@@ -66,8 +66,6 @@ configuration:
       geomDBVariation: may_2018_engineers
     DCTB:
       geomDBVariation: may_2018_engineers
-    DCKF:
-      geomDBVariation: may_2018_engineers
 
 mime-types:
   - binary/data-hipo

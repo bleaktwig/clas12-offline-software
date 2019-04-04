@@ -69,7 +69,6 @@ public class DCHBEngine extends DCEngine {
         double triggerPhase = 0;
 
         // Load the constants
-        //-------------------
         int newRun = bank.getInt("run", 0);
         if (newRun == 0)
             return true;
@@ -267,7 +266,6 @@ public class DCHBEngine extends DCEngine {
         reader.open(inputFile);
 
         HipoDataSync writer = new HipoDataSync();
-        //Writer
 
         String outputFile = "/Users/ziegler/Desktop/Work/Files/test.hipo";
 
