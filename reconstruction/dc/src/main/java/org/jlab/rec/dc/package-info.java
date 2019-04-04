@@ -1,8 +1,8 @@
 /**
  * Package for reconstructing tracks in the DC.
- * It does hit reconstruction, pattern recognition for hit-based and subsequently time-based tracking.
- */
-/**
+ * It does hit reconstruction, pattern recognition for hit-based and subsequently time-based
+ * tracking.
+ *
  * @author ziegler
  *
  */

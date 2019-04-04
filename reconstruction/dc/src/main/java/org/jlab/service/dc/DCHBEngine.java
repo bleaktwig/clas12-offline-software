@@ -57,182 +57,109 @@ public class DCHBEngine extends DCEngine {
         Constants.Load();
         super.setStartTimeOption();
         super.LoadTables();
-//        newRun = 809;
-//        long timeStamp = 371468548086L;
-//        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-//            IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
-//            double period = tabJ.getDoubleValue("period", 0, 0, 0);
-//            int phase = tabJ.getIntValue("phase", 0, 0, 0);
-//            int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
-//
-//            if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
-//
-//            TableLoader.FillT0Tables(newRun, super.variationName);
-//            TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
-//
-//            Run.set(newRun);
-//        }
         return true;
     }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-//        long startTime = 0;
-        //setRunConditionsParameters( event) ;
-        if (!event.hasBank("RUN::config")) {
-            return true;
-        }
+        if (!event.hasBank("RUN::config")) return true;
 
-       DataBank bank = event.getBank("RUN::config");
-       long timeStamp = bank.getLong("timestamp", 0);
-       double triggerPhase = 0;
+        DataBank bank = event.getBank("RUN::config");
+        long timeStamp = bank.getLong("timestamp", 0);
+        double triggerPhase = 0;
 
         // Load the constants
-        //-------------------
         int newRun = bank.getInt("run", 0);
-       if (newRun == 0)
-           return true;
+        if (newRun == 0)
+            return true;
 
-       if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-           if (timeStamp == -1)
-               return true;
- //          if (debug.get()) startTime = System.currentTimeMillis();
-           IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
-           double period = tabJ.getDoubleValue("period", 0, 0, 0);
-           int phase = tabJ.getIntValue("phase", 0, 0, 0);
-           int cycles = tabJ.getIntValue("cycles", 0, 0, 0);
+        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
+            if (timeStamp == -1) return true;
 
-           if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
+            IndexedTable tabJ = super.getConstantsManager().getConstants(newRun, Constants.TIMEJITTER);
+            double period = tabJ.getDoubleValue("period", 0, 0, 0);
+            int phase     = tabJ.getIntValue   ("phase",  0, 0, 0);
+            int cycles    = tabJ.getIntValue   ("cycles", 0, 0, 0);
 
-           TableLoader.FillT0Tables(newRun, super.variationName);
-           TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
+            if (cycles > 0) triggerPhase = period * ((timeStamp + phase) % cycles);
 
-           Run.set(newRun);
-           if (event.hasBank("MC::Particle") && this.getEngineConfigString("wireDistort")==null) {
-               Constants.setWIREDIST(0);
-           }
+            TableLoader.FillT0Tables(newRun, super.variationName);
+            TableLoader.Fill(super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST));
 
- //          if (debug.get()) System.out.println("NEW RUN INIT = " + (System.currentTimeMillis() - startTime));
-       }
+            Run.set(newRun);
+            if (event.hasBank("MC::Particle") && this.getEngineConfigString("wireDistort") == null) {
+                Constants.setWIREDIST(0);
+            }
+        }
 
-        /* 1 */
-        // get Field
         Swim dcSwim = new Swim();
-        /* 2 */
-        // init SNR
+
         Clas12NoiseResult results = new Clas12NoiseResult();
-        /* 3 */
         Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
-        /* 4 */
         NoiseReductionParameters parameters =
-                new NoiseReductionParameters(
-                        2,
-                        Constants.SNR_LEFTSHIFTS,
-                        Constants.SNR_RIGHTSHIFTS);
-        /* 5 */
-        ClusterFitter cf = new ClusterFitter();
-        /* 6 */
-        ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
-        /* 7 */
+                new NoiseReductionParameters(2, Constants.SNR_LEFTSHIFTS, Constants.SNR_RIGHTSHIFTS);
+
         RecoBankWriter rbc = new RecoBankWriter();
-        /* 8 */
+
+        // Read hits
         HitReader hitRead = new HitReader();
-        /* 9 */
-        hitRead.fetch_DCHits(event,
-                noiseAnalysis,
-                parameters,
-                results,
-                super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
+
+        hitRead.fetchDCHits(event, noiseAnalysis, parameters, results,
                 super.getConstantsManager().getConstants(newRun, Constants.TDCTCUTS),
                 super.getConstantsManager().getConstants(newRun, Constants.WIRESTAT),
-                dcDetector,
-                triggerPhase);
-        /* 10 */
-        //I) get the hits
+                dcDetector, triggerPhase);
+
         List<Hit> hits = hitRead.get_DCHits();
-        //II) process the hits
-        //1) exit if hit list is empty
-        if (hits.isEmpty()) {
-            return true;
-        }
-        /* 11 */
-        //2) find the clusters from these hits
+        if (hits.isEmpty()) return true;
+
+        // Find the clusters from these hits
+        ClusterFitter cf = new ClusterFitter();
+        ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
+
         ClusterFinder clusFinder = new ClusterFinder();
-        List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits,
-                ct,
-                cf,
-                dcDetector);
-        if (clusters.isEmpty()) {
-            return true;
-        }
-        /* 12 */
+        List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits, ct, cf, dcDetector);
+        if (clusters.isEmpty()) return true;
+
+        // Update hits with cluster information
         List<FittedHit> fhits = rbc.createRawHitList(hits);
-        /* 13 */
-        rbc.updateListsListWithClusterInfo(fhits, clusters);
-        /* 14 */
-        //3) find the segments from the fitted clusters
+        rbc.updateHitsListWithClusterInfo(fhits, clusters);
+
+        // Find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();
-        List<Segment> segments = segFinder.get_Segments(clusters,
-                event,
-                dcDetector, false);
-        /* 15 */
-        // need 6 segments to make a trajectory
+        List<Segment> segments = segFinder.get_Segments(clusters, event, dcDetector, false);
         if (segments.isEmpty()) {
-            rbc.fillAllHBBanks(event,
-                    rbc,
-                    fhits,
-                    clusters,
-                    null,
-                    null,
-                    null);
+            rbc.fillAllHBBanks(event, rbc, fhits, clusters, null, null, null);
             return true;
         }
         List<Segment> rmSegs = new ArrayList<>();
-        // clean up hit-based segments
+
         double trkDocOverCellSize;
         for (Segment se : segments) {
             trkDocOverCellSize = 0;
-            for (FittedHit fh : se.get_fittedCluster()) {
+            for (FittedHit fh : se.get_fittedCluster())
                 trkDocOverCellSize += fh.get_ClusFitDoca() / fh.get_CellSize();
-            }
-            if (trkDocOverCellSize / se.size() > 1.1) {
-                rmSegs.add(se);
-            }
+            if (trkDocOverCellSize / se.size() > 1.1) rmSegs.add(se);
         }
         segments.removeAll(rmSegs);
-        /* 16 */
+
+        // Make the crosses from the segments
         CrossMaker crossMake = new CrossMaker();
         List<Cross> crosses = crossMake.find_Crosses(segments, dcDetector);
         if (crosses.isEmpty()) {
-            rbc.fillAllHBBanks(event,
-                    rbc,
-                    fhits,
-                    clusters,
-                    segments,
-                    null,
-                    null);
+            rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, null, null);
             return true;
         }
-        /* 17 */
+
         CrossListFinder crossLister = new CrossListFinder();
-
-        CrossList crosslist = crossLister.candCrossLists(crosses,
-                false,
+        CrossList crosslist = crossLister.candCrossLists(crosses, false,
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
-                dcDetector,
-                null,
-                dcSwim);
-        /* 18 */
-        //6) find the list of  track candidates
-        TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
-        List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
-                                                           dcDetector,
-                                                           Swimmer.getTorScale(),
-                                                           dcSwim,
-                                                           false);
-        /* 19 */
+                dcDetector, null, dcSwim);
 
-        // track found
+        // Find the list of track candidates
+        TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
+        List<Track> trkcands = trkcandFinder.getTrackCands(crosslist, dcDetector,
+                Swimmer.getTorScale(), dcSwim, false);
+
         int trkId = 1;
         if (trkcands.size() > 0) {
             // remove overlaps
@@ -240,20 +167,13 @@ public class DCHBEngine extends DCEngine {
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.get_Trajectory(),
-                        trk,
-                        dcDetector,
-                        dcSwim);
+                trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
                     c.get_Segment1().isOnTrack = true;
                     c.get_Segment2().isOnTrack = true;
 
-                    for (FittedHit h1 : c.get_Segment1()) {
-                        h1.set_AssociatedHBTrackID(trk.get_Id());
-                    }
-                    for (FittedHit h2 : c.get_Segment2()) {
-                        h2.set_AssociatedHBTrackID(trk.get_Id());
-                    }
+                    for (FittedHit h1 : c.get_Segment1()) h1.set_AssociatedHBTrackID(trk.get_Id());
+                    for (FittedHit h2 : c.get_Segment2()) h2.set_AssociatedHBTrackID(trk.get_Id());
                 }
                 trkId++;
             }
@@ -262,10 +182,8 @@ public class DCHBEngine extends DCEngine {
         List<Segment> psegments = new ArrayList<>();
 
         for (Cross c : crosses) {
-            if (!c.get_Segment1().isOnTrack)
-                crossSegsNotOnTrack.add(c.get_Segment1());
-            if (!c.get_Segment2().isOnTrack)
-                crossSegsNotOnTrack.add(c.get_Segment2());
+            if (!c.get_Segment1().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment1());
+            if (!c.get_Segment2().isOnTrack) crossSegsNotOnTrack.add(c.get_Segment2());
         }
         RoadFinder rf = new RoadFinder();
         List<Road> allRoads = rf.findRoads(segments, dcDetector);
@@ -284,36 +202,26 @@ public class DCHBEngine extends DCEngine {
             }
             for (int ri = 0; ri < 3; ri++) {
                 for (Segment s : crossSegsNotOnTrack) {
-                    if (s.get_Sector() == r.get(ri).get_Sector() &&
-                            s.get_Region() == r.get(ri).get_Region() &&
-                            s.associatedCrossId == r.get(ri).associatedCrossId &&
-                            r.get(ri).associatedCrossId != -1) {
-                        if (s.get_Superlayer() % 2 == missingSL % 2)
-                            Segs2Road.add(s);
-                    }
+                    if (s.get_Sector() == r.get(ri).get_Sector()
+                            && s.get_Region() == r.get(ri).get_Region()
+                            && s.associatedCrossId == r.get(ri).associatedCrossId
+                            && r.get(ri).associatedCrossId != -1
+                            && s.get_Superlayer() % 2 == missingSL % 2)
+                        Segs2Road.add(s);
                 }
             }
             if (Segs2Road.size() == 2) {
-                Segment pSegment = rf.findRoadMissingSegment(Segs2Road,
-                        dcDetector,
-                        r.a);
-                if (pSegment != null)
-                    psegments.add(pSegment);
+                Segment pSegment = rf.findRoadMissingSegment(Segs2Road, dcDetector, r.a);
+                if (pSegment != null) psegments.add(pSegment);
             }
         }
         segments.addAll(psegments);
         List<Cross> pcrosses = crossMake.find_Crosses(segments, dcDetector);
-        CrossList pcrosslist = crossLister.candCrossLists(pcrosses,
-                false,
+        CrossList pcrosslist = crossLister.candCrossLists(pcrosses, false,
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
-                dcDetector,
-                null,
-                dcSwim);
-        List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
-                                                              dcDetector,
-                                                              Swimmer.getTorScale(),
-                                                              dcSwim,
-                                                              false);
+                dcDetector, null, dcSwim);
+        List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist, dcDetector,
+                Swimmer.getTorScale(), dcSwim, false);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
@@ -322,42 +230,21 @@ public class DCHBEngine extends DCEngine {
 
                 // reset the id
                 trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.get_Trajectory(),
-                        trk,
-                        dcDetector,
-                        dcSwim);
+                trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
-                    for (FittedHit h1 : c.get_Segment1()) {
-                        h1.set_AssociatedHBTrackID(trk.get_Id());
-                    }
-                    for (FittedHit h2 : c.get_Segment2()) {
-                        h2.set_AssociatedHBTrackID(trk.get_Id());
-                    }
+                    for (FittedHit h1 : c.get_Segment1()) h1.set_AssociatedHBTrackID(trk.get_Id());
+                    for (FittedHit h2 : c.get_Segment2()) h2.set_AssociatedHBTrackID(trk.get_Id());
                 }
                 trkId++;
             }
         }
         trkcands.addAll(mistrkcands);
 
-        // no candidate found, stop here and save the hits,
-        // the clusters, the segments, the crosses
-        if (trkcands.isEmpty()) {
-            rbc.fillAllHBBanks(event,
-                    rbc,
-                    fhits,
-                    clusters,
-                    segments,
-                    crosses,
-                    null);
-            return true;
-        }
-        rbc.fillAllHBBanks(event,
-                rbc,
-                fhits,
-                clusters,
-                segments,
-                crosses,
-                trkcands);
+        // No candidate found, stop here and save the hits, the clusters, the segments, the crosses
+        if (trkcands.isEmpty())
+            rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null);
+        else
+            rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
         return true;
     }
 
@@ -379,7 +266,6 @@ public class DCHBEngine extends DCEngine {
         reader.open(inputFile);
 
         HipoDataSync writer = new HipoDataSync();
-        //Writer
 
         String outputFile = "/Users/ziegler/Desktop/Work/Files/test.hipo";
 

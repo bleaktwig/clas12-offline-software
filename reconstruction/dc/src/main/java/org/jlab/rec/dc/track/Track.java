@@ -48,8 +48,8 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _fitConvergenceStatus;
 
 
-    public Track() {
-    }
+    public Track() {}
+
     /**
      *
      * @return missing superlayer of the track
