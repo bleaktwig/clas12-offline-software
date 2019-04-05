@@ -3,7 +3,7 @@ package org.jlab.service.dc;
 import java.util.ArrayList;
 import java.util.List;
 
-import Jama.Matrix;
+import org.ejml.simple.SimpleMatrix;
 
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Point3D;
@@ -181,7 +181,7 @@ public class DCTBEngine extends DCEngine {
                                        trkbank.getFloat("Vtx0_z", i)));
 
             HBtrk.set_FitChi2(trkbank.getFloat("chi2", i));
-            Matrix initCMatrix = new Matrix(new double[][]{
+            SimpleMatrix initCMatrix = new SimpleMatrix(new double[][]{
                 {trkcovbank.getFloat("C11", i), trkcovbank.getFloat("C12", i),
                  trkcovbank.getFloat("C13", i), trkcovbank.getFloat("C14", i),
                  trkcovbank.getFloat("C15", i)},

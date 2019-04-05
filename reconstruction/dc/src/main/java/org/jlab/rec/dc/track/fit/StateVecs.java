@@ -1,6 +1,6 @@
 package org.jlab.rec.dc.track.fit;
 
-import Jama.Matrix;
+import org.ejml.simple.SimpleMatrix;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +24,7 @@ public class StateVecs {
 
     public StateVec StateVec;
     public CovMat CovMat;
-    public Matrix F;
+    public SimpleMatrix F;
     private final double[] A   = new double[2];
     private final double[] dA  = new double[4];
     private final float[]  bf  = new float[3];
@@ -287,7 +287,7 @@ public class StateVecs {
                                                  zSquared * (err_sl1Squared + err_sl2Squared));
         double epSq = 0.001 * trkcand.get_P() * trkcand.get_P();
 
-        Matrix initCMatrix = new Matrix(new double[][]{
+        SimpleMatrix initCMatrix = new SimpleMatrix(new double[][]{
             {ex * ex, 0, 0, 0, 0},
             {0, ey * ey, 0, 0, 0},
             {0, 0, eux * eux, 0, 0},
@@ -360,14 +360,6 @@ public class StateVecs {
         this.trackCov.put(0, initCM);
     }
 
-    public void printMatrix(Matrix C) {
-        for (int k = 0; k < 5; k++) {
-            for (int j = 0; j < 5; j++) {
-                System.out.println("C[" + j + "][" + k + "] = " + C.get(j, k));
-            }
-        }
-    }
-
     /**
      * The state vector representing the track at a given measurement site
      */
@@ -394,7 +386,7 @@ public class StateVecs {
     public class CovMat {
 
         final int k;
-        public Matrix covMat;
+        public SimpleMatrix covMat;
 
         CovMat(int k) {
             this.k = k;

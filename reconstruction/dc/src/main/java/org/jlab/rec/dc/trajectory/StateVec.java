@@ -1,6 +1,6 @@
 package org.jlab.rec.dc.trajectory;
 
-import Jama.Matrix;
+import org.ejml.simple.SimpleMatrix;
 
 /**
  * A StateVec describes a cross measurement in the DC. It is characterized by a point in the DC
@@ -11,7 +11,7 @@ import Jama.Matrix;
  * axis is perperdicular to the wire planes.
  * @author ziegler
  */
-public class StateVec extends Matrix {
+public class StateVec extends SimpleMatrix {
 
     private static final long serialVersionUID = 1874984192960130771L;
 
@@ -74,11 +74,11 @@ public class StateVec extends Matrix {
     }
 
     /**
-     * Instantiates a new state vector from a Jama matrix. Needed since Jama.Matrix cannot be casted
-     * into StateVec by default.
+     * Instantiates a new state vector from an Ejml matrix. Needed since ejml.SimpleMatrix cannot be
+     * casted into StateVec by default.
      * @param m the m
      */
-    private StateVec(Matrix m) {
+    private StateVec(SimpleMatrix m) {
         super(4,1);
         set(0, 0, m.get(0, 0));
         set(1, 0, m.get(1, 0));

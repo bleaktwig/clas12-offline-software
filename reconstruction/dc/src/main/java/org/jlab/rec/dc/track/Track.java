@@ -1,6 +1,6 @@
 package org.jlab.rec.dc.track;
 
-import Jama.Matrix;
+import org.ejml.simple.SimpleMatrix;
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.geom.prim.Point3D;
@@ -24,7 +24,7 @@ public class Track extends Trajectory implements Comparable<Track>{
 
     private int _Q;
     private double _P;
-    private Matrix _CovMat;
+    private SimpleMatrix _CovMat;
 
     private Point3D _Region3CrossPoint;
     private Point3D _Region3CrossDir;
@@ -290,14 +290,14 @@ public class Track extends Trajectory implements Comparable<Track>{
      *
      * @return Kalman fit covariance matrix
      */
-    public Matrix get_CovMat() {
+    public SimpleMatrix get_CovMat() {
         return _CovMat;
     }
     /**
      *
      * @param _CovMat Kalman fit covariance matrix
      */
-    public void set_CovMat(Matrix _CovMat) {
+    public void set_CovMat(SimpleMatrix _CovMat) {
         this._CovMat = _CovMat;
     }
 

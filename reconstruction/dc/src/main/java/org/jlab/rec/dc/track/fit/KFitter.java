@@ -3,7 +3,7 @@ package org.jlab.rec.dc.track.fit;
 import java.util.ArrayList;
 import java.util.List;
 
-import Jama.Matrix;
+import org.ejml.simple.SimpleMatrix;
 
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
@@ -126,14 +126,14 @@ public class KFitter {
                      mv.measurements.get(k).wireMaxSag,
                      mv.measurements.get(k).wireLen);
 
-        Matrix Hvec  = new Matrix(new double[][] {{H[0]}, {H[1]}, {0}, {0}, {0}});
-        Matrix HvecT = Hvec.transpose();
+        SimpleMatrix Hvec  = new SimpleMatrix(new double[][] {{H[0]}, {H[1]}, {0}, {0}, {0}});
+        SimpleMatrix HvecT = Hvec.transpose();
 
-        Matrix CH = (sv.trackCov.get(k).covMat).times(Hvec);
+        SimpleMatrix CH = (sv.trackCov.get(k).covMat).mult(Hvec);
 
-        double div = V + (HvecT.times(CH)).get(0, 0);
-        Matrix result = (CH.times(HvecT)).times(sv.trackCov.get(k).covMat);
-        for (int i = 0; i < 5; ++i) {
+        double div = V + (HvecT.mult(CH)).get(0, 0);
+        SimpleMatrix result = (CH.mult(HvecT)).mult(sv.trackCov.get(k).covMat);
+        for (int i = 0; i < 5; ++i) { // TODO: See if I can get the same result with divide()
             for (int j = 0; j < 5; ++j) {
                 result.set(i, j, result.get(i, j)/div);
             }
