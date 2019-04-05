@@ -2,7 +2,6 @@ package org.jlab.rec.dc.cross;
 
 import java.util.ArrayList;
 import java.util.List;
-import Jama.Matrix;
 
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -343,7 +342,8 @@ public class CrossListFinder  {
             double aux2 = sum[2]*sum[3] - sum[1]*sum[4];
             double aux3 = sum[1]*sum[3] - aux1;
             double aux4 = sum[1]*sum[2] - sum[0]*sum[3];
-            double div  = -(aux1*sum[2]) + 2*sum[1]*sum[2]*sum[3] + sum[0]*sum[2]*sum[4] - sum[0]*sum[3]*sum[3] - sum[1]*sum[1]*sum[4];
+            double div  = -(aux1*sum[2]) + 2*sum[1]*sum[2]*sum[3] + sum[0]*sum[2]*sum[4]
+                    - sum[0]*sum[3]*sum[3] - sum[1]*sum[1]*sum[4];
 
             double ret[] = {((sum[2]*sum[4]-sum[3]*sum[3])*sum[5] + aux2*sum[6] + aux3*sum[7])/div,
                             (aux2*sum[5] + (sum[0]*sum[4]-aux1)*sum[6] + aux4*sum[7])/div,

@@ -33,19 +33,14 @@ public class KFitter {
     public int NDF        = 0;
     public int ConvStatus = 1;
 
-    public KFitter(Track trk, DCGeant4Factory DcDetector,
-                   boolean TimeBasedUsingHBtrack,
-                   Swim swimmer) {
+    public KFitter(Track trk, DCGeant4Factory DcDetector, boolean TimeBasedUsingHBtrack,
+            Swim swimmer) {
 
         sv = new StateVecs(swimmer);
-        if (TimeBasedUsingHBtrack) {
-            this.initFromHB(trk, DcDetector);
-        } else {
-            this.init(trk, DcDetector);
-        }
+        if (TimeBasedUsingHBtrack) this.initFromHB(trk, DcDetector);
+        else                       this.init(trk, DcDetector);
     }
 
-    // NOTE: The two following methods should be merged.
     private void initFromHB(Track trk, DCGeant4Factory DcDetector) {
         mv.setMeasVecsFromHB(trk, DcDetector);
         int mSize = mv.measurements.size();
@@ -74,12 +69,10 @@ public class KFitter {
         this.NDF = mv.ndf;
         int svzLength = sv.Z.length;
 
-        // IntStream.range(1,totNumIter ).parallel().forEach(i -> {
         for (int i = 1; i <= totNumIter; i++) {
             this.chi2kf = 0;
             if (i > 1) {
-                // get new state vec at 1st measurement after propagating back
-                //     from the last filtered state
+                // get new state vec at 1st measurement after propagating from the last filtered state
                 sv.transport(sector,
                              svzLength - 1,
                              0,
@@ -93,18 +86,12 @@ public class KFitter {
                 this.filter(k + 1);
             }
             if (i <= 1) continue;
-            // this.calcFinalChisq();
-            // if(this.chi2>1000000) {
-            //     i = totNumIter;
-            //     this.setFitFailed=true;
-            // }
 
-            // double deltaChi2 = Math.abs(this.chi2kf - newChisq);
             if (this.chi2kf >= newChisq) {
                 this.ConvStatus = 1;
                 continue;
             }
-            // if (this.chi2kf < newChisq) {
+
             if(this.finalStateVec != null) {
                 if (Math.abs(sv.trackTraj.get(svzLength-1).Q -this.finalStateVec.Q) <5.e-4 &&
                     Math.abs(sv.trackTraj.get(svzLength-1).x -this.finalStateVec.x) <1.e-4 &&
@@ -118,15 +105,10 @@ public class KFitter {
             this.finalStateVec = sv.trackTraj.get(svzLength - 1);
             this.finalCovMat   = sv.trackCov.get(svzLength - 1);
 
-            // if (deltaChi2 < 0.001) {
-            //     this.ConvStatus = 0;
-            //     i = totNumIter;
-            // }
-
             newChisq = this.chi2kf;
         }
-        // });
-        if(totNumIter == 1) {
+
+        if (totNumIter == 1) {
             this.finalStateVec = sv.trackTraj.get(svzLength - 1);
             this.finalCovMat   = sv.trackCov.get(svzLength - 1);
         }
@@ -134,12 +116,8 @@ public class KFitter {
     }
 
     private void filter(int k) {
-        if (sv.trackTraj.get(k)       == null ||
-            sv.trackCov.get(k).covMat == null ||
-            k                         >= sv.Z.length) {
-
+        if (sv.trackTraj.get(k) == null || sv.trackCov.get(k).covMat == null || k >= sv.Z.length)
             return;
-        }
 
         double[] K = new double[5];
         double V   = Math.abs(mv.measurements.get(k).unc);
@@ -148,21 +126,19 @@ public class KFitter {
                      mv.measurements.get(k).wireMaxSag,
                      mv.measurements.get(k).wireLen);
 
-        // Sherman-Morrisey formula applied to the filter. This is possible because the HTGH matrix
-        // used can be expressed as a column vector multiplied by a row vector (in this case, itself
-        // transposed).
         Matrix Hvec  = new Matrix(new double[][] {{H[0]}, {H[1]}, {0}, {0}, {0}});
         Matrix HvecT = Hvec.transpose();
-        Matrix C     = sv.trackCov.get(k).covMat;
 
-        double div = (new Matrix(new double[][] {{V}}).plus((HvecT.times(C)).times(Hvec))).get(0, 0);
-        Matrix result = ((C.times(Hvec)).times(HvecT)).times(C);
+        Matrix CH = (sv.trackCov.get(k).covMat).times(Hvec);
+
+        double div = V + (HvecT.times(CH)).get(0, 0);
+        Matrix result = (CH.times(HvecT)).times(sv.trackCov.get(k).covMat);
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
                 result.set(i, j, result.get(i, j)/div);
             }
         }
-        sv.trackCov.get(k).covMat = C.minus(result);
+        sv.trackCov.get(k).covMat = (sv.trackCov.get(k).covMat).minus(result);
 
         for (int j = 0; j < 5; j++) {
             // the gain matrix
@@ -252,9 +228,5 @@ public class KFitter {
             kfStateVecsAlongTrajectory.add(svc);
             chi2 += (mv.measurements.get(k1).x - h) * (mv.measurements.get(k1).x - h) / V;
         }
-    }
-
-    private boolean isNonsingular(Matrix mat) {
-        return Math.abs(mat.det()) >= 1.e-30;
     }
 }
