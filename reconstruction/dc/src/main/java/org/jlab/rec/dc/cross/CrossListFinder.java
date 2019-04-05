@@ -319,18 +319,8 @@ public class CrossListFinder  {
             LineFitter linefit = new LineFitter();
             linefit.fitStatus(x, y2, err, err, x.length);
 
-            double[] ret = {0.,0.,0.};
-            Matrix A = new Matrix(3,3);
-            Matrix V = new Matrix(3,1);
+            double[] sum = new double[8];
 
-            double sum1 = 0.0;
-            double sum2 = 0.0;
-            double sum3 = 0.0;
-            double sum4 = 0.0;
-            double sum5 = 0.0;
-            double sum6 = 0.0;
-            double sum7 = 0.0;
-            double sum8 = 0.0;
             for (int i = 0; i < x.length; ++i) {
                 double y1 = y[i];
                 double x1 = x[i];
@@ -339,64 +329,48 @@ public class CrossListFinder  {
                 double x4 = x2 * x2;
                 double e2 = err[i] * err[i];
 
-                sum1 += x4/e2;
-                sum2 += x3/e2;
-                sum3 += x2/e2;
-                sum4 += x1/e2;
-                sum5 += 1.0/e2;
-                sum6 += y1 * x2/e2;
-                sum7 += y1 * x1/e2;
-                sum8 += y1/e2;
+                sum[0] += x4/e2;
+                sum[1] += x3/e2;
+                sum[2] += x2/e2;
+                sum[3] += x1/e2;
+                sum[4] += 1.0/e2;
+                sum[5] += y1 * x2/e2;
+                sum[6] += y1 * x1/e2;
+                sum[7] += y1/e2;
             }
 
-            A.set(0, 0, sum1);
-            A.set(0, 1, sum2);
-            A.set(0, 2, sum3);
-            A.set(1, 0, sum2);
-            A.set(1, 1, sum3);
-            A.set(1, 2, sum4);
-            A.set(2, 0, sum3);
-            A.set(2, 1, sum4);
-            A.set(2, 2, sum5);
-            V.set(0, 0, sum6);
-            V.set(1, 0, sum7);
-            V.set(2, 0, sum8);
+            double aux1 = sum[2]*sum[2];
+            double aux2 = sum[2]*sum[3] - sum[1]*sum[4];
+            double aux3 = sum[1]*sum[3] - aux1;
+            double aux4 = sum[1]*sum[2] - sum[0]*sum[3];
+            double div  = -(aux1*sum[2]) + 2*sum[1]*sum[2]*sum[3] + sum[0]*sum[2]*sum[4] - sum[0]*sum[3]*sum[3] - sum[1]*sum[1]*sum[4];
 
-            Matrix Ainv = A.inverse();
-            Matrix X;
+            double ret[] = {((sum[2]*sum[4]-sum[3]*sum[3])*sum[5] + aux2*sum[6] + aux3*sum[7])/div,
+                            (aux2*sum[5] + (sum[0]*sum[4]-aux1)*sum[6] + aux4*sum[7])/div,
+                            (aux3*sum[5] + aux4*sum[6] + (sum[0]*sum[2]-sum[1]*sum[1])*sum[7])/div};
 
-            try {
-                X = Ainv.times(V);
-                for (int i = 0; i < 3; ++i) {
-                    ret[i] = X.get(i, 0);
-                }
-                for (int i = 0; i < x.length; i++) {
+            for (int i = 0; i < x.length; i++) {
+                double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
+                double tiltSysYterm = linefit.getFit().slope()*x[i] + linefit.getFit().intercept();
+                double tiltSysZterm = x[i];
 
-                    double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
-                    double tiltSysYterm = linefit.getFit().slope()*x[i] +
-                                          linefit.getFit().intercept();
-                    double tiltSysZterm = x[i];
+                double dl  = 0.01;
+                double dQ  = 2.*ret[0]*x[i]*dl + ret[0] + ret[1]*dl;
+                double dL  = linefit.getFit().slope()*dl;
+                double Len = Math.sqrt(dl*dl + dQ*dQ + dL*dL) ;
 
-                    double dl  = 0.01;
-                    double dQ  = 2.*ret[0]*x[i]*dl + ret[0] + ret[1]*dl;
-                    double dL  = linefit.getFit().slope()*dl;
-                    double Len = Math.sqrt(dl*dl + dQ*dQ + dL*dL) ;
+                double tiltSysdirXterm = dQ/Len;
+                double tiltSysdirYterm = dL/Len;
+                double tiltSysdirZterm = dl/Len;
 
-                    double tiltSysdirXterm = dQ/Len;
-                    double tiltSysdirYterm = dL/Len;
-                    double tiltSysdirZterm = dl/Len;
-
-                    fitResult[0][i] = tiltSysXterm;
-                    fitResult[1][i] = tiltSysYterm;
-                    fitResult[2][i] = tiltSysZterm;
-                    fitResult[3][i] = tiltSysdirXterm;
-                    fitResult[4][i] = tiltSysdirYterm;
-                    fitResult[5][i] = tiltSysdirZterm;
-                }
+                fitResult[0][i] = tiltSysXterm;
+                fitResult[1][i] = tiltSysYterm;
+                fitResult[2][i] = tiltSysZterm;
+                fitResult[3][i] = tiltSysdirXterm;
+                fitResult[4][i] = tiltSysdirYterm;
+                fitResult[5][i] = tiltSysdirZterm;
             }
-            catch (ArithmeticException e) {
-                e.printStackTrace();
-            }
+
             return(ret);
         }
     }

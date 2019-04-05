@@ -2,7 +2,6 @@ package org.jlab.rec.dc.trajectory;
 
 import java.util.ArrayList;
 import java.util.List;
-import Jama.Matrix;
 
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
@@ -267,18 +266,7 @@ public class RoadFinder  {
 
         public void evaluate(double[] x, double[] y, double[] err) {
 
-            double[] ret = {0.,0.,0.};
-            Matrix A = new Matrix(3,3);
-            Matrix V = new Matrix(3,1);
-
-            double sum1 = 0.0;
-            double sum2 = 0.0;
-            double sum3 = 0.0;
-            double sum4 = 0.0;
-            double sum5 = 0.0;
-            double sum6 = 0.0;
-            double sum7 = 0.0;
-            double sum8 = 0.0;
+            double[] sum = new double[8];
 
             for (int i = 0; i < x.length; ++i) {
                 double y1 = y[i];
@@ -288,65 +276,34 @@ public class RoadFinder  {
                 double x4 = x2 * x2;
                 double e2 = err[i] * err[i];
 
-                sum1 += x4/e2;
-                sum2 += x3/e2;
-                sum3 += x2/e2;
-                sum4 += x1/e2;
-                sum5 += 1.0/e2;
-                sum6 += y1 * x2/e2;
-                sum7 += y1 * x1/e2;
-                sum8 += y1/e2;
+                sum[0] += x4/e2;
+                sum[1] += x3/e2;
+                sum[2] += x2/e2;
+                sum[3] += x1/e2;
+                sum[4] += 1.0/e2;
+                sum[5] += y1 * x2/e2;
+                sum[6] += y1 * x1/e2;
+                sum[7] += y1/e2;
             }
 
-            // TODO: Hardcoding the inverse so it doesn't need to be calculated
-            // double aux1 = sum3*sum4 + sum2*sum5;
-            // double aux2 = sum3*sum3;
-            // double aux3 = sum2*sum4 - aux2;
-            // double aux4 = sum2*sum3 - sum1*sum4;
-            //
-            // double[] ret = {(sum3*sum5 - sum4*sum4)*sum6 + aux1*sum7 + aux3*sum8,
-            //                 aux1*sum6 + (sum1*sum5 - aux2)*sum7 + aux4*sum8,
-            //                 aux3*sum6 + aux4*sum7 + (sum1*sum3 - sum2*sum2)*sum8};
-            //
-            // double _chi2 = 0;
-            // for (int i = 0; i < x.length; ++i) {
-            //     double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
-            //     _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
-            // }
-            // this.chi2 = _chi2;
-            // this.NDF = x.length - 3;
-            //
-            // a = ret;
+            double aux1 = sum[2]*sum[2];
+            double aux2 = sum[2]*sum[3] - sum[1]*sum[4];
+            double aux3 = sum[1]*sum[3] - aux1;
+            double aux4 = sum[1]*sum[2] - sum[0]*sum[3];
+            double div  = -(aux1*sum[2]) + 2*sum[1]*sum[2]*sum[3] + sum[0]*sum[2]*sum[4] - sum[0]*sum[3]*sum[3] - sum[1]*sum[1]*sum[4];
 
-            A.set(0, 0, sum1);
-            A.set(0, 1, sum2);
-            A.set(0, 2, sum3);
-            A.set(1, 0, sum2);
-            A.set(1, 1, sum3);
-            A.set(1, 2, sum4);
-            A.set(2, 0, sum3);
-            A.set(2, 1, sum4);
-            A.set(2, 2, sum5);
-            V.set(0, 0, sum6);
-            V.set(1, 0, sum7);
-            V.set(2, 0, sum8);
+            double ret[] = {((sum[2]*sum[4]-sum[3]*sum[3])*sum[5] + aux2*sum[6] + aux3*sum[7])/div,
+                            (aux2*sum[5] + (sum[0]*sum[4]-aux1)*sum[6] + aux4*sum[7])/div,
+                            (aux3*sum[5] + aux4*sum[6] + (sum[0]*sum[2]-sum[1]*sum[1])*sum[7])/div};
 
-            Matrix Ainv = A.inverse();
-            Matrix X;
-
-            try {
-                X = Ainv.times(V);
-                for (int i = 0; i < 3; ++i) ret[i] = X.get(i, 0);
-
-                double _chi2 = 0;
-                for (int i = 0; i < x.length; i++) {
-                    double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
-                    _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
-                }
-                this.chi2 = _chi2;
-                this.NDF  = x.length -3;
-            } catch (ArithmeticException e) {
+            double _chi2 = 0;
+            for (int i = 0; i < x.length; ++i) {
+                double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
+                _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
             }
+            this.chi2 = _chi2;
+            this.NDF = x.length - 3;
+
             a = ret;
         }
     }
