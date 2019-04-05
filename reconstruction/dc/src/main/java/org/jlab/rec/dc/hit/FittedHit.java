@@ -30,7 +30,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
                         //     from 1 to 6.
     private double _lY; // Y in local coordinate system used in hit-based fit to cluster line, used
                         //     in the cluster-finding algorithm to fit the hit-based wire positions.
-    private double _Residual; // Cluster line to the wire position's residual, or the residual from 
+    private double _Residual; // Cluster line to the wire position's residual, or the residual from
                               //     the fit to the wire positions in the superlayer.
     private double _TimeResidual = 0; // Cluster line to the wire position's time-residual, or
                                       //     |fit| - |y| from the fit to the wire positions in the
@@ -55,7 +55,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     private double _ClusFitDoca = -1; // Doca to cluster fit line in cm.
     private double _TrkFitDoca = -1; // Doca to track trajectory at hit layer plane in cm.
     private double _TimeToDistance = 0; // the calculated distance in cm from the time in ns.
-    private double _Beta = 1.0; // NOTE: Needs description
+    private double _Beta = 1.0;
 
     private StateVec _AssociatedStateVec; // State vector (x, y, tx, ty, q/p) associated with the
                                           //     hit.
@@ -65,7 +65,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     private double _B; // B-field intensity at hit location along wire, measured in T.
     private int _Id; // The ID corresponds to the hit index in the EvIO column.
-    public int _lr; // NOTE: Needs description
+    public int _lr;
 
     public boolean RemoveFlag = false;
     private int _AssociatedClusterID = -1; // ID of the cluster associated to the fitted hit.
@@ -73,9 +73,9 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     private int _AssociatedTBTrackID = -1; // ID of the TB track associated to the fitted hit.
 
     // intersection of cross direction line with the hit wire (TCS)
-    private Point3D CrossDirIntersWire;        // NOTE: Needs description
-    private double _SignalPropagAlongWire;     // NOTE: Needs description
-    private double _SignalPropagTimeAlongWire; // NOTE: Needs description
+    private Point3D CrossDirIntersWire;
+    private double _SignalPropagAlongWire;
+    private double _SignalPropagTimeAlongWire;
     private double _SignalTimeOfFlight;        // Signal time of flight to the track doca of the hit
                                                // in ns.
 
@@ -87,10 +87,10 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     private boolean _OutOfTimeFlag; // Boolean flag for identifying out of time hits.
     private double _WireLength;     // Length of the wire.
-    private double _WireMaxSag;     // NOTE: Needs description
-    private double _TrkResid = 999; // NOTE: Needs description
+    private double _WireMaxSag;
+    private double _TrkResid = 999;
 
-    private double _deltatime_beta; // NOTE: Needs description
+    private double _deltatime_beta;
 
     public FittedHit(int sector, int superlayer, int layer, int wire, int TDC, int id) {
         super(sector, superlayer, layer, wire, TDC, id);
@@ -144,10 +144,10 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * Sets the calculated distance (in cm) from the time (in ns).
-     * @param cosTrkAngle NOTE: Missing description
-     * @param B           NOTE: Missing description
-     * @param tab         NOTE: Missing description
-     * @param tde         NOTE: Missing description
+     * @param cosTrkAngle
+     * @param B
+     * @param tab
+     * @param tde
      */
     public void set_TimeToDistance(double cosTrkAngle, double B, IndexedTable tab,
             TimeToDistanceEstimator tde) {
@@ -184,7 +184,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     }
 
     /**
-     * NOTE: Missing description
+     *
      * @param cellSize the cell size in cm
      */
     public void fix_TimeToDistance(double cellSize) {this._TimeToDistance = cellSize;}
@@ -266,8 +266,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 
     /**
      * Calculates the signal propagation time along the wire in ns given an explicit X and Y.
-     * @param X          NOTE: Missing description
-     * @param Y          NOTE: Missing description
+     * @param X
+     * @param Y
      * @param DcDetector DC detector geometry
      * @return           signal propagation time along the wire
      */
@@ -327,10 +327,10 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     /**
      * Calculates the approximate uncertainty on the hit's positions using the inverse of the gemc
      * smearing function.
-     * @param B          NOTE: Missing description
-     * @param constants0 NOTE: Missing description
-     * @param constants1 NOTE: Missing description
-     * @param tde        NOTE: Missing description
+     * @param B
+     * @param constants0
+     * @param constants1
+     * @param tde
      * @return           the approximate uncertainty on the hit position
      */
     public double get_PosErr(double B,
@@ -408,11 +408,11 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     /**
      * A method to update the hit position information after the fit to the wire positions employing
      * hit-based tracking algorithms has been performed.
-     * @param cosTrkAngle NOTE: Missing description
-     * @param B           NOTE: Missing description
-     * @param tab         NOTE: Missing description
+     * @param cosTrkAngle
+     * @param B
+     * @param tab
      * @param DcDetector  DC detector geometry
-     * @param tde         NOTE: Missing description
+     * @param tde
      */
     public void updateHitPositionWithTime(double cosTrkAngle, double B, IndexedTable tab,
             DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {

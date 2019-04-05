@@ -344,7 +344,7 @@ public class RungeKutta {
     private double deltx_delty0_next(double qv, double tx1, double ty1, float b0, float b1, float b2,
                                      double deltx_delty0_1, double delty_delty0_1,
                                      double Csq, double C, double Ax, double Ay) {
-        return qv * (delAx_deltx(tx1, ty1, b0, b1, b2, Csq, C, Ax, Ay) * deltx_delty0_1 // NOTE: HERE
+        return qv * (delAx_deltx(tx1, ty1, b0, b1, b2, Csq, C, Ax, Ay) * deltx_delty0_1
                      + delAx_delty(tx1, ty1, b0, b1, b2, Csq, C, Ax, Ay) * delty_delty0_1);
     }
     private double deltx_delq0_next(double qv, double v, double tx1, double ty1, float b0, float b1, float b2,

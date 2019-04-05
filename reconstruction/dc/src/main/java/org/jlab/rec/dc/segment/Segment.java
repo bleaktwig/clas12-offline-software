@@ -52,7 +52,6 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         this.set_Status(Status());
     }
 
-    /** NOTE: Lacks description */
     public int Status() {
         int stat = 0;
 
@@ -123,7 +122,6 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         return value;
     }
 
-    // NOTE: Lacks JavaDoc comment
     public boolean hasNoMatchingSegment(List<Segment> othersegs) {
         /*
         A region-segment contains two segments if they are in the same sector and region and satisfy
@@ -144,7 +142,6 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         return value;
     }
 
-    // NOTE: Lacks JavaDoc comment
     public boolean hasConsistentSlope(Segment otherseg) {
         if (this.get_fitPlane() != null && otherseg.get_fitPlane() != null &&
                 Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal()))) - 12.) < Constants.SEGMENTPLANESANGLE) {

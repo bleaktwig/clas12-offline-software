@@ -3,7 +3,6 @@ package org.jlab.rec.dc.trajectory;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 /**
- * NOTE: Lacks JavaDoc description
  * @author ziegler
  */
 public class SegmentTrajectory {

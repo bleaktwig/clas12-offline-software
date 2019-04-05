@@ -45,7 +45,6 @@ public class KFitter {
         }
     }
 
-    // NOTE: The two following methods should be merged.
     private void initFromHB(Track trk, DCGeant4Factory DcDetector) {
         mv.setMeasVecsFromHB(trk, DcDetector);
         int mSize = mv.measurements.size();

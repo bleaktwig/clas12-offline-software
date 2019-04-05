@@ -9,8 +9,6 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.dc.Constants;
 
 /**
- * NOTE: Lacks JavaDoc description
- *
  * @author ziegler
  */
 public class TableLoader {
@@ -33,10 +31,6 @@ public class TableLoader {
     // Fraction of dmax corresponding to the point in the cell where the velocity is minimal
     public static double FracDmaxAtMinVel = 0.615;
 
-    // NOTE: Maybe this method should be deleted?
-    /*
-     * NOTE: Lacks JavaDoc description
-     */
     public void test(){
         TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
         for (int s = 0; s < 1; s++) { // Loop over sectors
@@ -68,7 +62,6 @@ public class TableLoader {
         }
     }
 
-    // NOTE: Lacks JavaDoc description
     public static synchronized void FillT0Tables(int run, String variation) {
         if (T0LOADED) return;
 
@@ -105,7 +98,6 @@ public class TableLoader {
         T0LOADED = true;
     }
 
-    // NOTE: Lacks JavaDoc description
     public static synchronized void Fill(IndexedTable tab) {
         if (T2DLOADED) return;
         System.out.println(" T2D TABLE FILLED.....");
@@ -173,7 +165,7 @@ public class TableLoader {
      * @param bfield B field value a x in T
      * @param s      sector idx
      * @param r      superlayer idx
-     * @param tab    NOTE: Missing description
+     * @param tab
      * @return time (ns)
      */
     public static synchronized double calc_Time(double x, double dmax, double tmax, double alpha,

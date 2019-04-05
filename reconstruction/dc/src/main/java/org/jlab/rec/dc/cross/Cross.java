@@ -194,9 +194,9 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
     /**
      * Gets rotated coordinates from tilted sector coordinate system to the sector's coordinate
      * system.
-     * @param X NOTE: Parameter lacks description
-     * @param Y NOTE: Parameter lacks description
-     * @param Z NOTE: Parameter lacks description
+     * @param X
+     * @param Y
+     * @param Z
      * @return  point3D containing the rotated coordinates
      */
     public Point3D getCoordsInSector(double X, double Y, double Z) {
@@ -205,9 +205,9 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
 
     /**
      * Gets rotates coordinates from tilted sector coordinate system to the lab frame.
-     * @param X NOTE: Parameter lacks description
-     * @param Y NOTE: Parameter lacks description
-     * @param Z NOTE: Parameter lacks description
+     * @param X
+     * @param Y
+     * @param Z
      * @return  Point3D containing the rotated coordinates
      */
     public Point3D getCoordsInLab(double X, double Y, double Z) {
@@ -221,7 +221,6 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         return new Point3D(rx, ry, PointInSec.z());
     }
 
-    // NOTE: Method lacks JavaDoc description
     public Point3D getCoordsInTiltedSector(double X, double Y, double Z) {
         // Math.toRadians(-60.) = -1.0471975511965976
         double rx = X * FastMath.cos((this.get_Sector() - 1) * -1.0471975511965976)
@@ -232,7 +231,6 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         return new Point3D(rx * cos_tilt - Z * sin_tilt, ry, rx * sin_tilt + Z * cos_tilt);
     }
 
-    // NOTE: Method lacks JavaDoc description
     void set_CrossDirIntersSegWires() {
         double wy_over_wx = (FastMath.cos(Math.toRadians(6.)) / FastMath.sin(Math.toRadians(6.)));
         double val_sl1 = this._seg1.get_fittedCluster().get_clusterLineFitSlope();
@@ -252,7 +250,6 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         }
     }
 
-    // NOTE: Method lacks JavaDoc description
     private void calc_IntersectPlaneAtZ(double z,       double wy_over_wx,
                                         double val_sl1, double val_sl2,
                                         double val_it1, double val_it2,

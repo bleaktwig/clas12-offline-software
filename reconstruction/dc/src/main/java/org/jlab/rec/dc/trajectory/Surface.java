@@ -1,12 +1,10 @@
 package org.jlab.rec.dc.trajectory;
 
 /**
- * NOTE: Lacks JavaDoc description.
  * @author ziegler
  */
 public class Surface {
 
-    // NOTE: All of these variables need a short description.
     private int _DetectorIndex;
     private int _DetectorLayer;
     private String _DetectorName;

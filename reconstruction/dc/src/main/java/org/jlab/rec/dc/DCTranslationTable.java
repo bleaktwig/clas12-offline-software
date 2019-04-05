@@ -7,7 +7,6 @@ import java.io.PrintWriter;
 import org.jlab.detector.base.DetectorCollection;
 import org.jlab.detector.base.DetectorDescriptor;
 
-// NOTE: What is DCRB?
 /**
  * Converts DC readout board (crate, slot, channel) to DC wire hit (sector, layer, wire) where crate
  * runs from 67 to 67+17, active readout slots are 4 to 10 and 13 to 19, and DCRB channels run from
@@ -162,8 +161,6 @@ public class DCTranslationTable {
                     int connector = (int) (channel / 16) + 1;
                     int icableID = (connector - 1) * 20 + slot - 1;
 
-                    // NOTE: This line isn't really doing much. Maybe it's supposed to be placed
-                    //       somewhere else?
                     if (sector <= 0 || layer <= 0 || wire <= 0) continue;
                 }
             }

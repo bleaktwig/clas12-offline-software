@@ -26,22 +26,20 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     private Line3D _clusLineErr; // The cluster line error.
 
     private double _fitProb = -1; // the linear fit chi^2 probability
-    private double _Chisq = Double.POSITIVE_INFINITY; // NOTE: If fitProb is the chi^2 probability
-                                                      //       then what is this variable?
+    private double _Chisq = Double.POSITIVE_INFINITY;
 
     private double _clusterLineFitSlope;        // The slope of the line fitted to the cluster.
     private double _clusterLineFitintercept;    // The intercept of the line fitted to the cluster.
     private double _clusterLineFitSlopeErr;     // The error in the slope.
     private double _clusterLineFitinterceptErr; // The error in the intercept.
-    private double _clusterLineFitSlIntCov;     // NOTE: What is this?
+    private double _clusterLineFitSlIntCov;
 
-    // NOTE: What are these variables? What does MP stand for?
     private double _clusterLineFitSlopeMP;
     private double _clusterLineFitInterceptMP;
     private double _clusterLineFitSlopeErrMP;
     private double _clusterLineFitInterceptErrMP;
 
-    private int[][] _Status; // NOTE: Lacks a description
+    private int[][] _Status;
 
     /**
      * Constructs a FittedCluster using the data from a cluster.

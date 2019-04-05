@@ -34,11 +34,6 @@ public class ClusterFitter {
 
     public ClusterFitter() {}
 
-    /**
-     * NOTE: Lacks description
-     * @param clus   NOTE: Lacks description
-     * @param system NOTE: Lacks description
-     */
     public void SetFitArray(FittedCluster clus, String system) {
 
         Collections.sort(clus);
@@ -102,7 +97,6 @@ public class ClusterFitter {
     }
 
     /**
-     * NOTE: Method lacks description
      * @param x0   local x in the tilted sector coordinate system (in cm)
      * @param clus fitted cluster
      */
@@ -123,7 +117,6 @@ public class ClusterFitter {
     }
 
     /**
-     * NOTE: Lacks description
      * @param clus             fitted cluster
      * @param calcTimeResidual boolean to compute the time residuals (in cm)
      * @param resetLRAmbig     boolean to reset the LR ambiguity
@@ -270,7 +263,6 @@ public class ClusterFitter {
     }
 
     /**
-     * NOTE: Method lacks description
      * @param clusCand fitted cluster
      * @return wire pattern in the cluster
      */

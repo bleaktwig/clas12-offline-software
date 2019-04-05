@@ -46,10 +46,8 @@ public class Trajectory extends ArrayList<Cross> {
     public double get_PathLength() {return _pathLength;}
     public void set_PathLength(double _PathLength) {this._pathLength = _PathLength;}
 
-    // NOTE: Lacks JavaDoc description
     public class TrajectoryStateVec {
 
-        // NOTE: What are each of these variables?
         private int _TrkId;
         private double _X;
         private double _Y;
@@ -101,7 +99,6 @@ public class Trajectory extends ArrayList<Cross> {
         public void setDetName(String name) {this._Name = name;}
     }
 
-    // NOTE: Lacks JavaDoc description.
     private int getFTOFPanel(Line3d trk, FTOFGeant4Factory ftofDetector) {
         List<DetHit> hits = ftofDetector.getIntersections(trk);
 
@@ -115,7 +112,6 @@ public class Trajectory extends ArrayList<Cross> {
        return panel;
     }
 
-    // NOTE: Lacks JavaDoc description.
     public void calcTrajectory(int id,
                                Swim dcSwim,
                                double x, double y, double z,
@@ -223,7 +219,6 @@ public class Trajectory extends ArrayList<Cross> {
         }
     }
 
-    // NOTE: Lacks JavaDoc description.
     private void FillTrajectory(int id,
                                 List<TrajectoryStateVec> trajectory,
                                 double[] trkPars,

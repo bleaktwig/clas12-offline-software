@@ -49,7 +49,7 @@ public class ClusterFinder {
     /**
      * Fills 3-dimentional array of hits from input hits
      * @param hits              the unfitted hit
-     * @param rejectLayer NOTE: Lacks description
+     * @param rejectLayer
      */
     private void fillHitArray(List<Hit> hits, int rejectLayer) {
 
@@ -71,7 +71,7 @@ public class ClusterFinder {
     /**
      * Finds clumps. A clump is a cluster that is not filtered for noise.
      * @param allhits the list of unfitted hits
-     * @param ct      NOTE: Lacks description
+     * @param ct
      * @return List of clusters
      */
     public List<Cluster> findClumps(List<Hit> allhits, ClusterCleanerUtilities ct) {
@@ -124,8 +124,8 @@ public class ClusterFinder {
      * Hit-based tracking linear fits to the wires is done to determine the cluster, resulting in a
      * fitted cluster.
      * @param allhits    the list of unfitted hits
-     * @param ct         NOTE: What is this?
-     * @param cf         NOTE: What is this?
+     * @param ct
+     * @param cf
      * @param DcDetector DC Detector geometry
      * @return           resulting fitted cluster of hits
      */
@@ -209,12 +209,11 @@ public class ClusterFinder {
     }
 
     /**
-     * NOTE: What is this method doing?
-     * @param fhits      NOTE: What is this?
-     * @param tab        NOTE: What is this?
+     * @param fhits
+     * @param tab
      * @param DcDetector DC Detector geometry
-     * @param tde        NOTE: What is this?
-     * @return           NOTE: What is this?
+     * @param tde
+     * @return
      */
     private List<FittedCluster> RecomposeClusters(List<FittedHit> fhits,
                                                   IndexedTable tab,
@@ -269,7 +268,6 @@ public class ClusterFinder {
         return clusters;
     }
 
-    // NOTE: Lacks JavaDoc comment
     public List<FittedCluster> FindTimeBasedClusters(List<FittedHit> fhits,
                                                      ClusterFitter cf,
                                                      ClusterCleanerUtilities ct,
@@ -406,13 +404,12 @@ public class ClusterFinder {
     }
 
     /**
-     * NOTE: What is this method doing?
-     * @param fclusters NOTE: What is this?
-     * @param allhits   NOTE: What is this?
-     * @param ct        NOTE: What is this?
-     * @param cf        NOTE: What is this?
+     * @param fclusters
+     * @param allhits
+     * @param ct
+     * @param cf
      * @param event     Evio data event
-     * @return          NOTE: What is this?
+     * @return
      */
     public EvioDataBank getLayerEfficiencies(List<FittedCluster> fclusters,
                                              List<Hit> allhits,

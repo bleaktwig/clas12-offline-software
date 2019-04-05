@@ -15,11 +15,11 @@ public class StateVec extends Matrix {
 
     private static final long serialVersionUID = 1874984192960130771L;
 
-    private double _PathLength; // NOTE: What is this?
-	private int _planeIdx;      // The wire plane index in the series of planes used in the traj.
-	private double z;           // NOTE: What is this?
-	private double b;           // NOTE: What is this?
-	private double h;           // KF projector
+    private double _PathLength;
+	private int _planeIdx; // The wire plane index in the series of planes used in the traj.
+	private double z;
+	private double b;
+	private double h; // KF projector
 
     public double x() {return(get(0,0));}
     public double y() {return(get(1,0));}

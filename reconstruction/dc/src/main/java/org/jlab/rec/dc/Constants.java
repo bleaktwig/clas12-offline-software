@@ -208,9 +208,6 @@ public class Constants {
     public static double[][][][] getT0Err() {return _T0ERR;}
     public static synchronized void setT0Err(double[][][][] T0ERR) {_T0ERR = T0ERR;}
 
-    /**
-     * NOTE: Lacks description
-     */
     public static synchronized void Load() {
         if (ConstantsLoaded) return;
 

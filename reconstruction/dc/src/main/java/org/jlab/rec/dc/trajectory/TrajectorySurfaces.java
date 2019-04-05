@@ -29,7 +29,6 @@ public class TrajectorySurfaces {
         _DetectorPlanes = aDetectorPlanes;
     }
 
-    // NOTE: Needs JavaDoc Description
     public void LoadSurfaces(DCGeant4Factory dcDetector,
                              FTOFGeant4Factory ftofDetector,
                              ECGeant4Factory ecDetector,
@@ -114,7 +113,6 @@ public class TrajectorySurfaces {
         }
     }
 
-    // NOTE: Lacks JavaDoc description.
     private Point3D RotateFromTSCtoLabC(double X, double Y, double Z, int sector) {
 
         // Math.sin(Math.toRadians(25.)) = 0.42261826174069944

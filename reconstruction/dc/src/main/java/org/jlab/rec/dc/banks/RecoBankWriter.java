@@ -24,8 +24,6 @@ import trackfitter.fitter.utilities.*;
  */
 public class RecoBankWriter {
 
-    // NOTE: I feel like this method shouldn't be in this class. Maybe it would fit better in
-    //       FittedHit?
     /**
      * Transforms a list hits into one of fitted hits.
      * @param hits list of hits to be transformed

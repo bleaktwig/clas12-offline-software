@@ -6,8 +6,6 @@ import java.text.DecimalFormat;
 import org.jlab.rec.dc.Constants;
 
 /**
- * NOTE: Lacks JavaDoc description
- *
  * @author ziegler
  */
 public class TimeToDistanceEstimator {

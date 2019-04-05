@@ -7,7 +7,6 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.track.Track;
 
-// NOTE: Class lacks JavaDoc description
 public class MeasVecs {
 
     public List<MeasVec> measurements = new ArrayList<MeasVec>();

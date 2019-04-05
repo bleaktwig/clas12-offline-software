@@ -13,7 +13,6 @@ import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.segment.Segment;
 
 /**
- * NOTE: Lacks JavaDoc description
  * @author ziegler
  */
 public class RoadFinder  {
@@ -95,7 +94,6 @@ public class RoadFinder  {
         return Roads;
     }
 
-    // NOTE: Lacks JavaDoc Description
     public Segment findRoadMissingSegment(List<Segment> segList,
                                           DCGeant4Factory DcDetector,
                                           double[] a)  {
@@ -201,7 +199,6 @@ public class RoadFinder  {
         return pseudoSeg1;
     }
 
-    // NOTE: Lacks JavaDoc Description
     private boolean fitRoad(ArrayList<Segment> segList, DCGeant4Factory DcDetector) {
 
         qf.init();

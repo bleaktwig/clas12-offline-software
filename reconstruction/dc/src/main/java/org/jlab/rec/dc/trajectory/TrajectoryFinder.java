@@ -58,7 +58,6 @@ public class TrajectoryFinder {
     }
 
     /**
-     * NOTE: Lacks JavaDoc description.
      * @param DcDetector DC detector utility
      * @return           integral Bdl
      */
@@ -241,10 +240,10 @@ public class TrajectoryFinder {
 
     /**
      * Calculates the error on the tangent num/denom.
-     * @param num     NOTE: Missing description
-     * @param denom   NOTE: Missing description
-     * @param numEr   NOTE: Missing description
-     * @param denomEr NOTE: Missing description
+     * @param num
+     * @param denom
+     * @param numEr
+     * @param denomEr
      * @return        the error
      */
     private double calcTanErr(double num, double denom, double numEr, double denomEr) {

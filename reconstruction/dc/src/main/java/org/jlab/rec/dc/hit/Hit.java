@@ -17,8 +17,8 @@ public class Hit implements Comparable<Hit> {
     private int _Superlayer;  // superlayer [1...6]
     private int _Layer;    	  // layer      [1...6]
     private int _Wire;    	  // wire     [1...112]
-    private int _TDC;         // NOTE: What does TDC stand for?
-    private double _cellSize; // NOTE: What is this cell size?
+    private int _TDC;
+    private double _cellSize;
     private double _DocaErr;  // Doca uncertainty, or error on the time in ns (4ns time window used
                               //     by default in reconstructing simulated data).
 
@@ -55,7 +55,6 @@ public class Hit implements Comparable<Hit> {
     public double get_CellSize() {return _cellSize;}
     public void set_CellSize(double cellSize) {_cellSize = cellSize;}
 
-    // NOTE: Lacks JavaDoc comment
     public void calc_CellSize(DCGeant4Factory DcDetector) {
         double layerDiffAtMPln = DcDetector.getWireMidpoint(this.get_Sector() - 1,
                                                             this.get_Superlayer() - 1, 0, 0).x -

@@ -50,8 +50,6 @@ public class DCTBEngine extends DCEngine {
         return true;
     }
 
-    // NOTE: A detailed javadoc description of the engine itself would be useful for newcomers to
-    //       the code.
     @Override
     public boolean processDataEvent(DataEvent event) {
         if (event.hasBank("RUN::config") == false) {

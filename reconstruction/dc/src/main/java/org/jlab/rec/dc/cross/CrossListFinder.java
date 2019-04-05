@@ -35,10 +35,10 @@ public class CrossListFinder  {
      * Determines which crosses from a list are consistent with belonging to a track in the DC.
      * @param dccrosslist the list of crosses in the event
      * @param TimeBased   flag telling if the detection is hit-based or time-based
-     * @param tab         NOTE: Lacks description
+     * @param tab
      * @param DcDetector  DC detector utility
-     * @param tde         NOTE: Lacks description
-     * @param swimmer     NOTE: Lacks description
+     * @param tde
+     * @param swimmer
      * @return the list of crosses determined to be consistent with belonging to a track in the DC
      */
     public CrossList candCrossLists(List<Cross> dccrosslist, boolean TimeBased, IndexedTable tab,
@@ -170,7 +170,7 @@ public class CrossListFinder  {
     /**
      * Recalculates the direction of a cross
      * @param c1    the cross
-     * @param slope NOTE: Lacks description
+     * @param slope
      */
     @SuppressWarnings("unused")
     private void RecalculateCrossDir(Cross c1, double slope) {
@@ -184,7 +184,6 @@ public class CrossListFinder  {
         c1.set_Dir(new Point3D(ux, uy, uz));
     }
 
-    // NOTE: Lacks JavaDoc Description
     @SuppressWarnings("unused")
     private void RecalculateCrossDirErr(Cross c1,
                                         double slope,
@@ -214,7 +213,6 @@ public class CrossListFinder  {
         c1.set_DirErr(estimDirErr);
     }
 
-    // NOTE: Lacks JavaDoc Description
     private void recalcParsSegment(Segment _Segment, IndexedTable tab, DCGeant4Factory DcDetector,
             TimeToDistanceEstimator tde) {
         // Refit
@@ -239,7 +237,6 @@ public class CrossListFinder  {
         cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
         cf.Fit(_Segment.get_fittedCluster(), true);
 
-        // calcTimeResidual = false, resetLRAmbig = false // NOTE: Is this comment correct?
         cf.SetResidualDerivedParams(_Segment.get_fittedCluster(), true, false, DcDetector);
 
         cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
@@ -249,7 +246,6 @@ public class CrossListFinder  {
                                     _Segment.get_fittedCluster());
     }
 
-    // NOTE: Lacks JavaDoc Description
     public List<List<Cross>> get_CrossesInSectors(List<Cross> crosses) {
 
         List<List<Cross>> CrossesBySectors = new ArrayList<List<Cross>>();
@@ -265,7 +261,7 @@ public class CrossListFinder  {
      * @param tab        table of constants
      * @param DcDetector detector geometry
      * @param tde        time-to-distance utility
-     * @param swimmer    NOTE: Lacks description
+     * @param swimmer
      * Updates the B-field information of the hits in the cross segments.
      */
     private void updateBFittedHits(Cross c, IndexedTable tab, DCGeant4Factory DcDetector,
@@ -298,13 +294,11 @@ public class CrossListFinder  {
         c.set_CrossParams(DcDetector);
     }
 
-    // NOTE: Lacks JavaDoc description
     private class BaseCand {
         public double Chisq;
         public List<Cross> CrossesOnTrack = new ArrayList<Cross>();
     }
 
-    // NOTE: Lacks JavaDoc description
     private class TrajectoryParametriz {
         private double[][] fitResult = {{0.,0.,0.},
                                         {0.,0.,0.},
@@ -313,7 +307,6 @@ public class CrossListFinder  {
                                         {0.,0.,0.},
                                         {0.,0.,0.}};
 
-        // NOTE: Lacks JavaDoc description
         public double[] evaluate(double[] x, double[] y, double[] err, double[] y2, double[] err2) {
 
             LineFitter linefit = new LineFitter();

@@ -62,14 +62,13 @@ public class HitReader {
     }
 
     /**
-     * NOTE: Missing description
-     * @param sector     NOTE: Missing description
-     * @param superlayer NOTE: Missing description
-     * @param layer      NOTE: Missing description
-     * @param wire       NOTE: Missing description
-     * @param T0         NOTE: Missing description
-     * @param T0ERR      NOTE: Missing description
-     * @return           NOTE: Missing description
+     * @param sector
+     * @param superlayer
+     * @param layer
+     * @param wire
+     * @param T0
+     * @param T0ERR
+     * @return
      */
     private double[] get_T0(int sector, int superlayer, int layer, int wire,
                             double[][][][] T0, double[][][][] T0ERR) {
@@ -85,13 +84,13 @@ public class HitReader {
      * Fills the DChit list of hits. This method reads the hits using clas-io methods to get the
      * EvioBank for the DC and fills the values to instantiate the DChit and MChit classes.
      * @param event         Data event
-     * @param noiseAnalysis NOTE: Missing description
-     * @param parameters    NOTE: Missing description
-     * @param results       NOTE: Missing description
-     * @param tab2          NOTE: Missing description
-     * @param tab3          NOTE: Missing description
-     * @param DcDetector    NOTE: Missing description
-     * @param triggerPhase  NOTE: Missing description
+     * @param noiseAnalysis
+     * @param parameters
+     * @param results
+     * @param tab2
+     * @param tab3
+     * @param DcDetector
+     * @param triggerPhase
      */
     public void fetchDCHits(DataEvent event,
                             Clas12NoiseAnalysis noiseAnalysis,
@@ -235,12 +234,12 @@ public class HitReader {
     /**
      * Reads HB DC hits written to the DC bank
      * @param event      data event
-     * @param constants0 NOTE: Missing description
-     * @param constants1 NOTE: Missing description
-     * @param T0         NOTE: Missing description
-     * @param T0ERR      NOTE: Missing description
-     * @param DcDetector NOTE: Missing description
-     * @param tde        NOTE: Missing description
+     * @param constants0
+     * @param constants1
+     * @param T0
+     * @param T0ERR
+     * @param DcDetector
+     * @param tde
      */
     public void readHBHits(DataEvent event, IndexedTable constants0, IndexedTable constants1,
             double[][][][] T0, double[][][][] T0ERR, DCGeant4Factory DcDetector,
@@ -353,10 +352,10 @@ public class HitReader {
     /**
      * Reads TB DC hits written to the DC bank
      * @param event      Data event
-     * @param constants0 NOTE: Missing description
-     * @param constants1 NOTE: Missing description
-     * @param T0         NOTE: Missing description
-     * @param T0ERR      NOTE: Missing description
+     * @param constants0
+     * @param constants1
+     * @param T0
+     * @param T0ERR
      */
     public void readTBHits(DataEvent event, IndexedTable constants0, IndexedTable constants1,
             TimeToDistanceEstimator tde, double[][][][] T0, double[][][][] T0ERR) {
@@ -454,10 +453,10 @@ public class HitReader {
     }
 
     /**
-     * NOTE: Missing description
+     *
      * @param event Data event
-     * @param tkrId NOTE: Missing description
-     * @return      NOTE: Missing description
+     * @param tkrId
+     * @return
      */
     private double readBeta(DataEvent event, int trkId) {
         double _beta = 1.0;

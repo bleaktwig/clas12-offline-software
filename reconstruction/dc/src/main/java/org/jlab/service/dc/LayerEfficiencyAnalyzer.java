@@ -37,7 +37,6 @@ import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.trajectory.SegmentTrajectory;
 
-// NOTE: Class lacks JavaDoc documentation
 public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListener{
 
     private TimeToDistanceEstimator tde;

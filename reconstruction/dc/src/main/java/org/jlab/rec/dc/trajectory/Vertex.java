@@ -15,7 +15,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.track.Track;
 
 /**
- * NOTE: Lacks JavaDoc description.
  * @author ziegler
  */
 public class Vertex {

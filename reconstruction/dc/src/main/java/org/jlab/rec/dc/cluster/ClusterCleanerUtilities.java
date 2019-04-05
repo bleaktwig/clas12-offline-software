@@ -11,8 +11,6 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
 
-// NOTE: Maybe changing the Math methods here to FastMath would be a good idea?
-// NOTE: Lacks JavaDoc description
 public class ClusterCleanerUtilities {
 
     private List<ArrayList<Hit>> sortedHits;
@@ -238,8 +236,8 @@ public class ClusterCleanerUtilities {
     /**
      * Sorts a list of hits by layer.
      * @param DCHits   list of hits to be sorted
-     * @param sector   NOTE: lacks description
-     * @param superlyr NOTE: lacks description
+     * @param sector
+     * @param superlyr
      * @return         sorted list of hits
      */
     public List<List<Hit>> sortByLayerList(List<Hit> DCHits, int sector, int superlyr) {
@@ -308,10 +306,10 @@ public class ClusterCleanerUtilities {
      * Resolves the Left-Right ambiguity in a cluster.
      * @param fClus      the cluster
      * @param cf         a cluster fitter instance
-     * @param tab        NOTE: parameter lacks description
+     * @param tab
      * @param DcDetector DC Detector Geometry
-     * @param tde        NOTE: parameter lacks description
-     * @return           NOTE: return data lacks description
+     * @param tde
+     * @return
      */
     public FittedCluster LRAmbiguityResolver(FittedCluster fClus, ClusterFitter cf,
             IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
@@ -542,13 +540,12 @@ public class ClusterCleanerUtilities {
     }
 
     /**
-     * NOTE: method lacks description
      * @param Clus       the cluster
      * @param cf         a cluster fitter instance
-     * @param tab        NOTE: parameter lacks description
+     * @param tab
      * @param DcDetector DC Detector Geometry
-     * @param tde        NOTE: parameter lacks description
-     * @return           NOTE: return data lacks description
+     * @param tde
+     * @return
      */
     public FittedCluster secondariesRemover(FittedCluster clus,
                                             ClusterFitter cf,
