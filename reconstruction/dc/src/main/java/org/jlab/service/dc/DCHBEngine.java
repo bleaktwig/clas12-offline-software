@@ -47,6 +47,8 @@ public class DCHBEngine extends DCEngine {
     private double triggerPhase;
     private int newRun = 0;
 
+    private int eventCounter = 0;
+
     public DCHBEngine() {
         super("DCHB");
     }
@@ -62,6 +64,10 @@ public class DCHBEngine extends DCEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
+        eventCounter++;
+        // if (eventCounter != 8879) return true;
+        System.out.printf("Processing event #%d\n", eventCounter);
+
         if (!event.hasBank("RUN::config")) return true;
 
         DataBank bank = event.getBank("RUN::config");
@@ -158,7 +164,7 @@ public class DCHBEngine extends DCEngine {
         // Find the list of track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist, dcDetector,
-                Swimmer.getTorScale(), dcSwim, false);
+                Swimmer.getTorScale(), dcSwim, true);
 
         int trkId = 1;
         if (trkcands.size() > 0) {
@@ -221,7 +227,7 @@ public class DCHBEngine extends DCEngine {
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector, null, dcSwim);
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist, dcDetector,
-                Swimmer.getTorScale(), dcSwim, false);
+                Swimmer.getTorScale(), dcSwim, true);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {

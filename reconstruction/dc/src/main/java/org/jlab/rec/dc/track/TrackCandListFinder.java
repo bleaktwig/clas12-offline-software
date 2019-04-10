@@ -204,9 +204,15 @@ public class TrackCandListFinder {
             if (cand != null) cands.add(cand);
         });
 
-        // TODO: This sorting is only needed due to the strange criteria for overlapping tracks.
+        // NOTE: This sorting is only needed due to the strange criteria for overlapping tracks.
         Collections.sort(cands);
-        for (int ii = 0; ii < cands.size(); ++ii) cands.get(ii).set_Id(ii);
+        for (int ii = 0; ii < cands.size(); ++ii) {
+            if (cands.get(ii) == null) {
+                System.out.printf("\n\n\n\nREMOVING TRACK %d!!\n\n\n\n", ii);
+                cands.remove(ii);
+            }
+            cands.get(ii).set_Id(ii);
+        }
 
         return cands;
     }
