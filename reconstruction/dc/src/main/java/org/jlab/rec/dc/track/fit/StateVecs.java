@@ -4,6 +4,9 @@ import Jama.Matrix;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.concurrent.TimeUnit;
+import java.lang.InterruptedException;
+
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.cross.Cross;
@@ -59,6 +62,9 @@ public class StateVecs {
     public void transport(int sector, int i, int f, StateVec iVec, CovMat iCovMat) {
 
         if (iVec == null) return;
+        if (Double.isNaN(iVec.z) || Double.isNaN(iVec.x) || Double.isNaN(iVec.y)
+                || Double.isNaN(iVec.tx) || Double.isNaN(iVec.ty)) return;
+
         double stepSize = 1.0;
 
         // final state vector and covariance matrix creation and initialization
@@ -79,32 +85,27 @@ public class StateVecs {
         double z       = Z[i];
         double BatMeas = iVec.B;
 
-        // auxiliary variable
         double signumAux = Math.signum(Z[f] - Z[i]);
-
-        while(signumAux * z < signumAux * Z[f]) {
-            // System.out.println(" RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x      = fVec.x;
-            double y      = fVec.y;
-            z             = fVec.z;
-            double tx     = fVec.tx;
-            double ty     = fVec.ty;
-            double Q      =  fVec.Q;
-            double dPath  = fVec.deltaPath;
+        while (signumAux * z < signumAux * Z[f]) {
+            double x     = fVec.x;
+            double y     = fVec.y;
+            z            = fVec.z;
+            double tx    = fVec.tx;
+            double ty    = fVec.ty;
+            double Q     = fVec.Q;
+            double dPath = fVec.deltaPath;
             iCovMat.covMat = fCovMat.covMat;
 
             s = Math.signum(Z[f] - Z[i]) * stepSize;
-           // System.out.println(" from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
-            if(Math.signum(Z[f] - Z[i]) *(z+s)>Math.signum(Z[f] - Z[i]) *Z[f])
-                s=Math.signum(Z[f] - Z[i]) *Math.abs(Z[f]-z);
+            if (Math.signum(Z[f] - Z[i]) * (z+s) > Math.signum(Z[f] - Z[i]) * Z[f])
+                s = Math.signum(Z[f] - Z[i]) * Math.abs(Z[f]-z);
 
-            rk.RK4transport( sector, Q, x, y, z, tx, ty, s, dcSwim,
-                        iCovMat, fVec, fCovMat, mass, dPath);
+            rk.RK4transport(sector, Q, x, y, z, tx, ty, s, dcSwim, iCovMat, fVec, fCovMat, mass,
+                    dPath);
 
-            if (Math.abs(fVec.B - BatMeas) < 0.0001)
+            if (Math.abs(fVec.B - BatMeas) < 0.0001) {
                 stepSize *= 2;
-
-            // BatMeas = fVec.B;
+            }
         }
 
         this.trackTraj.put(f, fVec);
@@ -386,6 +387,18 @@ public class StateVecs {
         StateVec(int k) {
             this.k = k;
         }
+
+        void print() {
+            System.out.printf("StateVec %d:\n", k);
+            System.out.printf("  z         : %f\n", z);
+            System.out.printf("  x         : %f\n", x);
+            System.out.printf("  y         : %f\n", y);
+            System.out.printf("  tx        : %f\n", tx);
+            System.out.printf("  ty        : %f\n", ty);
+            System.out.printf("  Q         : %f\n", Q);
+            System.out.printf("  B         : %f\n", B);
+            System.out.printf("  deltaPath : %f\n", deltaPath);
+        }
     }
 
     /**
@@ -400,5 +413,15 @@ public class StateVecs {
             this.k = k;
         }
 
+        void print() {
+            System.out.printf("CovMat %d\n", k);
+            for (int ii = 0; ii < covMat.getColumnDimension(); ++ii) {
+                System.out.printf("  ");
+                for (int jj = 0; jj < covMat.getRowDimension(); ++jj) {
+                    System.out.printf("%f ", covMat.get(ii, jj));
+                }
+                System.out.printf("\b\n");
+            }
+        }
     }
 }

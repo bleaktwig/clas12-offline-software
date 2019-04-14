@@ -47,8 +47,6 @@ public class DCHBEngine extends DCEngine {
     private double triggerPhase;
     private int newRun = 0;
 
-    private int eventCounter = 0;
-
     public DCHBEngine() {
         super("DCHB");
     }
@@ -64,9 +62,6 @@ public class DCHBEngine extends DCEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        eventCounter++;
-        // if (eventCounter != 8879) return true;
-        System.out.printf("Processing event #%d\n", eventCounter);
 
         if (!event.hasBank("RUN::config")) return true;
 
@@ -76,8 +71,7 @@ public class DCHBEngine extends DCEngine {
 
         // Load the constants
         int newRun = bank.getInt("run", 0);
-        if (newRun == 0)
-            return true;
+        if (newRun == 0) return true;
 
         if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
             if (timeStamp == -1) return true;

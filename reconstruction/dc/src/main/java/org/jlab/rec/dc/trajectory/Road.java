@@ -9,5 +9,5 @@ import org.jlab.rec.dc.segment.Segment;
  */
 public class Road extends ArrayList<Segment>{
     public int id;
-    public double[] a = new double[3]; // Fit params
+    public double[] a = new double[3]; // fit params
 }

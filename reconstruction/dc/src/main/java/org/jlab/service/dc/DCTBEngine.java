@@ -156,7 +156,7 @@ public class DCTBEngine extends DCEngine {
         CrossMaker crossMake = new CrossMaker();
 
         // The track bank is also needed
-        if (event.hasBank("HitBasedTrkg::HBTracks") == false) return true;
+        if (!event.hasBank("HitBasedTrkg::HBTracks")) return true;
 
         DataBank trkbank    = event.getBank("HitBasedTrkg::HBTracks");
         DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
@@ -202,7 +202,6 @@ public class DCTBEngine extends DCEngine {
             TrackArray[HBtrk.get_Id()-1].set_Status(0);
         }
         if (TrackArray == null) return true; // HB tracks not saved correctly
-
         for (Segment seg : segments) {
             TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg);
             if (seg.get_Status() == 1)
@@ -218,7 +217,6 @@ public class DCTBEngine extends DCEngine {
                     || TrackArray[i].get_ListOfHBSegments().size() < 4) {
                 continue;
             }
-
             TrackArray[i].set_MissingSuperlayer(get_Status(TrackArray[i]));
             TrackArray[i].addAll(crossMake.find_Crosses(TrackArray[i].get_ListOfHBSegments(),
                                                         dcDetector));
@@ -230,7 +228,7 @@ public class DCTBEngine extends DCEngine {
             StateVec fn = new StateVec();
             kFit.runFitter(TrackArray[i].get(0).get_Sector());
 
-            if (kFit.setFitFailed == false && kFit.finalStateVec != null) {
+            if (!kFit.setFitFailed && kFit.finalStateVec != null) {
                 // Set the state vector at the last measurement site
                 fn.set(kFit.finalStateVec.x,  kFit.finalStateVec.y,
                        kFit.finalStateVec.tx, kFit.finalStateVec.ty);
@@ -238,10 +236,8 @@ public class DCTBEngine extends DCEngine {
                 // Set the track parameters if the filter does not fail
                 TrackArray[i].set_P(1./Math.abs(kFit.finalStateVec.Q));
                 TrackArray[i].set_Q((int)Math.signum(kFit.finalStateVec.Q));
-                trkcandFinder.setTrackPars(TrackArray[i], new Trajectory(),
-                                           trjFind, fn,
-                                           kFit.finalStateVec.z,
-                                           dcDetector, dcSwim);
+                trkcandFinder.setTrackPars(TrackArray[i], new Trajectory(), trjFind, fn,
+                        kFit.finalStateVec.z, dcDetector, dcSwim);
 
                 // Candidate parameters are set from the state vector
                 TrackArray[i].set_FitChi2(kFit.chi2);
@@ -250,6 +246,7 @@ public class DCTBEngine extends DCEngine {
                 TrackArray[i].set_FitConvergenceStatus(kFit.ConvStatus);
                 TrackArray[i].set_Id(TrackArray[i].size()+1);
                 TrackArray[i].set_CovMat(kFit.finalCovMat.covMat);
+
                 if (TrackArray[i].get_Vtx0().toVector3D().mag() > 500) continue;
                 trkcands.add(TrackArray[i]);
             }

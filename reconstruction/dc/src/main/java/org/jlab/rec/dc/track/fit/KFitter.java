@@ -33,38 +33,27 @@ public class KFitter {
     public int NDF        = 0;
     public int ConvStatus = 1;
 
-    public KFitter(Track trk, DCGeant4Factory DcDetector,
-                   boolean TimeBasedUsingHBtrack,
-                   Swim swimmer) {
+    public KFitter(Track trk, DCGeant4Factory DcDetector, boolean TimeBasedUsingHBtrack,
+            Swim swimmer) {
 
         sv = new StateVecs(swimmer);
-        if (TimeBasedUsingHBtrack) {
-            this.initFromHB(trk, DcDetector);
-        } else {
-            this.init(trk, DcDetector);
-        }
+        if (TimeBasedUsingHBtrack) this.initFromHB(trk, DcDetector);
+        else                       this.init(trk, DcDetector);
     }
 
     private void initFromHB(Track trk, DCGeant4Factory DcDetector) {
         mv.setMeasVecsFromHB(trk, DcDetector);
-        int mSize = mv.measurements.size();
-        sv.Z = new double[mSize];
+        sv.Z = new double[mv.measurements.size()];
 
-        for (int i = 0; i < mSize; i++) {
-            sv.Z[i] = mv.measurements.get(i).z;
-        }
+        for (int i = 0; i < mv.measurements.size(); i++) sv.Z[i] = mv.measurements.get(i).z;
         sv.initFromHB(trk, sv.Z[0], this);
     }
 
     public void init(Track trk, DCGeant4Factory DcDetector) {
         mv.setMeasVecs(trk, DcDetector);
-        int mSize = mv.measurements.size();
+        sv.Z = new double[mv.measurements.size()];
 
-        sv.Z = new double[mSize];
-
-        for (int i = 0; i < mSize; i++) {
-            sv.Z[i] = mv.measurements.get(i).z;
-        }
+        for (int i = 0; i < mv.measurements.size(); i++) sv.Z[i] = mv.measurements.get(i).z;
         sv.init(trk, sv.Z[0], this);
     }
 
@@ -73,62 +62,45 @@ public class KFitter {
         this.NDF = mv.ndf;
         int svzLength = sv.Z.length;
 
-        // IntStream.range(1,totNumIter ).parallel().forEach(i -> {
         for (int i = 1; i <= totNumIter; i++) {
             this.chi2kf = 0;
             if (i > 1) {
-                // get new state vec at 1st measurement after propagating back
-                //     from the last filtered state
-                sv.transport(sector,
-                             svzLength - 1,
-                             0,
-                             sv.trackTraj.get(svzLength - 1),
-                             sv.trackCov.get(svzLength- 1));
+                // Get new state vec at 1st measurement after propagating back from the last
+                // filtered state
+                sv.transport(sector, svzLength-1, 0, sv.trackTraj.get(svzLength-1),
+                        sv.trackCov.get(svzLength-1));
             }
             for (int k = 0; k < svzLength - 1; k++) {
-                sv.transport(sector, k, k + 1,
-                             sv.trackTraj.get(k),
-                             sv.trackCov.get(k));
+                sv.transport(sector, k, k + 1, sv.trackTraj.get(k), sv.trackCov.get(k));
                 this.filter(k + 1);
             }
             if (i <= 1) continue;
-            // this.calcFinalChisq();
-            // if(this.chi2>1000000) {
-            //     i = totNumIter;
-            //     this.setFitFailed=true;
-            // }
 
-            // double deltaChi2 = Math.abs(this.chi2kf - newChisq);
             if (this.chi2kf >= newChisq) {
                 this.ConvStatus = 1;
                 continue;
             }
-            // if (this.chi2kf < newChisq) {
-            if(this.finalStateVec != null) {
-                if (Math.abs(sv.trackTraj.get(svzLength-1).Q -this.finalStateVec.Q) <5.e-4 &&
-                    Math.abs(sv.trackTraj.get(svzLength-1).x -this.finalStateVec.x) <1.e-4 &&
-                    Math.abs(sv.trackTraj.get(svzLength-1).y -this.finalStateVec.y) <1.e-4 &&
-                    Math.abs(sv.trackTraj.get(svzLength-1).tx-this.finalStateVec.tx)<1.e-6 &&
-                    Math.abs(sv.trackTraj.get(svzLength-1).ty-this.finalStateVec.ty)<1.e-6) {
 
+            if (this.finalStateVec != null) {
+                if (Math.abs(sv.trackTraj.get(svzLength-1).Q -this.finalStateVec.Q) < 5.e-4
+                        && Math.abs(sv.trackTraj.get(svzLength-1).x -this.finalStateVec.x)  < 1.e-4
+                        && Math.abs(sv.trackTraj.get(svzLength-1).y -this.finalStateVec.y)  < 1.e-4
+                        && Math.abs(sv.trackTraj.get(svzLength-1).tx-this.finalStateVec.tx) < 1.e-6
+                        && Math.abs(sv.trackTraj.get(svzLength-1).ty-this.finalStateVec.ty) < 1.e-6) {
                     i = totNumIter;
                 }
             }
             this.finalStateVec = sv.trackTraj.get(svzLength - 1);
             this.finalCovMat   = sv.trackCov.get(svzLength - 1);
 
-            // if (deltaChi2 < 0.001) {
-            //     this.ConvStatus = 0;
-            //     i = totNumIter;
-            // }
-
             newChisq = this.chi2kf;
         }
-        // });
-        if(totNumIter == 1) {
+
+        if (totNumIter == 1) {
             this.finalStateVec = sv.trackTraj.get(svzLength - 1);
             this.finalCovMat   = sv.trackCov.get(svzLength - 1);
         }
+
         this.calcFinalChisq(sector);
     }
 
