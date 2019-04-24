@@ -33,9 +33,7 @@ public class ClusterCleanerUtilities {
      * @param cf                instance of the cluster fitter class
      * @return                  a list of fitted clusters
      */
-    public List<FittedCluster> clusterSplitter(FittedCluster clus,
-                                               int nextClsStartIndex,
-                                               ClusterFitter cf) {
+    public List<FittedCluster> clusterSplitter(FittedCluster clus, ClusterFitter cf) {
         /*
         The principle of Hough Transform in pattern recognition is as follows:
 
@@ -64,45 +62,47 @@ public class ClusterCleanerUtilities {
 
         This is a numerical method to find the intersection of any number of curves. Once the
         accumulator array has been filled with all (r, theta) points peaks and their associated
-        (rho, phi) points are determined. From these, sets of points belonging to common lines can be
-        determined. This is a preliminary pattern recognition method used to identify reconstructed
-        hits belonging to the same track-segment.
+        (rho, phi) points are determined. From these, sets of points belonging to common lines can
+        be determined. This is a preliminary pattern recognition method used to identify
+        reconstructed hits belonging to the same track-segment.
         */
-        int N_t = 180;
+
+        // setup variables
+        int n_t = 180;
 
         // From this calculate the bin size in the theta accumulator array
-        double ThetaMin = 0.;
-        double ThetaMax = 2. * Math.PI;
-        double SizeThetaBin = (ThetaMax - ThetaMin) / ((double) N_t);
+        double thetaMin = 0.;
+        double thetaMax = 2. * Math.PI;
+        double sizeThetaBin = (thetaMax - thetaMin) / ((double) n_t);
 
         // Define the dimension of the r accumulator array
-        int N_r = 130;
+        int n_r = 130;
 
         // From this calculate the bin size in the theta accumulator array
-        double RMin = -130;
-        double RMax = 130;
+        double rMin = -130;
+        double rMax = 130;
 
-        int[][] R_Phi_Accumul;
-        R_Phi_Accumul = new int[N_r][N_t];
+        int[][] rPhiAccumul;
+        rPhiAccumul = new int[n_r][n_t];
 
         // Cache the cos and sin theta values [for performance improvement]
-        double[] cosTheta_RPhi_array;
-        double[] sinTheta_RPhi_array;
+        double[] cosThetaRPhiArray;
+        double[] sinThetaRPhiArray;
+        cosThetaRPhiArray = new double[n_t];
+        sinThetaRPhiArray = new double[n_t];
 
         // The values corresponding to the peaks in the array
         double[] binrMaxR_Phi;
         double[] bintMaxR_Phi;
-        binrMaxR_Phi = new double[N_r * N_t];
-        bintMaxR_Phi = new double[N_r * N_t];
+        binrMaxR_Phi = new double[n_r * n_t];
+        bintMaxR_Phi = new double[n_r * n_t];
 
-        cosTheta_RPhi_array = new double[N_t];
-        sinTheta_RPhi_array = new double[N_t];
 
-        for (int j_t = 0; j_t < N_t; j_t++) {
+        for (int j_t = 0; j_t < n_t; j_t++) {
             // theta_j in the middle of the bin :
-            double theta_j = ThetaMin + (0.5 + j_t) * SizeThetaBin;
-            cosTheta_RPhi_array[j_t] = Math.cos(theta_j);
-            sinTheta_RPhi_array[j_t] = Math.sin(theta_j);
+            double theta_j = thetaMin + (0.5 + j_t) * sizeThetaBin;
+            cosThetaRPhiArray[j_t] = Math.cos(theta_j);
+            sinThetaRPhiArray[j_t] = Math.sin(theta_j);
         }
 
         // Loop over points to fill the accumulator arrays
@@ -112,15 +112,15 @@ public class ClusterCleanerUtilities {
             double phi = clus.get(i).get_lY();
 
             // Fill the accumulator arrays
-            for (int j_t = 0; j_t < N_t; j_t++) {
+            for (int j_t = 0; j_t < n_t; j_t++) {
                 // r_j corresponding to theta_j
-                double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
+                double r_j = rho * cosThetaRPhiArray[j_t] + phi * sinThetaRPhiArray[j_t];
 
                 // This value of r_j falls into the following bin in the r array:
-                int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+                int j_r = (int) Math.floor(n_r * (r_j - rMin) / (float) (rMax - rMin));
 
                 // Increase this accumulator cell:
-                R_Phi_Accumul[j_r][j_t]++;
+                rPhiAccumul[j_r][j_t]++;
             }
         }
 
@@ -132,13 +132,13 @@ public class ClusterCleanerUtilities {
         int nbPeaksR_Phi = 0;
 
         // 1st find the peaks in the R_Phi accumulator array
-        for (int ibinr1 = 0; ibinr1 < N_r; ibinr1++) {
-            for (int ibint1 = 0; ibint1 < N_t; ibint1++) {
+        for (int ibinr1 = 0; ibinr1 < n_r; ibinr1++) {
+            for (int ibint1 = 0; ibint1 < n_t; ibint1++) {
 
                 // Find the peak
-                if (R_Phi_Accumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS) {
-                    if (R_Phi_Accumul[ibinr1][ibint1] > threshold) {
-                        threshold = R_Phi_Accumul[ibinr1][ibint1];
+                if (rPhiAccumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS) {
+                    if (rPhiAccumul[ibinr1][ibint1] > threshold) {
+                        threshold = rPhiAccumul[ibinr1][ibint1];
                     }
 
                     binrMaxR_Phi[nbPeaksR_Phi] = ibinr1;
@@ -150,7 +150,7 @@ public class ClusterCleanerUtilities {
 
         // For a given Maximum value of the accumulator, find the set of points associated with it.
         // For this, loop again over all the points.
-        List<FittedCluster> splitclusters = new ArrayList<FittedCluster>();
+        List<FittedCluster> splitClusters = new ArrayList<FittedCluster>();
 
         for (int p = nbPeaksR_Phi - 1; p > -1; p--) {
 
@@ -161,11 +161,11 @@ public class ClusterCleanerUtilities {
                 double rho = clus.get(i).get_X();
                 double phi = clus.get(i).get_lY();
 
-                for (int j_t = 0; j_t < N_t; j_t++) {
+                for (int j_t = 0; j_t < n_t; j_t++) {
                     // r_j corresponding to theta_j:
-                    double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
+                    double r_j = rho * cosThetaRPhiArray[j_t] + phi * sinThetaRPhiArray[j_t];
                     // This value of r_j falls into the following bin in the r array:
-                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+                    int j_r = (int) Math.floor(n_r * (r_j - rMin) / (float) (rMax - rMin));
 
                     // Match bins:
                     if (j_r == binrMaxR_Phi[p] && j_t == bintMaxR_Phi[p]) newClus.add(clus.get(i));
@@ -177,9 +177,7 @@ public class ClusterCleanerUtilities {
             boolean passCluster = true;
             for (int l = 1; l <= Constants.NLAYR; l++) {
                 for (int i = 0; i < newClus.size(); i++) {
-                    if (newClus.get(i).get_Layer() == l) {
-                        contigArrayOfHits.add(newClus.get(i));
-                    }
+                    if (newClus.get(i).get_Layer() == l) contigArrayOfHits.add(newClus.get(i));
                 }
             }
             for (int i = 0; i < contigArrayOfHits.size() - 1; i++) {
@@ -187,6 +185,7 @@ public class ClusterCleanerUtilities {
                 if (contigArrayOfHits.get(i + 1).get_Layer()
                         - contigArrayOfHits.get(i).get_Layer() > 1) {
                     passCluster = false;
+                    break;
                 }
             }
             // Require 4 layers to make a cluster
@@ -195,41 +194,29 @@ public class ClusterCleanerUtilities {
             }
 
             // Require consistency with line
-            cf.SetFitArray(newClus, "LC");
-            cf.Fit(newClus, true);
+            cf.setFitArray(newClus, false);
+            cf.fit(newClus, true);
 
             if (newClus.get_fitProb() < 0.9) passCluster = false;
-            if (!(splitclusters.contains(newClus)) && passCluster) splitclusters.add(newClus);
+            if (!(splitClusters.contains(newClus)) && passCluster) splitClusters.add(newClus);
         }
 
         // Make new clusters
         List<FittedCluster> selectedClusList = new ArrayList<FittedCluster>();
 
-        int newcid = nextClsStartIndex;
-        for (FittedCluster cluster : splitclusters) {
-            cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, "LC");
-            cf.Fit(cluster, true);
+        for (FittedCluster cluster : splitClusters) {
+            cf.setFitArray(cluster, false);
+            cf.fit(cluster, true);
 
-            FittedCluster bestCls = overlappingClusterResolver(cluster, splitclusters);
+            FittedCluster bestCls = overlappingClusterResolver(cluster, splitClusters);
 
             if (bestCls != null) {
                 if (!(selectedClusList.contains(bestCls))) selectedClusList.add(bestCls);
             }
         }
 
-        int splitclusId = 1;
-        if (selectedClusList.size() != 0) {
-            for (FittedCluster cl : selectedClusList) {
-                cl.set_Id(clus.get_Id() * 1000 + splitclusId);
-                splitclusId++;
-            }
-        }
-
-        if (selectedClusList.size() == 0) {
-            // If the splitting fails, then return the original cluster
-            selectedClusList.add(clus);
-        }
+        // If the splitting fails, then return the original cluster
+        if (selectedClusList.size() == 0) selectedClusList.add(clus);
         return selectedClusList;
     }
 
@@ -536,7 +523,7 @@ public class ClusterCleanerUtilities {
             }
         }
 
-        return cf.BestClusterSelector(arrayOfClus, "TSC");
+        return cf.BestClusterSelector(arrayOfClus, true);
     }
 
     /**
@@ -637,7 +624,7 @@ public class ClusterCleanerUtilities {
             clusters.add(newClus);
         }
 
-        FittedCluster BestCluster = cf.BestClusterSelector(clusters, "LC");
+        FittedCluster BestCluster = cf.BestClusterSelector(clusters, false);
 
         return BestCluster;
     }
@@ -727,7 +714,7 @@ public class ClusterCleanerUtilities {
         }
 
         hits.clear();
-        for(int l = 0; l < 6; l++) {
+        for (int l = 0; l < 6; l++) {
             if (sortedHits.get(l).size() > 0) hits.addAll(sortedHits.get(l));
         }
         return hits;
@@ -811,8 +798,8 @@ public class ClusterCleanerUtilities {
     public void outOfTimersRemover(FittedCluster fClus, boolean removeHit) {
         for (int i = 0; i < fClus.size(); i++) {
             if (fClus.get(i).get_OutOfTimeFlag() == true) {
-                if (removeHit == true) fClus.remove(i);
-                else fClus.get(i).set_Doca(fClus.get(i).get_CellSize());
+                if (removeHit) fClus.remove(i);
+                else           fClus.get(i).set_Doca(fClus.get(i).get_CellSize());
             }
         }
     }

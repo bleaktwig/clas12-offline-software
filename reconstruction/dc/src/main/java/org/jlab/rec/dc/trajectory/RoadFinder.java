@@ -138,10 +138,10 @@ public class RoadFinder  {
             fPseudoCluster.add(pseudoHit);
         }
 
-        cf.SetFitArray(fPseudoCluster, "TSC");
-        cf.Fit(fPseudoCluster, true);
+        cf.setFitArray(fPseudoCluster, true);
+        cf.fit(fPseudoCluster, true);
 
-        cf.SetSegmentLineParameters(fPseudoCluster.get(0).get_Z(), fPseudoCluster);
+        cf.setSegmentLineParameters(fPseudoCluster.get(0).get_Z(), fPseudoCluster);
         pseudoSeg = new Segment(fPseudoCluster);
         pseudoSeg.set_fitPlane(DcDetector);
         return pseudoSeg;
@@ -188,10 +188,10 @@ public class RoadFinder  {
             pseudoHit.updateHitPosition(DcDetector);
             fPseudoCluster.add(pseudoHit);
         }
-        cf.SetFitArray(fPseudoCluster, "TSC");
-        cf.Fit(fPseudoCluster, true);
+        cf.setFitArray(fPseudoCluster, true);
+        cf.fit(fPseudoCluster, true);
 
-        cf.SetSegmentLineParameters(fPseudoCluster.get(0).get_Z(), fPseudoCluster) ;
+        cf.setSegmentLineParameters(fPseudoCluster.get(0).get_Z(), fPseudoCluster);
         Segment pseudoSeg1 = new Segment(fPseudoCluster);
 
         pseudoSeg1.set_fitPlane(DcDetector);

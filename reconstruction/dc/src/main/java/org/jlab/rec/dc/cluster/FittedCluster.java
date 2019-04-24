@@ -74,7 +74,6 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
         for (int i = 0; i < fHits.size(); i++) this.add(fHits.get(i));
     }
 
-
     public int get_Sector() {return _Sector;}
     public void set_Sector(int _Sector) {this._Sector = _Sector;}
 
@@ -169,8 +168,9 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
      */
     @Override
     public int compareTo(FittedCluster o) {
-        if (this.size() > o.size()) return 1;
-        else return 0;
+        if      (this.get_Id() > o.get_Id())  return 1;
+        else if (this.get_Id() == o.get_Id()) return 0;
+        else                                  return -1;
     }
 
     /**

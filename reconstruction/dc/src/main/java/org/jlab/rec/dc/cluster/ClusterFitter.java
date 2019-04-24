@@ -19,8 +19,8 @@ import org.jlab.rec.dc.track.fit.basefit.LineFitter;
  */
 public class ClusterFitter {
 
-    private LineFitPars FitPars;
-    private List<ArrayList<Double>> FitArray = new ArrayList<ArrayList<Double>>();
+    private LineFitPars fitPars;
+    private List<ArrayList<Double>> fitArray = new ArrayList<ArrayList<Double>>();
     private List<Double> x = new ArrayList<Double>();
     private List<Double> y = new ArrayList<Double>();
     private List<Double> ex = new ArrayList<Double>();
@@ -28,92 +28,99 @@ public class ClusterFitter {
     // Math.cos(Math.toRadians(6.)) = 0.9945218953682733
     private double stereo = 0.9945218953682733;
 
-    private String CoordinateSystem; // LC = local, TSC = tilted Sector
-                                     // LC:  local coordinate grid, Delta_z = 1
-                                     // TSC: local tilted coordinate system Delta_z, ~ cell size
+    private boolean coordinateSystem; // LC = local, TSC = tilted Sector
+                                      // false - LC:  local coordinate grid, Delta_z = 1
+                                      // true  - TSC: local tilted coordinate system Delta_z, ~ cell size
 
     public ClusterFitter() {}
 
-    public void SetFitArray(FittedCluster clus, String system) {
+    /**
+     * @param system decides which system is being used.
+     *               false: LC, local coordinate grid
+     *               true:  TSC, local tilted coordinate system
+     */
+    public void setFitArray(FittedCluster clus, boolean system) {
 
         Collections.sort(clus);
-        for (int i = 0; i < FitArray.size(); i++) FitArray.get(i).clear();
+        for (int i = 0; i < fitArray.size(); i++) fitArray.get(i).clear();
 
-        for (int i = 0; i < clus.size(); i++) {
-            if (system.equals("LC")) {
-                CoordinateSystem = "LC";
+        this.coordinateSystem = system;
+        if (!system) {
+            for (int i = 0; i < clus.size(); i++) {
                 x.add(i, clus.get(i).get_lX());
                 ex.add(i, (double) 0);
                 y.add(i, clus.get(i).get_lY());
                 ey.add(i, (double) 1);
             }
-            else if (system.equals("TSC")) {
-                CoordinateSystem = "TSC";
+        }
+        else {
+            for (int i = 0; i < clus.size(); i++) {
                 x.add(i, clus.get(i).get_Z());
                 ex.add(i, (double) 0);
                 y.add(i, clus.get(i).get_X());
                 ey.add(i, clus.get(i).get_DocaErr() / stereo);
             }
         }
-        FitArray.add((ArrayList<Double>) x);
-        FitArray.add((ArrayList<Double>) ex);
-        FitArray.add((ArrayList<Double>) y);
-        FitArray.add((ArrayList<Double>) ey);
+
+        fitArray.add((ArrayList<Double>) x);
+        fitArray.add((ArrayList<Double>) ex);
+        fitArray.add((ArrayList<Double>) y);
+        fitArray.add((ArrayList<Double>) ey);
     }
 
     /**
      * Fits the cluster to a line if it hasn't been done yet.
-     * @param clus fitted cluster
-     * @param SaveFitPars boolean to save the fit parameters
+     * @param clus        fitted cluster
+     * @param saveFitPars boolean to save the fit parameters
      */
-    public void Fit (FittedCluster clus, boolean SaveFitPars) {
-        if (FitArray != null) {
-            LineFitter linefit = new LineFitter();
-            boolean linefitstatusOK = linefit.fitStatus(FitArray.get(0), FitArray.get(2),
-                                                        FitArray.get(1), FitArray.get(3),
-                                                        FitArray.get(0).size());
+    public void fit (FittedCluster clus, boolean saveFitPars) {
 
-            if (linefitstatusOK) FitPars = linefit.getFit();
-            else FitPars = null;
+        if (fitArray == null) return;
+        LineFitter lineFit = new LineFitter();
+        boolean lineFitStatusOK = lineFit.fitStatus(fitArray.get(0), fitArray.get(2),
+                                                    fitArray.get(1), fitArray.get(3),
+                                                    fitArray.get(0).size());
 
-            if (SaveFitPars) this.SetClusterFitParameters(clus);
-        }
+        if (lineFitStatusOK) fitPars = lineFit.getFit();
+        else                 fitPars = null;
+
+        if (saveFitPars) this.setClusterFitParameters(clus);
     }
 
     /**
      * Saves the fit parameters into a fitted cluster.
      * @param clus fitted cluster
      */
-    public void SetClusterFitParameters(FittedCluster clus) {
-        if (FitPars == null) return;
+    private void setClusterFitParameters(FittedCluster clus) {
+        if (fitPars == null) return;
 
-        clus.set_clusterLineFitSlope(FitPars.slope());
-        clus.set_clusterLineFitSlopeErr(FitPars.slopeErr());
-        clus.set_clusterLineFitIntercept(FitPars.intercept());
-        clus.set_clusterLineFitInterceptErr(FitPars.interceptErr());
-        clus.set_clusterLineFitSlIntCov(FitPars.SlopeIntercCov());
-        clus.set_fitProb(FitPars.getProb());
-        clus.set_Chisq(FitPars.chisq());
+        clus.set_clusterLineFitSlope(fitPars.slope());
+        clus.set_clusterLineFitSlopeErr(fitPars.slopeErr());
+        clus.set_clusterLineFitIntercept(fitPars.intercept());
+        clus.set_clusterLineFitInterceptErr(fitPars.interceptErr());
+        clus.set_clusterLineFitSlIntCov(fitPars.SlopeIntercCov());
+        clus.set_fitProb(fitPars.getProb());
+        clus.set_Chisq(fitPars.chisq());
     }
 
     /**
      * @param x0   local x in the tilted sector coordinate system (in cm)
      * @param clus fitted cluster
      */
-    public void SetSegmentLineParameters(double x0, FittedCluster clus) {
-        if (FitPars == null) return;
+    public void setSegmentLineParameters(double x0, FittedCluster clus) {
+        if (fitPars == null) return;
 
-        Point3D pointOnLine    = get_PointOnLine(x0, FitPars.slope(), FitPars.intercept());
-        Point3D dirOfLine      = get_DirOnLine(FitPars.slope(), FitPars.intercept());
-        Point3D pointOnLineErr = get_PointOnLine(x0, FitPars.slopeErr(), FitPars.interceptErr());
-        Point3D dirOfLineErr   = get_DirOnLine(FitPars.slopeErr(), FitPars.interceptErr());
+        Point3D pointOnLine    = get_PointOnLine(x0, fitPars.slope(), fitPars.intercept());
+        Point3D dirOfLine      = get_DirOnLine(fitPars.slope(), fitPars.intercept());
+        Point3D pointOnLineErr = get_PointOnLine(x0, fitPars.slopeErr(), fitPars.interceptErr());
+        Point3D dirOfLineErr   = get_DirOnLine(fitPars.slopeErr(), fitPars.interceptErr());
 
         clus.set_clusLine(new Line3D(pointOnLine, dirOfLine));
         clus.set_clusLineErr(new Line3D(pointOnLineErr, dirOfLineErr));
-        clus.set_clusterLineFitSlopeMP(FitPars.slope());
-        clus.set_clusterLineFitSlopeErrMP(FitPars.slopeErr());
-        clus.set_clusterLineFitInterceptMP(FitPars.intercept());
-        clus.set_clusterLineFitInterceptErrMP(FitPars.interceptErr());
+        clus.set_clusterLineFitSlopeMP(fitPars.slope());
+        clus.set_clusterLineFitSlopeErrMP(fitPars.slopeErr());
+        clus.set_clusterLineFitInterceptMP(fitPars.intercept());
+        clus.set_clusterLineFitInterceptErrMP(fitPars.interceptErr());
     }
 
     /**
@@ -122,12 +129,10 @@ public class ClusterFitter {
      * @param resetLRAmbig     boolean to reset the LR ambiguity
      * @param DcDetector       DC detector geometry
      */
-    public void SetResidualDerivedParams(FittedCluster clus,
-                                         boolean calcTimeResidual,
-                                         boolean resetLRAmbig,
-                                         DCGeant4Factory DcDetector) {
+    public void setResidualDerivedParams(FittedCluster clus, boolean calcTimeResidual,
+            boolean resetLRAmbig, DCGeant4Factory DcDetector) {
 
-        if (FitPars == null || FitArray == null) return;
+        if (fitPars == null || fitArray == null) return;
 
         // 6 = nb of layers, 3 number of criteria
         int[][] statusArray     = new int[3][6];
@@ -138,9 +143,8 @@ public class ClusterFitter {
         for (int i = 0; i < clus.size(); i++) {
             nHitsInLyr[clus.get(i).get_Layer() - 1]++;
 
-            double residual = (FitArray.get(2).get(i) - FitPars.slope() * FitArray.get(0).get(i) -
-                               FitPars.intercept());
-            clus.get(i).set_Residual(residual);
+            clus.get(i).set_Residual(fitArray.get(2).get(i) - fitPars.slope()
+                                     * fitArray.get(0).get(i) - fitPars.intercept());
 
             double xWire = DcDetector.getWireMidpoint(clus.get(i).get_Sector() - 1,
                                                       clus.get(i).get_Superlayer() - 1,
@@ -151,49 +155,42 @@ public class ClusterFitter {
                                                       clus.get(i).get_Layer() - 1,
                                                       clus.get(i).get_Wire() - 1).z;
 
-            Line3D FitLine = new Line3D();
-            Point3D pointOnTrk = new Point3D(FitArray.get(0).get(0),
-                    FitPars.slope() * FitArray.get(0).get(0) + FitPars.intercept(),
-                    0);
+            Point3D pointOnTrk = new Point3D(fitArray.get(0).get(0),
+                    fitPars.slope() * fitArray.get(0).get(0) + fitPars.intercept(), 0);
 
-            Vector3D trkDir = new Vector3D(1, FitPars.slope(), 0);
+            Vector3D trkDir = new Vector3D(1, fitPars.slope(), 0);
             trkDir.unit();
-            FitLine.set(pointOnTrk, trkDir);
-            Point3D Wire = new Point3D(zWire, xWire, 0);
 
-            double trkDocaMP = FitLine.distance(Wire).length();
-            double trkDoca   = trkDocaMP * stereo;
+            Line3D fitLine = new Line3D();
+            fitLine.set(pointOnTrk, trkDir);
 
-            clus.get(i).set_ClusFitDoca(trkDoca);
+            Point3D wire = new Point3D(zWire, xWire, 0);
+            double trkDocaMP = fitLine.distance(wire).length();
+            clus.get(i).set_ClusFitDoca(trkDocaMP * stereo);
 
-            if (Math.abs(residual) < 0.350) {
+            if (Math.abs(clus.get(i).get_Residual()) < 0.350) {
                 // less than the average resolution
                 nPassingResAccCut[clus.get(i).get_Layer() - 1]++;
             }
 
             if (clus.get(i).get_LeftRightAmb() == 0) {
-                if      (residual < 0) clus.get(i).set_LeftRightAmb(1);
-                else if (residual > 0) clus.get(i).set_LeftRightAmb(-1);
+                if      (clus.get(i).get_Residual() < 0) clus.get(i).set_LeftRightAmb(1);
+                else if (clus.get(i).get_Residual() > 0) clus.get(i).set_LeftRightAmb(-1);
             }
 
-            if (resetLRAmbig) {
-                if ((CoordinateSystem.equals("LC") && Math.abs(residual) < 0.01)
-                        || (CoordinateSystem.equals("LTS")
-                        && clus.get(i).get_Doca() / clus.get(i).get_CellSize() < 0.4)) {
-                    // DOCA is required to be larger than 40% of cell size for hit-based tracking LR
-                    //     assignment
-                    clus.get(i).set_LeftRightAmb(0);
-                }
-            }
+            if (resetLRAmbig && ((!coordinateSystem && Math.abs(clus.get(i).get_Residual())<0.01)
+                    || (coordinateSystem && clus.get(i).get_Doca()/clus.get(i).get_CellSize()<0.4)))
+                // DOCA is required to be larger than 40% of cell size for hit-based tracking LR
+                //     assignment
+                clus.get(i).set_LeftRightAmb(0);
 
-            if (clus.get(i).get_LeftRightAmb() != 0) {
+            if (clus.get(i).get_LeftRightAmb() != 0)
                 nLRresolvedInLyr[clus.get(i).get_Layer() - 1]++;
-            }
 
-            if (calcTimeResidual == true) {
-                double timeResidual = Math.abs(FitPars.slope() * FitArray.get(0).get(i)
-                                    + FitPars.intercept() - xWire)
-                                    - Math.abs(FitArray.get(2).get(i) - xWire);
+            if (calcTimeResidual) {
+                double timeResidual = Math.abs(fitPars.slope() * fitArray.get(0).get(i)
+                                    + fitPars.intercept() - xWire)
+                                    - Math.abs(fitArray.get(2).get(i) - xWire);
                 clus.get(i).set_TimeResidual(timeResidual);
             }
         }
@@ -215,7 +212,7 @@ public class ClusterFitter {
      * @param system   coordinate system in which the fit is performed
      * @return         the selected fitted cluster
      */
-    public FittedCluster BestClusterSelector(List<FittedCluster> clusters, String system) {
+    public FittedCluster BestClusterSelector(List<FittedCluster> clusters, boolean system) {
 
         FittedCluster BestCluster = null;
         double bestChisq = 999999999.;
@@ -228,11 +225,11 @@ public class ClusterFitter {
             }
 
             // Set the array of measurements according to the system used in the analysis
-            SetFitArray(clusCand, system);
+            setFitArray(clusCand, system);
             // Do the fit and get the chisq
-            Fit(clusCand, true);
-            if (FitPars == null) continue;
-            double chisq = FitPars.chisq();
+            fit(clusCand, true);
+            if (fitPars == null) continue;
+            double chisq = fitPars.chisq();
 
             if (chisq < bestChisq) {
                 bestChisq = chisq;

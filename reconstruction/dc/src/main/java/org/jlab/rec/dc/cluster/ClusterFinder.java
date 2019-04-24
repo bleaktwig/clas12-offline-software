@@ -3,6 +3,7 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.evio.EvioDataBank;
@@ -124,21 +125,17 @@ public class ClusterFinder {
      * Hit-based tracking linear fits to the wires is done to determine the cluster, resulting in a
      * fitted cluster.
      * @param allhits    the list of unfitted hits
-     * @param ct
-     * @param cf
+     * @param ct         ClusterCleanerUtilities instance
+     * @param cf         ClusterFitter instance
      * @param DcDetector DC Detector geometry
      * @return           resulting fitted cluster of hits
      */
     public List<FittedCluster> FindHitBasedClusters(List<Hit> allhits, ClusterCleanerUtilities ct,
-            ClusterFitter cf, DCGeant4Factory DcDetector) {
+            ClusterFitter cf, DCGeant4Factory DcDetector, boolean parallel) {
 
-        // Fill array of hit
+        // Create clusters and prune noise hits
         this.fillHitArray(allhits, 0);
-
-        // Prune noise
-        // Find clumps of hits init
         List<Cluster> clusters = this.findClumps(allhits, ct);
-
         allhits.clear();
 
         for (Cluster clus : clusters) {
@@ -151,61 +148,103 @@ public class ClusterFinder {
         clusters = this.findClumps(allhits, ct);
 
         // Create cluster list to be fitted
-        List<FittedCluster> selectedClusList = new ArrayList<>();
-
-        for (Cluster clus : clusters) {
-            if (clus.size() < Constants.DC_MIN_NLAYERS) continue;
-
-            FittedCluster fClus = new FittedCluster(clus);
-            ct.outOfTimersRemover(fClus, true); // remove out-of-timers
-
-            if (fClus.size() < Constants.DC_MIN_NLAYERS) continue;
-            selectedClusList.add(fClus);
+        List<FittedCluster> clusList = new ArrayList<>();
+        for (Cluster c : clusters) {
+            FittedCluster fc = createFittedCluster(c, ct);
+            if (fc != null) clusList.add(fc);
         }
 
-        List<FittedCluster> fittedClusList   = new ArrayList<FittedCluster>();
-        List<FittedCluster> refittedClusList = new ArrayList<FittedCluster>();
+        // Fit and Split the clusters
+        List<FittedCluster> fittedClusList;
+        if (!parallel) fittedClusList = getFitClustersSeq(clusList, cf, ct, DcDetector);
+        else           fittedClusList = getFitClustersCPUPar(clusList, DcDetector);
 
-        for (FittedCluster clus : selectedClusList) {
+        // Update the clusters order and ids
+        Collections.sort(fittedClusList);
+        for (int ci = 0; ci < fittedClusList.size(); ++ci) fittedClusList.get(ci).set_Id(ci+1);
 
-            cf.SetFitArray(clus, "LC");
-            cf.Fit(clus, true);
+        return fittedClusList;
+    }
 
-            if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB
-                    || clus.size() < Constants.HITBASEDTRKGNONSPLITTABLECLSSIZE) {
-                // If the chi2 prob is good enough or the cluster is not split-able because it has
-                //     too few hits, just add the cluster.
-                fittedClusList.add(clus);
-            } else {
-                List<FittedCluster> splitClus = ct.clusterSplitter(clus, selectedClusList.size(), cf);
-                fittedClusList.addAll(splitClus);
+    private List<FittedCluster> getFitClustersSeq(List<FittedCluster> cl, ClusterFitter cf,
+            ClusterCleanerUtilities ct, DCGeant4Factory DcDetector) {
+
+        List<FittedCluster> fcl = new ArrayList<>();
+        for (FittedCluster c : cl) {
+            if (fitCluster(c, cf)) fcl.addAll(ct.clusterSplitter(c, cf));
+            else                   fcl.add(c);
+        }
+
+        for (FittedCluster c : fcl) {
+            if (c == null) {
+                fcl.remove(c);
+                continue;
             }
+            if (!refitCluster(c, cf, DcDetector)) fcl.remove(c);
         }
 
-        for (FittedCluster clus : fittedClusList) {
-            if (clus != null && clus.size() > 3) {
+        return fcl;
+    }
+    private List<FittedCluster> getFitClustersCPUPar(List<FittedCluster> cl,
+            DCGeant4Factory DcDetector) {
 
-                // update the hits
-                for (FittedHit fhit : clus) {
-                    fhit.set_TrkgStatus(0);
-                    fhit.updateHitPosition(DcDetector);
-                    fhit.set_AssociatedClusterID(clus.get_Id());
-                }
+        List<FittedCluster> fcl = new CopyOnWriteArrayList<>();
+        cl.parallelStream().forEach((c) -> {
+            ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
+            ClusterFitter           cf = new ClusterFitter();
+            if (fitCluster(c, cf)) fcl.addAll(ct.clusterSplitter(c, cf));
+            else                   fcl.add(c);
+        });
 
-                cf.SetFitArray(clus, "TSC");
-                cf.Fit(clus, true);
-                // calcTimeResidual = false, resetLRAmbig = false, local = false
-                cf.SetResidualDerivedParams(clus, false, false, DcDetector);
-
-                cf.SetFitArray(clus, "TSC");
-                cf.Fit(clus, false);
-                cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
-
-                if (clus != null) refittedClusList.add(clus);
+        fcl.parallelStream().forEach((c) -> {
+            if (c == null) {
+                fcl.remove(c);
+                return;
             }
+
+            ClusterFitter cf = new ClusterFitter();
+            if (!refitCluster(c, cf, DcDetector)) fcl.remove(c);
+        });
+
+        return fcl;
+    }
+    private FittedCluster createFittedCluster(Cluster c, ClusterCleanerUtilities ct) {
+        if (c.size() < Constants.DC_MIN_NLAYERS) return null; // TODO: Compare time with & without this line
+
+        FittedCluster fc = new FittedCluster(c);
+        ct.outOfTimersRemover(fc, true); // remove out-of-timers
+
+        if (fc.size() < Constants.DC_MIN_NLAYERS) return null;
+        return fc;
+    }
+    private boolean fitCluster(FittedCluster c, ClusterFitter cf) {
+        cf.setFitArray(c, false);
+        cf.fit(c, true);
+
+        if      (c.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB) return false;
+        else if (c.size() < Constants.HITBASEDTRKGNONSPLITTABLECLSSIZE) return false;
+        else                                                            return true;
+    }
+    private boolean refitCluster(FittedCluster c, ClusterFitter cf, DCGeant4Factory DcDetector) {
+        if (c == null || c.size() <= 3) return false;
+
+        // update the hits
+        for (FittedHit h : c) {
+            h.set_TrkgStatus(0);
+            h.updateHitPosition(DcDetector);
+            h.set_AssociatedClusterID(c.get_Id());
         }
 
-        return refittedClusList;
+        cf.setFitArray(c, true);
+        cf.fit(c, true);
+        cf.setResidualDerivedParams(c, false, false, DcDetector);
+
+        // cf.setFitArray(clus, true);
+        cf.fit(c, false);
+        cf.setSegmentLineParameters(c.get(0).get_Z(), c);
+
+        if (c == null) return false;
+        else           return true;
     }
 
     /**
@@ -332,8 +371,8 @@ public class ClusterFinder {
 
                     clus2.add(newhit);
                 }
-                cf.SetFitArray(clus2, "TSC");
-                cf.Fit(clus2, true);
+                cf.setFitArray(clus2, true);
+                cf.fit(clus2, true);
 
                 if (Math.abs(clus.get_Chisq() - clus2.get_Chisq()) < 1) clusters.add(clus2);
             }
@@ -341,8 +380,8 @@ public class ClusterFinder {
         }
 
         for (FittedCluster clus : clusters) {
-            cf.SetFitArray(clus, "TSC");
-            cf.Fit(clus, true);
+            cf.setFitArray(clus, true);
+            cf.fit(clus, true);
 
             double cosTrkAngle = 1. / Math.sqrt(1. + clus.get_clusterLineFitSlope() *
                                                      clus.get_clusterLineFitSlope());
@@ -357,8 +396,8 @@ public class ClusterFinder {
             double prevChi2 = 999999999;
             double cosTrkAngleFinal = 0;
             while (Chi2Diff > 0) {
-                cf.SetFitArray(clus, "TSC");
-                cf.Fit(clus, true);
+                cf.setFitArray(clus, true);
+                cf.fit(clus, true);
                 Chi2Diff = prevChi2 - clus.get_Chisq();
                 if (Chi2Diff > 0) {
                     cosTrkAngle = 1. / Math.sqrt(1. + clus.get_clusterLineFitSlope() *
@@ -374,21 +413,21 @@ public class ClusterFinder {
 
             // Update to MP
             // calcTimeResidual = false, resetLRAmbig = false
-            cf.SetResidualDerivedParams(clus, false, false, DcDetector);
+            cf.setResidualDerivedParams(clus, false, false, DcDetector);
 
             for (FittedHit fhit : clus) {
                 fhit.updateHitPositionWithTime(cosTrkAngleFinal, fhit.getB(), tab, DcDetector, tde);
             }
 
-            cf.SetFitArray(clus, "TSC");
-            cf.Fit(clus, true);
+            cf.setFitArray(clus, true);
+            cf.fit(clus, true);
             // calcTimeResidual = false, resetLRAmbig = false
-            cf.SetResidualDerivedParams(clus, true, false, DcDetector);
+            cf.setResidualDerivedParams(clus, true, false, DcDetector);
 
-            cf.SetFitArray(clus, "TSC");
-            cf.Fit(clus, false);
+            cf.setFitArray(clus, true);
+            cf.fit(clus, false);
 
-            cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
+            cf.setSegmentLineParameters(clus.get(0).get_Z(), clus);
         }
 
         return clusters;
@@ -450,9 +489,9 @@ public class ClusterFinder {
                 if (clus == null) continue;
                 int status = 0;
 
-                // Fit
-                cf.SetFitArray(clus, "LC");
-                cf.Fit(clus, true);
+                // fit
+                cf.setFitArray(clus, false);
+                cf.fit(clus, true);
 
                 for (Hit hit : allhits) {
 

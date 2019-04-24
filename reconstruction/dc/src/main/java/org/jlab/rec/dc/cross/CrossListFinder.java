@@ -137,7 +137,7 @@ public class CrossListFinder  {
                                         c3.get_PointErr().y());
                         }
 
-                        // Fit the  projection with a line
+                        // fit the  projection with a line
                         // The track is ~ constant in phi
                         LineFitter linefit = new LineFitter();
                         if (!linefit.fitStatus(X, Y, errX, errY, Z.length)) continue;
@@ -225,8 +225,8 @@ public class CrossListFinder  {
             fhit.updateHitPositionWithTime(cosTrkAngle, fhit.getB(), tab, DcDetector, tde);
         }
 
-        cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
-        cf.Fit(_Segment.get_fittedCluster(), true);
+        cf.setFitArray(_Segment.get_fittedCluster(), true);
+        cf.fit(_Segment.get_fittedCluster(), true);
         cosTrkAngle = 1. / Math.sqrt(1. + _Segment.get_fittedCluster().get_clusterLineFitSlope() *
                                           _Segment.get_fittedCluster().get_clusterLineFitSlope());
 
@@ -234,15 +234,15 @@ public class CrossListFinder  {
             fhit.updateHitPositionWithTime(cosTrkAngle, fhit.getB(), tab, DcDetector, tde);
         }
 
-        cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
-        cf.Fit(_Segment.get_fittedCluster(), true);
+        cf.setFitArray(_Segment.get_fittedCluster(), true);
+        cf.fit(_Segment.get_fittedCluster(), true);
 
-        cf.SetResidualDerivedParams(_Segment.get_fittedCluster(), true, false, DcDetector);
+        cf.setResidualDerivedParams(_Segment.get_fittedCluster(), true, false, DcDetector);
 
-        cf.SetFitArray(_Segment.get_fittedCluster(), "TSC");
-        cf.Fit(_Segment.get_fittedCluster(), false);
+        cf.setFitArray(_Segment.get_fittedCluster(), true);
+        cf.fit(_Segment.get_fittedCluster(), false);
 
-        cf.SetSegmentLineParameters(_Segment.get_fittedCluster().get(0).get_Z(),
+        cf.setSegmentLineParameters(_Segment.get_fittedCluster().get(0).get_Z(),
                                     _Segment.get_fittedCluster());
     }
 

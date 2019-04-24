@@ -31,9 +31,6 @@ import trackfitter.fitter.LineFitter;
 
 public class TrackCandListFinder {
 
-    private boolean debug = false;
-    long startTime, startTime2 = 0;
-
     /** the tracking status = "HitBased" or "TimeBased". */
     private String trking;
 
@@ -204,13 +201,10 @@ public class TrackCandListFinder {
             if (cand != null) cands.add(cand);
         });
 
-        // NOTE: This sorting is only needed due to the strange criteria for overlapping tracks.
+        // NOTE: This sort is only needed due to the strange criteria for overlapping tracks.
         Collections.sort(cands);
         for (int ii = 0; ii < cands.size(); ++ii) {
-            if (cands.get(ii) == null) {
-                System.out.printf("\n\n\n\nREMOVING TRACK %d!!\n\n\n\n", ii);
-                cands.remove(ii);
-            }
+            if (cands.get(ii) == null) cands.remove(ii);
             cands.get(ii).set_Id(ii);
         }
 

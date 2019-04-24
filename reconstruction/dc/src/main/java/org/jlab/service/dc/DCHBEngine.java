@@ -47,6 +47,12 @@ public class DCHBEngine extends DCEngine {
     private double triggerPhase;
     private int newRun = 0;
 
+    // Define if cluster and track finding is done sequentially or in parallel:
+    //     false: sequential
+    //     true:  parallel
+    private boolean clusterFindingMode = true;
+    private boolean trackFindingMode   = true;
+
     public DCHBEngine() {
         super("DCHB");
     }
@@ -117,7 +123,8 @@ public class DCHBEngine extends DCEngine {
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
 
         ClusterFinder clusFinder = new ClusterFinder();
-        List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits, ct, cf, dcDetector);
+        List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits, ct, cf, dcDetector,
+                clusterFindingMode);
         if (clusters.isEmpty()) return true;
 
         // Update hits with cluster information
@@ -158,7 +165,7 @@ public class DCHBEngine extends DCEngine {
         // Find the list of track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist, dcDetector,
-                Swimmer.getTorScale(), dcSwim, true);
+                Swimmer.getTorScale(), dcSwim, trackFindingMode);
 
         int trkId = 1;
         if (trkcands.size() > 0) {
@@ -221,7 +228,7 @@ public class DCHBEngine extends DCEngine {
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector, null, dcSwim);
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist, dcDetector,
-                Swimmer.getTorScale(), dcSwim, true);
+                Swimmer.getTorScale(), dcSwim, trackFindingMode);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
