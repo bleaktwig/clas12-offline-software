@@ -21,8 +21,7 @@ public class RoadFinder  {
 
     private ClusterFitter cf = new ClusterFitter();
     QuadraticFit qf = new QuadraticFit();
-    public RoadFinder() {
-    }
+    public RoadFinder() {}
 
     /**
      * Finds a list of pseudo-segments
@@ -263,11 +262,6 @@ public class RoadFinder  {
         }
 
         public void evaluate(double[] x, double[] y, double[] err) {
-
-            double[] ret = {0.,0.,0.};
-            Matrix A = new Matrix(3,3);
-            Matrix V = new Matrix(3,1);
-
             double sum1 = 0.0;
             double sum2 = 0.0;
             double sum3 = 0.0;
@@ -295,55 +289,33 @@ public class RoadFinder  {
                 sum8 += y1/e2;
             }
 
-            // TODO: Hardcoding the inverse so it doesn't need to be calculated
-            // double aux1 = sum3*sum4 + sum2*sum5;
-            // double aux2 = sum3*sum3;
-            // double aux3 = sum2*sum4 - aux2;
-            // double aux4 = sum2*sum3 - sum1*sum4;
-            //
-            // double[] ret = {(sum3*sum5 - sum4*sum4)*sum6 + aux1*sum7 + aux3*sum8,
-            //                 aux1*sum6 + (sum1*sum5 - aux2)*sum7 + aux4*sum8,
-            //                 aux3*sum6 + aux4*sum7 + (sum1*sum3 - sum2*sum2)*sum8};
-            //
-            // double _chi2 = 0;
-            // for (int i = 0; i < x.length; ++i) {
-            //     double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
-            //     _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
-            // }
-            // this.chi2 = _chi2;
-            // this.NDF = x.length - 3;
-            //
-            // a = ret;
+            // NOTE: The matrix inversion is hardcoded so as to accelerate the method
+            double g1 = sum3*sum3;
+            double g2 = sum3*sum4;
+            double g3 = sum2*sum5;
+            double g4 = sum1*sum4;
+            double g5 = sum3*sum5;
 
-            A.set(0, 0, sum1);
-            A.set(0, 1, sum2);
-            A.set(0, 2, sum3);
-            A.set(1, 0, sum2);
-            A.set(1, 1, sum3);
-            A.set(1, 2, sum4);
-            A.set(2, 0, sum3);
-            A.set(2, 1, sum4);
-            A.set(2, 2, sum5);
-            V.set(0, 0, sum6);
-            V.set(1, 0, sum7);
-            V.set(2, 0, sum8);
+            double i1 = g2 - g3;
+            double i2 = sum2*sum4 - g1;
+            double i3 = sum2*sum3 - g4;
 
-            Matrix Ainv = A.inverse();
-            Matrix X;
+            double[] ret = {(g5 - sum4*sum4) * sum6 + i1 * sum7 + i2 * sum8,
+                            i1 * sum6 + (sum1*sum5 - g1) * sum7 + i3 * sum8,
+                            i2 * sum6 + i3 * sum7 + (sum1*sum3 - sum2*sum2) * sum8};
 
-            try {
-                X = Ainv.times(V);
-                for (int i = 0; i < 3; ++i) ret[i] = X.get(i, 0);
+            double div = -g1*sum3 + 2*sum2*g2 + sum1*g5 - sum4*g4 - sum2*g3;
 
-                double _chi2 = 0;
-                for (int i = 0; i < x.length; i++) {
-                    double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
-                    _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
-                }
-                this.chi2 = _chi2;
-                this.NDF  = x.length -3;
-            } catch (ArithmeticException e) {
+            for (int i = 0; i < ret.length; ++i) ret[i] /= div;
+
+            double _chi2 = 0;
+            for (int i = 0; i < x.length; ++i) {
+                double tiltSysXterm = ret[0]*x[i]*x[i] + ret[1]*x[i] + ret[2];
+                _chi2 += (tiltSysXterm-y[i]) * (tiltSysXterm-y[i]) / (err[i]*err[i]);
             }
+            this.chi2 = _chi2;
+            this.NDF = x.length - 3;
+
             a = ret;
         }
     }
