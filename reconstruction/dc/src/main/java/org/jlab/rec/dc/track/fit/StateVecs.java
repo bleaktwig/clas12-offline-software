@@ -62,8 +62,6 @@ public class StateVecs {
     public void transport(int sector, int i, int f, StateVec iVec, CovMat iCovMat) {
 
         if (iVec == null) return;
-        if (Double.isNaN(iVec.z) || Double.isNaN(iVec.x) || Double.isNaN(iVec.y)
-                || Double.isNaN(iVec.tx) || Double.isNaN(iVec.ty)) return;
 
         double stepSize = 1.0;
 

@@ -32,7 +32,7 @@ public class RoadFinder  {
     public List<Road> findRoads(List<Segment> segs, DCGeant4Factory DcDetector) {
 
         // Initialize the lists
-        List<Road> Roads = new ArrayList<Road>();
+        List<Road> roads = new ArrayList<Road>();
 
         List<ArrayList<ArrayList<Segment>>> superLayerLists =
                 new ArrayList<ArrayList<ArrayList<Segment>>>();
@@ -73,16 +73,14 @@ public class RoadFinder  {
                             if (s2.get_Id() != -10) sLyr.add(s2);
                             if (s3.get_Id() != -10) sLyr.add(s3);
 
-                            if (sLyr.size() < 3
-                                    || !this.fitRoad(sLyr, DcDetector)
-                                    || qf.chi2 >= 150
+                            if (sLyr.size() < 3 || !this.fitRoad(sLyr, DcDetector) || qf.chi2 >= 150
                                     || qf.chi2 == 0) {
                                 continue;
                             }
                             // Road is good --> pass w.out looking for missing segment
                             sLyr.id = roadId;
                             sLyr.a  = qf.a;
-                            Roads.add(sLyr);
+                            roads.add(sLyr);
                             roadId++;
                         }
                     }
@@ -90,7 +88,7 @@ public class RoadFinder  {
             }
         }
 
-        return Roads;
+        return roads;
     }
 
     public Segment findRoadMissingSegment(List<Segment> segList,
@@ -262,14 +260,7 @@ public class RoadFinder  {
         }
 
         public void evaluate(double[] x, double[] y, double[] err) {
-            double sum1 = 0.0;
-            double sum2 = 0.0;
-            double sum3 = 0.0;
-            double sum4 = 0.0;
-            double sum5 = 0.0;
-            double sum6 = 0.0;
-            double sum7 = 0.0;
-            double sum8 = 0.0;
+            double[] sum = {0, 0, 0, 0, 0, 0, 0, 0};
 
             for (int i = 0; i < x.length; ++i) {
                 double y1 = y[i];
@@ -279,32 +270,32 @@ public class RoadFinder  {
                 double x4 = x2 * x2;
                 double e2 = err[i] * err[i];
 
-                sum1 += x4/e2;
-                sum2 += x3/e2;
-                sum3 += x2/e2;
-                sum4 += x1/e2;
-                sum5 += 1.0/e2;
-                sum6 += y1 * x2/e2;
-                sum7 += y1 * x1/e2;
-                sum8 += y1/e2;
+                sum[0] += x4/e2;
+                sum[1] += x3/e2;
+                sum[2] += x2/e2;
+                sum[3] += x1/e2;
+                sum[4] += 1.0/e2;
+                sum[5] += y1 * x2/e2;
+                sum[6] += y1 * x1/e2;
+                sum[7] += y1/e2;
             }
 
             // NOTE: The matrix inversion is hardcoded so as to accelerate the method
-            double g1 = sum3*sum3;
-            double g2 = sum3*sum4;
-            double g3 = sum2*sum5;
-            double g4 = sum1*sum4;
-            double g5 = sum3*sum5;
+            double g1 = sum[2]*sum[2];
+            double g2 = sum[2]*sum[3];
+            double g3 = sum[1]*sum[4];
+            double g4 = sum[0]*sum[3];
+            double g5 = sum[2]*sum[4];
 
             double i1 = g2 - g3;
-            double i2 = sum2*sum4 - g1;
-            double i3 = sum2*sum3 - g4;
+            double i2 = sum[1]*sum[3] - g1;
+            double i3 = sum[1]*sum[2] - g4;
 
-            double[] ret = {(g5 - sum4*sum4) * sum6 + i1 * sum7 + i2 * sum8,
-                            i1 * sum6 + (sum1*sum5 - g1) * sum7 + i3 * sum8,
-                            i2 * sum6 + i3 * sum7 + (sum1*sum3 - sum2*sum2) * sum8};
+            double[] ret = {(g5 - sum[3]*sum[3]) * sum[5] + i1 * sum[6] + i2 * sum[7],
+                            i1 * sum[5] + (sum[0]*sum[4] - g1) * sum[6] + i3 * sum[7],
+                            i2 * sum[5] + i3 * sum[6] + (sum[0]*sum[2] - sum[1]*sum[1]) * sum[7]};
 
-            double div = -g1*sum3 + 2*sum2*g2 + sum1*g5 - sum4*g4 - sum2*g3;
+            double div = -g1*sum[2] + 2*sum[1]*g2 + sum[0]*g5 - sum[3]*g4 - sum[1]*g3;
 
             for (int i = 0; i < ret.length; ++i) ret[i] /= div;
 

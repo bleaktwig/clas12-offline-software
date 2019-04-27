@@ -105,9 +105,10 @@ public class KFitter {
     }
 
     private void filter(int k) {
-        if (sv.trackTraj.get(k)       == null ||
-            sv.trackCov.get(k).covMat == null ||
-            k                         >= sv.Z.length) {
+        // long initTime = System.nanoTime();
+        if (sv.trackTraj.get(k) == null
+                || sv.trackCov.get(k).covMat == null
+                || k >= sv.Z.length) {
 
             return;
         }
@@ -133,7 +134,11 @@ public class KFitter {
                 result.set(i, j, result.get(i, j)/div);
             }
         }
+
         sv.trackCov.get(k).covMat = C.minus(result);
+
+        if (sv.trackCov.get(k) == null) return;
+        if (Double.isNaN(sv.trackCov.get(k).covMat.get(0,0))) return;
 
         for (int j = 0; j < 5; j++) {
             // the gain matrix
@@ -152,6 +157,8 @@ public class KFitter {
         sv.trackTraj.get(k).tx += K[2] * (mv.measurements.get(k).x - h);
         sv.trackTraj.get(k).ty += K[3] * (mv.measurements.get(k).x - h);
         sv.trackTraj.get(k).Q  += K[4] * (mv.measurements.get(k).x - h);
+
+        // System.out.printf("time += %d\n", System.nanoTime() - initTime);
     }
 
     @SuppressWarnings("unused")
