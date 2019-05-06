@@ -68,7 +68,6 @@ public class DCHBEngine extends DCEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-
         if (!event.hasBank("RUN::config")) return true;
 
         DataBank bank = event.getBank("RUN::config");

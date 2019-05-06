@@ -386,7 +386,7 @@ public class StateVecs {
             this.k = k;
         }
 
-        void print() {
+        public void print() {
             System.out.printf("StateVec %d:\n", k);
             System.out.printf("  z         : %f\n", z);
             System.out.printf("  x         : %f\n", x);

@@ -364,8 +364,8 @@ public class TrackCandListFinder {
             if (chi2 > 2500 || iBdl == 0) return null;
 
             // Momentum estimate if Bdl is non zero and the track has curvature
-            double p = calcInitTrkP(ux, uy, uz, thX, thY, theta1, theta3, iBdl, TORSCALE);
-            int q = this.calcInitTrkQ(theta1, theta3, TORSCALE);
+            double p = this.calcInitTrkP(ux, uy, uz, thX, thY, theta1, theta3, iBdl, TORSCALE);
+            int q    = this.calcInitTrkQ(theta1, theta3, TORSCALE);
 
             if (p > 11) p = 11;
 

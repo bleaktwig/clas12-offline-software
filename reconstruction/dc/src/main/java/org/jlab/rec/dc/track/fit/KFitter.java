@@ -64,12 +64,9 @@ public class KFitter {
 
         for (int i = 1; i <= totNumIter; i++) {
             this.chi2kf = 0;
-            if (i > 1) {
-                // Get new state vec at 1st measurement after propagating back from the last
-                // filtered state
-                sv.transport(sector, svzLength-1, 0, sv.trackTraj.get(svzLength-1),
-                        sv.trackCov.get(svzLength-1));
-            }
+            if (i > 1) // Get new initial state propagating back from the last state
+                sv.transport(sector, svzLength-1, 0,
+                        sv.trackTraj.get(svzLength-1), sv.trackCov.get(svzLength-1));
             for (int k = 0; k < svzLength - 1; k++) {
                 sv.transport(sector, k, k + 1, sv.trackTraj.get(k), sv.trackCov.get(k));
                 this.filter(k + 1);
@@ -105,7 +102,6 @@ public class KFitter {
     }
 
     private void filter(int k) {
-        // long initTime = System.nanoTime();
         if (sv.trackTraj.get(k) == null
                 || sv.trackCov.get(k).covMat == null
                 || k >= sv.Z.length) {
@@ -120,7 +116,7 @@ public class KFitter {
                      mv.measurements.get(k).wireMaxSag,
                      mv.measurements.get(k).wireLen);
 
-        // Sherman-Morrisey formula applied to the filter. This is possible because the HTGH matrix
+        // Sherman-Morrison formula applied to the filter. This is possible because the HTGH matrix
         // used can be expressed as a column vector multiplied by a row vector (in this case, itself
         // transposed).
         Matrix Hvec  = new Matrix(new double[][] {{H[0]}, {H[1]}, {0}, {0}, {0}});
@@ -157,8 +153,6 @@ public class KFitter {
         sv.trackTraj.get(k).tx += K[2] * (mv.measurements.get(k).x - h);
         sv.trackTraj.get(k).ty += K[3] * (mv.measurements.get(k).x - h);
         sv.trackTraj.get(k).Q  += K[4] * (mv.measurements.get(k).x - h);
-
-        // System.out.printf("time += %d\n", System.nanoTime() - initTime);
     }
 
     @SuppressWarnings("unused")
