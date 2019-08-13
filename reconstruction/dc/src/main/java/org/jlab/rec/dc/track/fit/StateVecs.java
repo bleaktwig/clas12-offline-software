@@ -10,6 +10,7 @@ import java.lang.InterruptedException;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.dc.track.BFieldInterpolator;
 import org.jlab.rec.dc.track.Track;
 
 /**
@@ -17,6 +18,7 @@ import org.jlab.rec.dc.track.Track;
  * @author ziegler
  */
 public class StateVecs {
+
     private double Bmax = 2.366498; // averaged
 
     final double speedLight = 0.002997924580;
@@ -59,9 +61,10 @@ public class StateVecs {
      * @param iVec    state vector at the initial index
      * @param iCovMat state covariance matrix at the initial index
      */
-    public void transport(int sector, int i, int f, StateVec iVec, CovMat iCovMat) {
+    public boolean transport(boolean mode, int sector, BFieldInterpolator[] bField, int i, int f,
+            StateVec iVec, CovMat iCovMat) {
 
-        if (iVec == null) return;
+        if (iVec == null) return true;
 
         double stepSize = 1.0;
 
@@ -97,9 +100,8 @@ public class StateVecs {
             s = Math.signum(Z[f] - Z[i]) * stepSize;
             if (Math.signum(Z[f] - Z[i]) * (z+s) > Math.signum(Z[f] - Z[i]) * Z[f])
                 s = Math.signum(Z[f] - Z[i]) * Math.abs(Z[f]-z);
-
-            rk.RK4transport(sector, Q, x, y, z, tx, ty, s, dcSwim, iCovMat, fVec, fCovMat, mass,
-                    dPath);
+            if (rk.RK4transport(mode, sector, bField, Q, x, y, z, tx, ty, s, dcSwim, iCovMat, fVec,
+                    fCovMat, mass, dPath)) return true;
 
             if (Math.abs(fVec.B - BatMeas) < 0.0001) {
                 stepSize *= 2;
@@ -108,58 +110,9 @@ public class StateVecs {
 
         this.trackTraj.put(f, fVec);
         this.trackCov.put(f, fCovMat);
+
+        return false;
     }
-
-    /**
-     *
-     * @param i initial state vector index
-     * @param f final state vector index
-     * @param iVec state vector at the initial index
-     * @param covMat state covariance matrix at the initial index
-     */
-    public void transportFixed(int sector, int i, int f, StateVec iVec, CovMat covMat) {
-        // s = signed step-size
-        if(iVec == null) return;
-        double stepSize = 0.5;
-
-        StateVecs.StateVec fVec = new StateVec(f);
-        CovMat fCov = new CovMat(f);
-        fVec.x  = iVec.x;
-        fVec.y  = iVec.y;
-        fVec.z  = iVec.z;
-        fVec.tx = iVec.tx;
-        fVec.ty = iVec.ty;
-        fVec.Q  = iVec.Q;
-        fCov.covMat = covMat.covMat;
-        int nSteps = (int) (Math.abs((Z[i] - Z[f]) / stepSize) + 1);
-
-        double s = (Z[f] - Z[i]) / (double) nSteps;
-        double z = Z[i];
-
-        for (int j = 0; j < nSteps; j++) {
-            // get the sign of the step
-            if (j == nSteps - 1) {
-                s = Math.signum(Z[f] - Z[i]) * Math.abs(z - Z[f]);
-            }
-            //System.out.println(" RK step num "+(j+1)+" = "+(float)s+" nSteps = "+nSteps);
-            double x  =  fVec.x;
-            double y  =  fVec.y;
-            z         = fVec.z;
-            double tx = fVec.tx;
-            double ty = fVec.ty;
-            double Q =  fVec.Q;
-            double dPath = fVec.deltaPath;
-            covMat.covMat = fCov.covMat;
-
-            rk.RK4transport( sector, Q, x, y, z, tx, ty, s, dcSwim,
-                        covMat, fVec, fCov, mass, dPath);
-
-        }
-
-        this.trackTraj.put(f, fVec);
-        this.trackCov.put(f, fCov);
-    }
-
 
     private void A(double tx, double ty, double Bx, double By, double Bz, double[] a) {
 
@@ -416,9 +369,9 @@ public class StateVecs {
             for (int ii = 0; ii < covMat.getColumnDimension(); ++ii) {
                 System.out.printf("  ");
                 for (int jj = 0; jj < covMat.getRowDimension(); ++jj) {
-                    System.out.printf("%f ", covMat.get(ii, jj));
+                    System.out.printf("%14.6f ", covMat.get(ii, jj));
                 }
-                System.out.printf("\b\n");
+                System.out.printf("\n");
             }
         }
     }

@@ -15,6 +15,7 @@ import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
+import org.jlab.rec.dc.track.BFieldInterpolator;
 import org.jlab.rec.dc.track.fit.KFitter;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
@@ -166,19 +167,20 @@ public class TrackCandListFinder {
      * @return           a list of track candidates in the DC
      */
     public List<Track> getTrackCands(CrossList crossLists, DCGeant4Factory DcDetector,
-                                     double TORSCALE, Swim dcSwim, boolean parallel) {
-        if (!parallel) return getTrackCandsSeq(crossLists, DcDetector, TORSCALE, dcSwim);
-        else           return getTrackCandsCPUPar(crossLists, DcDetector, TORSCALE);
+                                     double TORSCALE, Swim dcSwim, BFieldInterpolator[] bField,
+                                     boolean parallel) {
+        if (!parallel) return getTrackCandsSeq(crossLists, DcDetector, TORSCALE, dcSwim, bField);
+        else           return getTrackCandsCPUPar(crossLists, DcDetector, TORSCALE, bField);
     }
 
     /** Gets the track candidates in a traditional, sequential manner. */
     private List<Track> getTrackCandsSeq(CrossList crossLists, DCGeant4Factory DcDetector,
-                                         double TORSCALE, Swim dcSwim) {
+                                         double TORSCALE, Swim dcSwim, BFieldInterpolator[] bField) {
         List<Track> cands = new ArrayList<>();
         if (crossLists.size() == 0) return cands;
 
         for (List<Cross> crossList : crossLists) {
-            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim);
+            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim, bField);
             if (cand != null) {
                 cand.set_Id(cands.size() + 1);
                 cands.add(cand);
@@ -190,14 +192,14 @@ public class TrackCandListFinder {
 
     /** Gets the track candidates creating a thread for each candidate. */
     private List<Track> getTrackCandsCPUPar(CrossList crossLists, DCGeant4Factory DcDetector,
-                                            double TORSCALE) {
+                                            double TORSCALE, BFieldInterpolator[] bField) {
 
         List<Track> cands = new ArrayList<>();
         if (crossLists.size() == 0) return cands;
 
         crossLists.parallelStream().forEach((crossList) -> {
             Swim dcSwim = new Swim();
-            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim);
+            Track cand = getTrackCand(crossList, DcDetector, TORSCALE, dcSwim, bField);
             if (cand != null) cands.add(cand);
         });
 
@@ -213,7 +215,7 @@ public class TrackCandListFinder {
 
     /** Gets a singular track candidate from a list of three crosses. */
     private Track getTrackCand(List<Cross> crossList, DCGeant4Factory DcDetector,
-                               double TORSCALE, Swim dcSwim) {
+                               double TORSCALE, Swim dcSwim, BFieldInterpolator[] bField) {
 
         if (crossList.size() != 3) return null;
 
@@ -241,7 +243,7 @@ public class TrackCandListFinder {
             cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
             // Initialize the fitter with the candidate track
-            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim, bField);
             kFit.totNumIter = 1;
 
             kFit.runFitter(cand.get(0).get_Sector());
@@ -381,7 +383,7 @@ public class TrackCandListFinder {
             cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
             // Initialize the fitter with the candidate track
-            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim);
+            KFitter kFit = new KFitter(cand, DcDetector, false, dcSwim, bField);
 
             // Initialize the state vector corresponding to the last measurement site
             StateVec fn = new StateVec();

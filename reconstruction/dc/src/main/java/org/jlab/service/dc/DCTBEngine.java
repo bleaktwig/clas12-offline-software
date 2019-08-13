@@ -24,6 +24,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
+import org.jlab.rec.dc.track.BFieldInterpolator;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.track.fit.KFitter;
@@ -39,6 +40,9 @@ public class DCTBEngine extends DCEngine {
 
     private TimeToDistanceEstimator tde;
     private double tarCent = -1.942;
+
+    private BFieldInterpolator[] bField;
+
     public DCTBEngine() {
         super("DCTB");
         tde = new TimeToDistanceEstimator();
@@ -223,7 +227,7 @@ public class DCTBEngine extends DCEngine {
             if (TrackArray[i].size() < 1) continue;
             crosses.addAll(TrackArray[i]);
 
-            KFitter kFit = new KFitter(TrackArray[i], dcDetector, true, dcSwim);
+            KFitter kFit = new KFitter(TrackArray[i], dcDetector, true, dcSwim, null);
 
             StateVec fn = new StateVec();
             kFit.runFitter(TrackArray[i].get(0).get_Sector());

@@ -1,4 +1,4 @@
-package org.jlab.service.dc;
+ package org.jlab.service.dc;
 
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
@@ -31,6 +31,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.timetodistance.TableLoader;
+import org.jlab.rec.dc.track.BFieldInterpolator;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.trajectory.RoadFinder;
@@ -50,8 +51,12 @@ public class DCHBEngine extends DCEngine {
     // Define if cluster and track finding is done sequentially or in parallel:
     //     false: sequential
     //     true:  parallel
-    private boolean clusterFindingMode = true;
-    private boolean trackFindingMode   = true;
+    private boolean clusterFindingMode = false;
+    private boolean trackFindingMode   = false;
+
+    private BFieldInterpolator[] bField;
+    private int eventCtr = 0;
+    private boolean firstEvent = true;
 
     public DCHBEngine() {
         super("DCHB");
@@ -69,6 +74,80 @@ public class DCHBEngine extends DCEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
         if (!event.hasBank("RUN::config")) return true;
+
+        // eventCtr++;
+        // boolean runEvent = false;
+        // NOTE: Singular covariance matrix events:
+        // {
+        //     if (eventCtr ==    1) runEvent = true;
+        //     if (eventCtr ==    2) runEvent = true;
+        //     if (eventCtr ==    3) runEvent = true;
+        //
+        //     if (eventCtr ==   50) runEvent = true;
+        //     if (eventCtr ==  356) runEvent = true;
+        //     if (eventCtr ==  695) runEvent = true;
+        //     if (eventCtr ==  923) runEvent = true;
+        //     if (eventCtr == 1458) runEvent = true;
+        //     if (eventCtr == 2679) runEvent = true;
+        //     if (eventCtr == 3242) runEvent = true;
+        //     if (eventCtr == 4166) runEvent = true;
+        //     if (eventCtr == 5221) runEvent = true;
+        //     if (eventCtr == 6638) runEvent = true;
+        //     if (eventCtr == 7320) runEvent = true;
+        //     if (eventCtr == 7689) runEvent = true;
+        // }
+        // NOTE: One track events:
+        // {
+        //     if (eventCtr ==    1) runEvent = true;
+        //     if (eventCtr ==    2) runEvent = true;
+        //     if (eventCtr ==    3) runEvent = true;
+
+        //     if (eventCtr ==    5) runEvent = true;
+        //     if (eventCtr ==    6) runEvent = true;
+        //     if (eventCtr ==   12) runEvent = true;
+        //     if (eventCtr ==   17) runEvent = true;
+        //     if (eventCtr ==   25) runEvent = true;
+        //     if (eventCtr ==   30) runEvent = true;
+        //
+        //     if (eventCtr ==   35) runEvent = true;
+        //     if (eventCtr ==   36) runEvent = true;
+        //     if (eventCtr ==   38) runEvent = true;
+        //     if (eventCtr ==   40) runEvent = true;
+        //     if (eventCtr ==   48) runEvent = true;
+        //     if (eventCtr ==   52) runEvent = true;
+        //
+        //     if (eventCtr ==   55) runEvent = true;
+        //     if (eventCtr ==   57) runEvent = true;
+        //     if (eventCtr ==   59) runEvent = true;
+        //     if (eventCtr ==   60) runEvent = true;
+        //     if (eventCtr ==   63) runEvent = true;
+        //     if (eventCtr ==   67) runEvent = true;
+        //
+        //     if (eventCtr ==   69) runEvent = true;
+        //     if (eventCtr ==   71) runEvent = true;
+        //     if (eventCtr ==   80) runEvent = true;
+        //     if (eventCtr ==   82) runEvent = true;
+        //     if (eventCtr ==   83) runEvent = true;
+        //     if (eventCtr ==   88) runEvent = true;
+        //
+        //     if (eventCtr ==   89) runEvent = true;
+        //     if (eventCtr ==   92) runEvent = true;
+        //     if (eventCtr ==   95) runEvent = true;
+        //     if (eventCtr ==  103) runEvent = true;
+        //     if (eventCtr ==  113) runEvent = true;
+        //     if (eventCtr ==  119) runEvent = true;
+        //
+        //     if (eventCtr ==  123) runEvent = true;
+        //     if (eventCtr ==  124) runEvent = true;
+        //     if (eventCtr ==  130) runEvent = true;
+        //     if (eventCtr ==  134) runEvent = true;
+        //     if (eventCtr ==  138) runEvent = true;
+        //     if (eventCtr ==  139) runEvent = true;
+        // }
+        // if (!runEvent) return true;
+        // System.out.printf("# event #%5d\n", eventCtr);
+
+        // long start = System.currentTimeMillis();
 
         DataBank bank = event.getBank("RUN::config");
         long timeStamp = bank.getLong("timestamp", 0);
@@ -98,6 +177,36 @@ public class DCHBEngine extends DCEngine {
         }
 
         Swim dcSwim = new Swim();
+
+        if (firstEvent) {
+            // Create bfield interpolators
+            double[] min = new double[] {-200., -200., 200.};
+            double[] max = new double[] { 200.,  200., 600.};
+            double[] ss  = new double[] {  10.,   10.,  10.};
+
+            bField = new BFieldInterpolator[6];
+            for (int i = 1; i <= 6; ++i) bField[i-1] = new BFieldInterpolator(dcSwim, i, min, max, ss);
+
+            firstEvent = false;
+        }
+
+        // if (eventCtr == 5) {
+        //     float[]  fb = new float[3];
+        //     double[] rb = new double[3];
+        //
+        //     for (double x = -197.5; x <= 197.5; x +=   5.) {
+        //         for (double y = -197.5; y <= 197.5; y +=   5.) {
+        //             for (double z = 202.5; z <= 597.5; z +=   5.) {
+        //                 dcSwim.Bfield(2, x, y, z, fb);
+        //                 // for (int i = 0; i < fb.length; ++i) rb[i] = (double) fb[i];
+        //                 rb = bField[1].getB(x, y, z);
+        //                 System.out.printf("%20.12e %20.12e %20.12e\n", rb[0], rb[1], rb[2]);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // if (!firstEvent) return true;
 
         Clas12NoiseResult results = new Clas12NoiseResult();
         Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
@@ -161,10 +270,12 @@ public class DCHBEngine extends DCEngine {
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector, null, dcSwim);
 
+        // if (eventCtr <= 4) return true;
+
         // Find the list of track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist, dcDetector,
-                Swimmer.getTorScale(), dcSwim, trackFindingMode);
+                Swimmer.getTorScale(), dcSwim, bField, trackFindingMode);
 
         int trkId = 1;
         if (trkcands.size() > 0) {
@@ -227,7 +338,7 @@ public class DCHBEngine extends DCEngine {
                 super.getConstantsManager().getConstants(newRun, Constants.TIME2DIST),
                 dcDetector, null, dcSwim);
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist, dcDetector,
-                Swimmer.getTorScale(), dcSwim, trackFindingMode);
+                Swimmer.getTorScale(), dcSwim, bField, trackFindingMode);
 
         // remove overlaps
         if (mistrkcands.size() > 0) {
@@ -251,6 +362,13 @@ public class DCHBEngine extends DCEngine {
             rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, null);
         else
             rbc.fillAllHBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
+
+        // long end = System.currentTimeMillis();
+        // System.out.printf("%d\n", end-start);
+        // for (Track trk : trkcands) {
+        //     System.out.printf("DCHB TRACK FOUND!!!\n");
+        // }
+
         return true;
     }
 
