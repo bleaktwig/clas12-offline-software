@@ -38,7 +38,7 @@ import org.jlab.rec.dc.trajectory.Road;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
- * @author zigler
+ * @author ziegler
  * @since 08.09.2018 updated by gurjyan
  */
 public class DCHBEngine extends DCEngine {
@@ -162,10 +162,10 @@ public class DCHBEngine extends DCEngine {
 
         int trkId = 1;
         if (trkcands.size() > 0) {
-            // remove overlaps
+            // Remove overlapping tracks
             trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
-                // reset the id
+                // Reset track's id
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {
@@ -223,12 +223,12 @@ public class DCHBEngine extends DCEngine {
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist, dcDetector,
                 Swimmer.getTorScale(), dcSwim, false);
 
-        // remove overlaps
+        // Remove overlapping tracks
         if (mistrkcands.size() > 0) {
             trkcandFinder.removeOverlappingTracks(mistrkcands);
             for (Track trk : mistrkcands) {
 
-                // reset the id
+                // Reset track's id
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.get_Trajectory(), trk, dcDetector, dcSwim);
                 for (Cross c : trk) {

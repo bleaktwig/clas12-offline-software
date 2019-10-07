@@ -22,16 +22,14 @@ public class TrackDictionaryMerger {
     private Map<ArrayList<Byte>, Particle> dictionary = null;
     private int nlines;
     private int nfull;
-    private int ndupli;            
-    
-    public TrackDictionaryMerger(){
+    private int ndupli;
 
-    }
+    public TrackDictionaryMerger() {}
 
     public Map<ArrayList<Byte>, Particle> getDictionary() {
         return dictionary;
     }
-    
+
     public boolean init() {
         this.dictionary = new HashMap<>();
         this.nlines = 0;
@@ -39,15 +37,13 @@ public class TrackDictionaryMerger {
         this.nfull  = 0;
         return true;
     }
-    
-    
+
     public void readDictionary(String fileName) {
-        
         System.out.println("\nReading dictionary from file " + fileName);
         int nLines = 0;
         int nFull  = 0;
         int nDupli = 0;
-        
+
         File fileDict = new File(fileName);
         BufferedReader txtreader = null;
         try {
@@ -63,7 +59,6 @@ public class TrackDictionaryMerger {
                     System.out.println("WARNING: dictionary line " + nLines + " incomplete: skipping");
                 }
                 else {
-//                    System.out.println(line);
                     int charge   = Integer.parseInt(lineValues[0]);
                     double p     = Double.parseDouble(lineValues[1]);
                     double theta = Double.parseDouble(lineValues[2]);
@@ -73,13 +68,13 @@ public class TrackDictionaryMerger {
                     double py    = p*Math.sin(Math.toRadians(theta))*Math.sin(Math.toRadians(phi));
                     double pz    = p*Math.cos(Math.toRadians(theta));
                     Particle road = new Particle(211*charge, px, py, pz, 0, 0, vz);
-                    // take wire id of first layer in each superlayer, id>0
-                    for(int i=0; i<6; i++) {
+                    for(int i = 0; i < 6; i++) {
                         int wire = Integer.parseInt(lineValues[4+i*6]);
-                        if(wire>0) wires.add((byte) wire);
+                        if (wire > 0) wires.add((byte) wire);
                     }
-                    // keep only roads with 6 superlayers
-                    if(wires.size()!=6) continue;
+
+                    // Keep only roads with 6 superlayers
+                    if (wires.size() != 6) continue;
                     int paddle1b = Integer.parseInt(lineValues[40]);
                     int paddle2  = Integer.parseInt(lineValues[42]);
                     int pcalu    = Integer.parseInt(lineValues[43]);
@@ -104,89 +99,86 @@ public class TrackDictionaryMerger {
                         this.dictionary.put(wires, road);
                     }
                 }
-                if(nLines % 1000000 == 0) System.out.println("Number of processed/full/duplicates in current file " + nLines + "/" + nFull + "/" + nDupli + " and in merged dictionary " 
-                               + this.nlines + "/" + this.nfull + "/" + this.ndupli + ", current dictionary size: " + this.dictionary.keySet().size());
+                if (nLines % 1000000 == 0) System.out.println("Number of processed/full/duplicates in current file "
+                        + nLines + "/" + nFull + "/" + nDupli + " and in merged dictionary "
+                        + this.nlines + "/" + this.nfull + "/" + this.ndupli
+                        + ", current dictionary size: " + this.dictionary.keySet().size());
             }
-            System.out.println("Number of processed/full/duplicates in current file " + nLines + "/" + nFull + "/" + nDupli + " and in merged dictionary " 
-                               + this.nlines + "/" + this.nfull + "/" + this.ndupli + ", current dictionary size: " + this.dictionary.keySet().size());
-        } 
+            System.out.println("Number of processed/full/duplicates in current file "
+                    + nLines + "/" + nFull + "/" + nDupli + " and in merged dictionary "
+                    + this.nlines + "/" + this.nfull + "/" + this.ndupli
+                    + ", current dictionary size: " + this.dictionary.keySet().size());
+        }
         catch (FileNotFoundException e) {
             e.printStackTrace();
-        } 
+        }
         catch (IOException e) {
             e.printStackTrace();
-        } 
+        }
    }
-    
+
     private void setDictionary(Map<ArrayList<Byte>, Particle> newDictionary) {
         this.dictionary = newDictionary;
     }
-    
+
     private void writeDictionary(String dictName) {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(dictName);
-            for(Map.Entry<ArrayList<Byte>, Particle> entry : this.dictionary.entrySet()) {
+            for (Map.Entry<ArrayList<Byte>, Particle> entry : this.dictionary.entrySet()) {
                 ArrayList<Byte> road = entry.getKey();
                 Particle        part = entry.getValue();
-                if(road.size()<12) {
-                    continue;
-                }
-                else {
-                    int wl1 = road.get(0);
-                    int wl2 = road.get(1);
-                    int wl3 = road.get(2);
-                    int wl4 = road.get(3);
-                    int wl5 = road.get(4);
-                    int wl6 = road.get(5);
-                    int paddle1b = road.get(6);
-                    int paddle2  = road.get(7);
-                    int pcalU    = road.get(8);
-                    int pcalV    = road.get(9);
-                    int pcalW    = road.get(10);
-                    int htcc     = road.get(11);
-                    pw.printf("%d\t%.2f\t%.2f\t%.2f\t"
-                    + "%d\t%d\t%d\t%d\t%d\t%d\t"
-                    + "%d\t%d\t%d\t%d\t%d\t%d\t"
-                    + "%d\t%d\t%d\t%d\t%d\t%d\t"
-                    + "%d\t%d\t%d\t%d\t%d\t%d\t"
-                    + "%d\t%d\t%d\t%d\t%d\t%d\t"
-                    + "%d\t%d\t%d\t%d\t%d\t%d\t"
-                    + "%d\t%.2f\t%d\t%d\t%d\t%d\t"
-                    + "%d\n",
-                    //+ "%.1f\t %.1f\t %.1f\t %.1f\t %.1f\t %.1f\t\n", 
-                    part.charge(), part.p(), Math.toDegrees(part.theta()), Math.toDegrees(part.phi()),
-                    road.get(0), 0, 0, 0, 0, 0, 
-                    road.get(1), 0, 0, 0, 0, 0, 
-                    road.get(2), 0, 0, 0, 0, 0, 
-                    road.get(3), 0, 0, 0, 0, 0, 
-                    road.get(4), 0, 0, 0, 0, 0, 
-                    road.get(5), 0, 0, 0, 0, 0,  
-                    paddle1b, part.vz(), paddle2, pcalU, pcalV, pcalW, htcc);
-                }
+
+                if(road.size() < 12) continue;
+                int wl1 = road.get(0);
+                int wl2 = road.get(1);
+                int wl3 = road.get(2);
+                int wl4 = road.get(3);
+                int wl5 = road.get(4);
+                int wl6 = road.get(5);
+                int paddle1b = road.get(6);
+                int paddle2  = road.get(7);
+                int pcalU    = road.get(8);
+                int pcalV    = road.get(9);
+                int pcalW    = road.get(10);
+                int htcc     = road.get(11);
+
+                pw.printf("%d\t%.2f\t%.2f\t%.2f\t"
+                        + "%d\t%d\t%d\t%d\t%d\t%d\t"
+                        + "%d\t%d\t%d\t%d\t%d\t%d\t"
+                        + "%d\t%d\t%d\t%d\t%d\t%d\t"
+                        + "%d\t%d\t%d\t%d\t%d\t%d\t"
+                        + "%d\t%d\t%d\t%d\t%d\t%d\t"
+                        + "%d\t%d\t%d\t%d\t%d\t%d\t"
+                        + "%d\t%.2f\t%d\t%d\t%d\t%d\t"
+                        + "%d\n",
+                        part.charge(), part.p(), Math.toDegrees(part.theta()), Math.toDegrees(part.phi()),
+                        road.get(0), 0, 0, 0, 0, 0,
+                        road.get(1), 0, 0, 0, 0, 0,
+                        road.get(2), 0, 0, 0, 0, 0,
+                        road.get(3), 0, 0, 0, 0, 0,
+                        road.get(4), 0, 0, 0, 0, 0,
+                        road.get(5), 0, 0, 0, 0, 0,
+                        paddle1b, part.vz(), paddle2, pcalU, pcalV, pcalW, htcc);
             }
             pw.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(TrackDictionaryMakerRNG.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
         }
-       
     }
-    
-    
+
+
     public static void main(String[] args) {
-        
         OptionParser parser = new OptionParser("dict-validation");
         parser.addOption("-o","output.txt", "output dictionary file");
         parser.parse(args);
-        
+
         List<String> inputList = parser.getInputList();
-        
-        if(parser.hasOption("-o")==true){
-            
-            if(inputList.isEmpty()==true){
+
+        if (parser.hasOption("-o")) {
+            if (inputList.isEmpty()){
                 parser.printUsage();
-                System.out.println("\n >>>> error : no input file is specified....\n");
+                System.out.println("\n >>>> error : no input file is specified...\n");
                 System.exit(0);
             }
 
@@ -195,19 +187,15 @@ public class TrackDictionaryMerger {
             TrackDictionaryMerger tm = new TrackDictionaryMerger();
             tm.init();
 
-            for(String inputFile : inputList){
+            for (String inputFile : inputList){
                 tm.readDictionary(inputFile);
                 tm.writeDictionary(outputFile);
-
             }
         }
         else {
             parser.printUsage();
             System.out.println("\n >>>> error : no dictionary specified: specify the road dictionary or choose to create it from file\n");
-            System.exit(0);       
+            System.exit(0);
         }
-
     }
-    
-    
 }

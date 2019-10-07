@@ -50,8 +50,6 @@ public class DCTBEngine extends DCEngine {
         return true;
     }
 
-    // NOTE: A detailed javadoc description of the engine itself would be useful for newcomers to
-    //       the code.
     @Override
     public boolean processDataEvent(DataEvent event) {
         if (event.hasBank("RUN::config") == false) {
@@ -59,9 +57,6 @@ public class DCTBEngine extends DCEngine {
             return true;
         }
         if (event.hasBank("MC::Event") == true) tarCent = 0;
-        // if (event.getBank("RECHB::Event").getFloat("STTime", 0) < 0)
-        //     return true; // Require the start time to reconstruct the tracks in the event
-
         DataBank bank = event.getBank("RUN::config");
 
         // Load the constants
@@ -111,16 +106,10 @@ public class DCTBEngine extends DCEngine {
         );
 
         List<FittedHit> hits = new ArrayList<FittedHit>();
-        // I) Get the hits =============================================================
         hits = hitRead.get_HBHits();
-
-        // II) Process the hits ========================================================
-        // 1)  Exit if hit list is empty -----------------------------------------------
         if(hits.isEmpty()) return true;
 
-        // 2)  Find the clusters from these hits ---------------------------------------
         ClusterFinder clusFinder = new ClusterFinder();
-
         clusters = clusFinder.FindTimeBasedClusters(hits, cf, ct,
             super.getConstantsManager()
                  .getConstants(newRun, "/calibration/dc/time_to_distance/time2dist"), dcDetector, tde);
@@ -130,13 +119,9 @@ public class DCTBEngine extends DCEngine {
             return true;
         }
 
-        // 3)  Find the segments from the fitted clusters ------------------------------
         SegmentFinder segFinder = new SegmentFinder();
-
         List<FittedCluster> pclusters = segFinder.selectTimeBasedSegments(clusters);
-
         segments = segFinder.get_Segments(pclusters, event, dcDetector, false);
-
         if (segments.isEmpty()) { // 6 segments are needed to make a trajectory
             for (FittedCluster c : clusters) {
                 for (FittedHit hit : c) {
@@ -211,7 +196,6 @@ public class DCTBEngine extends DCEngine {
                 TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
         }
 
-        // 4)  Find the list of track candidates ---------------------------------------
         TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
         TrajectoryFinder trjFind = new TrajectoryFinder();
         for (int i = 0; i < TrackArray.length; i++) {
@@ -298,14 +282,11 @@ public class DCTBEngine extends DCEngine {
             }
         }
 
-        if (trkcands.isEmpty()) {
-            // No candidates found, stop here and save the hits, the clusters, the segments and the
-            //     crosses.
+        // No candidates found, stop here and save all but the tracks.
+        if (trkcands.isEmpty())
             rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, null);
-        }
-        else {
+        else
             rbc.fillAllTBBanks(event, rbc, fhits, clusters, segments, crosses, trkcands);
-        }
         return true;
     }
 

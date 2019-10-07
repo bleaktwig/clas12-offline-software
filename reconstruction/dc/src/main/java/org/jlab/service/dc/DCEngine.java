@@ -33,7 +33,6 @@ public class DCEngine extends ReconstructionEngine {
         super(name, "ziegler", "5.0");
     }
 
-    // NOTE: Lacks JavaDoc description.
     public void setStartTimeOption() {
         // Load config
         String useSTTConf = this.getEngineConfigString("useStartTime");
@@ -78,7 +77,6 @@ public class DCEngine extends ReconstructionEngine {
         }
     }
 
-    // NOTE: Lacks JavaDoc description.
     public void LoadTables() {
 
         // Load tables
